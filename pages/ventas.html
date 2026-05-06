@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventas - TECNORIVAS</title>
+    <link rel="stylesheet" href="../bt/bootstrap.min.css">
+    <link rel="stylesheet" href="../bt-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/sweetalert2.all.min.js"></script>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="app-wrapper">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="bi bi-snow3"></i></div>
+            <div class="brand-text"><span class="brand-name">TECNORIVAS</span><span class="brand-sub">Sistema Admin</span></div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">Principal</div>
+            <a href="dashboard.html" class="nav-item-sidebar" id="nav-dashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+            <div class="sidebar-section">Módulos</div>
+            <a href="usuarios.html" class="nav-item-sidebar" id="nav-usuarios"><i class="bi bi-people-fill"></i> Usuarios</a>
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-compras">
+                <i class="bi bi-cart-fill"></i> Compras <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-compras">
+                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
+                <a href="compras.html#categorias" class="nav-sub-item"><i class="bi bi-tag"></i> Categorías</a>
+                <a href="compras.html#articulos" class="nav-sub-item"><i class="bi bi-box"></i> Artículos</a>
+                <a href="compras.html#compras" class="nav-sub-item"><i class="bi bi-receipt"></i> Compras</a>
+            </div>
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-ventas">
+                <i class="bi bi-bag-check-fill"></i> Ventas <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-ventas">
+                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-person-lines-fill"></i> Clientes</a>
+                <a href="ventas.html#cajas" class="nav-sub-item"><i class="bi bi-cash-stack"></i> Caja</a>
+                <a href="ventas.html#ventas" class="nav-sub-item"><i class="bi bi-bag-fill"></i> Ventas</a>
+            </div>
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-inventario">
+                <i class="bi bi-boxes"></i> Inventario <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-inventario">
+                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-clipboard2-data"></i> Stock</a>
+                <a href="inventario.html#movimientos" class="nav-sub-item"><i class="bi bi-arrow-left-right"></i> Movimientos</a>
+            </div>
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-presupuestos">
+                <i class="bi bi-file-earmark-text-fill"></i> Presupuestos <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-presupuestos">
+                <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
+                <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
+            </div>
+            <div class="sidebar-section">Reportes</div>
+            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes"><i class="bi bi-bar-chart-fill"></i> Reportes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="usuario-sidebar">
+                <div class="usuario-avatar" id="avatar-inicial">A</div>
+                <div class="usuario-info">
+                    <div class="usuario-nombre" id="nav-usuario-nombre">Cargando...</div>
+                    <div class="usuario-rol" id="nav-usuario-rol">...</div>
+                </div>
+                <button class="btn-logout" data-logout title="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="btn-menu-mobile" id="btn-menu"><i class="bi bi-list"></i></button>
+                <div>
+                    <div class="topbar-titulo">Ventas</div>
+                    <div class="topbar-breadcrumb">Inicio / Módulo Ventas</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="page-content">
+
+            <!-- CLIENTES -->
+            <div id="panel-clientes" class="card" style="border-radius:0 0 10px 10px;border-top:none;">
+                <div class="card-header">
+                    <div class="modulo-header">
+                        <h1 class="modulo-titulo">Clientes</h1>
+                        <div class="modulo-acciones">
+                            <button class="btn btn-primario" id="btn-nuevo-clientes"><i class="bi bi-person-plus me-1"></i>Nuevo</button>
+                            <button class="btn btn-outline-secondary" id="btn-exportar-clientes"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar</button>
+                            <div class="buscador-wrapper">
+                                <i class="bi bi-search"></i>
+                                <input type="text" class="buscador-input" id="buscador-clientes" placeholder="Buscar cliente...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tabla-wrapper">
+                    <table class="table table-hover">
+                        <thead><tr><th>Cédula</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Dirección</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-body-clientes"></tbody>
+                    </table>
+                </div>
+                <div class="tabla-footer">
+                    <span id="contador-clientes">0 registro(s)</span>
+                    <ul class="pagination pagination-sm mb-0" id="paginacion-clientes"></ul>
+                </div>
+            </div>
+
+            <!-- VENTAS -->
+            <div id="panel-ventas" class="card d-none" style="border-radius:0 0 10px 10px;border-top:none;">
+                <div class="card-header">
+                    <div class="modulo-header">
+                        <h1 class="modulo-titulo">Registro de Ventas</h1>
+                        <div class="modulo-acciones">
+                            <button class="btn btn-primario" id="btn-nueva-venta"><i class="bi bi-bag-plus me-1"></i>Nueva Venta</button>
+                            <button class="btn btn-outline-secondary" id="btn-exportar-ventas"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar</button>
+                            <div class="buscador-wrapper">
+                                <i class="bi bi-search"></i>
+                                <input type="text" class="buscador-input" id="buscador-ventas" placeholder="Buscar venta...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tabla-wrapper">
+                    <table class="table table-hover">
+                        <thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-body-ventas"></tbody>
+                    </table>
+                </div>
+                <div class="tabla-footer">
+                    <span id="contador-ventas">0 registro(s)</span>
+                    <ul class="pagination pagination-sm mb-0" id="paginacion-ventas"></ul>
+                </div>
+            </div>
+
+            <!-- CAJA -->
+            <div id="panel-cajas" class="card d-none" style="border-radius:0 0 10px 10px;border-top:none;">
+                <div class="card-header">
+                    <div class="modulo-header">
+                        <h1 class="modulo-titulo">Control de Caja</h1>
+                        <div class="modulo-acciones">
+                            <button class="btn btn-primario" id="btn-abrir-caja"><i class="bi bi-unlock me-1"></i>Abrir Caja</button>
+                            <div class="buscador-wrapper">
+                                <i class="bi bi-search"></i>
+                                <input type="text" class="buscador-input" id="buscador-cajas" placeholder="Buscar...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tabla-wrapper">
+                    <table class="table table-hover">
+                        <thead><tr><th>Apertura</th><th>Monto Inicial</th><th>Monto Final</th><th>Estado</th><th>Responsable</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-body-cajas"></tbody>
+                    </table>
+                </div>
+                <div class="tabla-footer">
+                    <span id="contador-cajas">0 registro(s)</span>
+                    <ul class="pagination pagination-sm mb-0" id="paginacion-cajas"></ul>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal fade" id="modal-cliente" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-titulo-cli">Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-cliente">
+                <div class="modal-body">
+                    <input type="hidden" id="cli-id">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label">Cédula/RNC *</label><input type="text" class="form-control" id="cli-cedula" required></div>
+                        <div class="col-md-6"><label class="form-label">Teléfono</label><input type="text" class="form-control" id="cli-telefono"></div>
+                        <div class="col-12"><label class="form-label">Nombre *</label><input type="text" class="form-control" id="cli-nombre" required></div>
+                        <div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" id="cli-email"></div>
+                        <div class="col-md-6"><label class="form-label">Dirección</label><input type="text" class="form-control" id="cli-direccion"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primario"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CAJA -->
+<div class="modal fade" id="modal-caja" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Apertura de Caja</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-caja">
+                <div class="modal-body">
+                    <label class="form-label">Monto inicial (RD$) *</label>
+                    <input type="number" class="form-control" id="caja-monto-inicial" min="0" step="0.01" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primario"><i class="bi bi-unlock me-1"></i>Abrir Caja</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL VENTA -->
+<div class="modal fade" id="modal-venta" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Venta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-venta">
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6"><label class="form-label">Cliente</label><select class="form-select" id="venta-cliente"><option value="">-- Cliente General --</option></select></div>
+                        <div class="col-md-6"><label class="form-label">Fecha *</label><input type="date" class="form-control" id="venta-fecha" required></div>
+                    </div>
+                    <hr>
+                    <h6 class="fw-bold mb-2">Agregar Productos</h6>
+                    <div class="row g-2 align-items-end mb-3">
+                        <div class="col-md-4"><label class="form-label">Artículo</label><select class="form-select form-select-sm" id="venta-articulo"><option value="">-- Seleccionar --</option></select></div>
+                        <div class="col-md-2"><label class="form-label">Stock</label><input type="number" class="form-control form-control-sm bg-light" id="venta-stock-actual" readonly></div>
+                        <div class="col-md-2"><label class="form-label">Cantidad</label><input type="number" class="form-control form-control-sm" id="venta-cantidad" min="1" value="1"></div>
+                        <div class="col-md-3">
+                            <label class="form-label">Precio unit.</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" class="form-control" id="venta-precio" min="0" step="100">
+                                <button class="btn btn-outline-secondary d-none" type="button" id="btn-unlock-precio" title="Autorizar cambio">
+                                    <i class="bi bi-lock-fill" id="icon-lock-precio"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-1"><button type="button" class="btn btn-dorado btn-sm w-100" id="btn-add-item-venta" title="Agregar"><i class="bi bi-plus-lg"></i></button></div>
+                    </div>
+                    <div class="tabla-wrapper" style="max-height:200px;overflow-y:auto;">
+                        <table class="table table-sm">
+                            <thead><tr><th>Artículo</th><th>Cant.</th><th>Precio</th><th>Subtotal</th><th></th></tr></thead>
+                            <tbody id="venta-detalle-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="text-end mt-2 fw-bold fs-5">Total: <span id="venta-total">RD$ 0.00</span></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primario"><i class="bi bi-receipt me-1"></i>Registrar Venta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="../bt/bootstrap.min.js"></script>
+<script src="../js/app.js"></script>
+<script src="../js/ventas.js"></script>
+<script>
+    const sesionV = obtenerSesion();
+    if (sesionV) document.getElementById('avatar-inicial').textContent = sesionV.nombre.charAt(0).toUpperCase();
+    document.getElementById('btn-menu').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('abierto');
+        document.getElementById('sidebar-overlay').classList.toggle('visible');
+    });
+    document.getElementById('sidebar-overlay').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.remove('abierto');
+        document.getElementById('sidebar-overlay').classList.remove('visible');
+    });
+
+</script>
+</body>
+</html>

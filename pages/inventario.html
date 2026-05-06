@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario - TECNORIVAS</title>
+    <link rel="stylesheet" href="../bt/bootstrap.min.css">
+    <link rel="stylesheet" href="../bt-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/sweetalert2.all.min.js"></script>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="app-wrapper">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="bi bi-snow3"></i></div>
+            <div class="brand-text"><span class="brand-name">TECNORIVAS</span><span class="brand-sub">Sistema Admin</span></div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">Principal</div>
+            <a href="dashboard.html" class="nav-item-sidebar" id="nav-dashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+            <div class="sidebar-section">Módulos</div>
+            <a href="usuarios.html" class="nav-item-sidebar" id="nav-usuarios"><i class="bi bi-people-fill"></i> Usuarios</a>
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-compras">
+                <i class="bi bi-cart-fill"></i> Compras <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-compras">
+                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
+                <a href="compras.html#categorias" class="nav-sub-item"><i class="bi bi-tag"></i> Categorías</a>
+                <a href="compras.html#articulos" class="nav-sub-item"><i class="bi bi-box"></i> Artículos</a>
+                <a href="compras.html#compras" class="nav-sub-item"><i class="bi bi-receipt"></i> Compras</a>
+            </div>
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-ventas">
+                <i class="bi bi-bag-check-fill"></i> Ventas <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-ventas">
+                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-person-lines-fill"></i> Clientes</a>
+                <a href="ventas.html#cajas" class="nav-sub-item"><i class="bi bi-cash-stack"></i> Caja</a>
+                <a href="ventas.html#ventas" class="nav-sub-item"><i class="bi bi-bag-fill"></i> Ventas</a>
+            </div>
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-inventario">
+                <i class="bi bi-boxes"></i> Inventario <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-inventario">
+                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-clipboard2-data"></i> Stock</a>
+                <a href="inventario.html#movimientos" class="nav-sub-item"><i class="bi bi-arrow-left-right"></i> Movimientos</a>
+            </div>
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-presupuestos">
+                <i class="bi bi-file-earmark-text-fill"></i> Presupuestos <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-presupuestos">
+                <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
+                <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
+            </div>
+            <div class="sidebar-section">Reportes</div>
+            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes"><i class="bi bi-bar-chart-fill"></i> Reportes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="usuario-sidebar">
+                <div class="usuario-avatar" id="avatar-inicial">A</div>
+                <div class="usuario-info">
+                    <div class="usuario-nombre" id="nav-usuario-nombre">Cargando...</div>
+                    <div class="usuario-rol" id="nav-usuario-rol">...</div>
+                </div>
+                <button class="btn-logout" data-logout title="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="btn-menu-mobile" id="btn-menu"><i class="bi bi-list"></i></button>
+                <div>
+                    <div class="topbar-titulo">Inventario</div>
+                    <div class="topbar-breadcrumb">Inicio / Control de Inventario</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <!-- Stats -->
+            <div class="dashboard-grid mb-4">
+                <div class="stat-card azul">
+                    <div class="stat-icon azul"><i class="bi bi-box-seam"></i></div>
+                    <div class="stat-valor" id="stat-total-articulos">0</div>
+                    <div class="stat-label">Total artículos</div>
+                </div>
+                <div class="stat-card verde">
+                    <div class="stat-icon verde"><i class="bi bi-currency-dollar"></i></div>
+                    <div class="stat-valor" id="stat-valor-inventario">RD$ 0</div>
+                    <div class="stat-label">Valor del inventario</div>
+                </div>
+                <div class="stat-card rojo">
+                    <div class="stat-icon rojo"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div class="stat-valor" id="stat-stock-bajo">0</div>
+                    <div class="stat-label">Stock bajo</div>
+                </div>
+                <div class="stat-card dorado">
+                    <div class="stat-icon dorado"><i class="bi bi-arrow-left-right"></i></div>
+                    <div class="stat-valor" id="stat-movimientos">0</div>
+                    <div class="stat-label">Movimientos registrados</div>
+                </div>
+            </div>
+
+            <!-- Alerta stock bajo -->
+            <div class="alerta-stock d-none" id="alerta-stock-bajo"></div>
+
+
+            <!-- STOCK -->
+            <div id="panel-stock" class="card" style="border-radius:0 0 10px 10px;border-top:none;">
+                <div class="card-header">
+                    <div class="modulo-header">
+                        <h1 class="modulo-titulo">Stock Actual</h1>
+                        <div class="modulo-acciones">
+                            <button class="btn btn-outline-secondary" id="btn-exportar-stock"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar</button>
+                            <button class="btn btn-outline-secondary" id="btn-imprimir-stock"><i class="bi bi-printer me-1"></i>Imprimir</button>
+                            <div class="buscador-wrapper">
+                                <i class="bi bi-search"></i>
+                                <input type="text" class="buscador-input" id="buscador-stock" placeholder="Buscar artículo...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tabla-wrapper">
+                    <table class="table table-hover">
+                        <thead><tr><th>Artículo</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Stock Mín.</th><th>Valor Total</th><th>Estado</th></tr></thead>
+                        <tbody id="tabla-body-stock"></tbody>
+                    </table>
+                </div>
+                <div class="tabla-footer">
+                    <span id="contador-stock">0 artículo(s)</span>
+                    <ul class="pagination pagination-sm mb-0" id="paginacion-stock"></ul>
+                </div>
+            </div>
+
+            <!-- MOVIMIENTOS -->
+            <div id="panel-movimientos" class="card d-none" style="border-radius:0 0 10px 10px;border-top:none;">
+                <div class="card-header">
+                    <div class="modulo-header">
+                        <h1 class="modulo-titulo">Historial de Movimientos</h1>
+                        <div class="modulo-acciones">
+                            <button class="btn btn-outline-secondary" id="btn-exportar-movimientos"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar</button>
+                            <div class="buscador-wrapper">
+                                <i class="bi bi-search"></i>
+                                <input type="text" class="buscador-input" id="buscador-movimientos" placeholder="Buscar...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tabla-wrapper">
+                    <table class="table table-hover">
+                        <thead><tr><th>Fecha</th><th>Tipo</th><th>Artículo</th><th>Cantidad</th><th>Referencia</th></tr></thead>
+                        <tbody id="tabla-body-movimientos"></tbody>
+                    </table>
+                </div>
+                <div class="tabla-footer">
+                    <span id="contador-movimientos">0 movimiento(s)</span>
+                    <ul class="pagination pagination-sm mb-0" id="paginacion-movimientos"></ul>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="../bt/bootstrap.min.js"></script>
+<script src="../js/app.js"></script>
+<script src="../js/inventario.js"></script>
+<script>
+    const sesionI = obtenerSesion();
+    if (sesionI) document.getElementById('avatar-inicial').textContent = sesionI.nombre.charAt(0).toUpperCase();
+    document.getElementById('btn-menu').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('abierto');
+        document.getElementById('sidebar-overlay').classList.toggle('visible');
+    });
+    document.getElementById('sidebar-overlay').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.remove('abierto');
+        document.getElementById('sidebar-overlay').classList.remove('visible');
+    });
+
+</script>
+</body>
+</html>
