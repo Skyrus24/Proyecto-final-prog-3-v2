@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarBotonesNuevoVentas();
     configurarVenta();
     configurarCaja();
+    configurarExportarImprimirVentas();
 });
 
 
@@ -155,7 +156,16 @@ function guardar_clientes() {
         email: document.getElementById('cli-email').value.trim(),
         direccion: document.getElementById('cli-direccion').value.trim()
     };
+    // Validar rango de cédula
+    const numCedula = parseInt(obj.cedula);
+    if (isNaN(numCedula) || numCedula < 100000 || numCedula > 10000000) {
+        alertaError('La cédula debe ser un número entre 100,000 y 10,000,000.'); return;
+    }
     const lista = obtenerClientes();
+    // Validar cédula duplicada
+    if (lista.find(x => x.cedula === obj.cedula && x.id !== parseInt(id))) { alertaError('Ya existe un cliente con esa cédula.'); return; }
+    // Validar nombre duplicado
+    if (lista.find(x => x.nombre.toLowerCase() === obj.nombre.toLowerCase() && x.id !== parseInt(id))) { alertaError('Ya existe un cliente con ese nombre.'); return; }
     if (id) { const idx = lista.findIndex(x => x.id === parseInt(id)); lista[idx] = { ...lista[idx], ...obj }; }
     else { lista.push({ id: generarId(lista), ...obj }); }
     guardarClientes(lista);
@@ -330,7 +340,8 @@ function agregarItemVenta() {
     const artId = parseInt(document.getElementById('venta-articulo').value);
     const cant = parseInt(document.getElementById('venta-cantidad').value);
     const precio = parseFloat(document.getElementById('venta-precio').value);
-    if (!artId || !cant || !precio) { alertaError('Complete todos los campos del ítem.'); return; }
+    if (!artId || !cant || isNaN(precio)) { alertaError('Complete todos los campos del ítem.'); return; }
+    if (precio < 1) { alertaError('El precio debe ser mayor a 0.'); return; }
     const art = obtenerDatos('articulos_tecnorivas').find(a => a.id === artId);
     if (!art) return;
     const enDetalle = detalleVenta.filter(d => d.articuloId === artId).reduce((s, d) => s + d.cantidad, 0);
@@ -446,3 +457,22 @@ async function eliminar_ventas(id) {
     cargarTabVentas('ventas');
     alertaExito('Venta anulada.');
 }
+
+function configurarExportarImprimirVentas() {
+    ['clientes', 'ventas'].forEach(tab => {
+        const btnExp = document.getElementById(`btn-exportar-${tab}`);
+        const btnImp = document.getElementById(`btn-imprimir-${tab}`);
+        const btnPdf = document.getElementById(`btn-pdf-${tab}`);
+        const titulo = tab.charAt(0).toUpperCase() + tab.slice(1);
+        if (btnExp) btnExp.addEventListener('click', () => {
+            const cols = {
+                clientes: [{ key: 'cedula', label: 'Cédula' }, { key: 'nombre', label: 'Nombre' }, { key: 'telefono', label: 'Teléfono' }, { key: 'email', label: 'Email' }],
+                ventas: [{ key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' }, { key: 'total', label: 'Total' }, { key: 'estado', label: 'Estado' }]
+            };
+            exportarExcel(filteredVentas[tab], tab, cols[tab]);
+        });
+        if (btnImp) btnImp.addEventListener('click', () => imprimirTabla(titulo, `tabla-body-${tab}`));
+        if (btnPdf) btnPdf.addEventListener('click', () => generarPDF(titulo));
+    });
+}
+

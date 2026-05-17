@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reportes - TECNORIVAS</title>
+    <script>
+        if (!localStorage.getItem('sesion_tecnorivas')) { window.location.href = '../login.html'; }
+    </script>
     <link rel="stylesheet" href="../bt/bootstrap.min.css">
     <link rel="stylesheet" href="../bt-icons/bootstrap-icons.min.css">
     <link rel="stylesheet" href="../css/styles.css">
@@ -63,9 +66,16 @@
                 <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
             </div>
             <div class="sidebar-section">Reportes</div>
-            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes">
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-reportes">
                 <i class="bi bi-bar-chart-fill"></i> Reportes
+                <i class="bi bi-chevron-down nav-arrow"></i>
             </a>
+            <div class="nav-sub" id="sub-reportes">
+                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-boxes"></i> Inventario</a>
+                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-people-fill"></i> Clientes</a>
+                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
+                <a href="usuarios.html" class="nav-sub-item"><i class="bi bi-person-badge"></i> Usuarios</a>
+            </div>
         </nav>
         <div class="sidebar-footer">
             <div class="usuario-sidebar">
@@ -125,7 +135,7 @@
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-bag-fill me-2"></i>Ventas por Estado</span>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="exportarReporteVentas()"><i class="bi bi-download"></i> CSV</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="exportarReporteVentas()"><i class="bi bi-download"></i> Exportar a Excel</button>
                         </div>
                         <div class="card-body">
                             <div id="reporte-ventas-estados"></div>
@@ -138,7 +148,7 @@
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-cart-fill me-2"></i>Compras por Estado</span>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="exportarReporteCompras()"><i class="bi bi-download"></i> CSV</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="exportarReporteCompras()"><i class="bi bi-download"></i> Exportar a Excel</button>
                         </div>
                         <div class="card-body">
                             <div id="reporte-compras-estados"></div>
@@ -164,7 +174,7 @@
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-clipboard2-data-fill me-2"></i>Inventario Valorizado</span>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="exportarInventarioValoriz()"><i class="bi bi-download"></i> CSV</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="exportarInventarioValoriz()"><i class="bi bi-download"></i> Exportar a Excel</button>
                         </div>
                         <div class="tabla-wrapper">
                             <table class="table">
@@ -194,107 +204,6 @@
 
 <script src="../bt/bootstrap.min.js"></script>
 <script src="../js/app.js"></script>
-<script>
-    const sesionR = obtenerSesion();
-    if (sesionR) document.getElementById('avatar-inicial').textContent = sesionR.nombre.charAt(0).toUpperCase();
-    document.getElementById('btn-menu').addEventListener('click', () => {
-        document.getElementById('sidebar').classList.toggle('abierto');
-        document.getElementById('sidebar-overlay').classList.toggle('visible');
-    });
-    document.getElementById('sidebar-overlay').addEventListener('click', () => {
-        document.getElementById('sidebar').classList.remove('abierto');
-        document.getElementById('sidebar-overlay').classList.remove('visible');
-    });
-
-    function cargarReportes() {
-        const ventas = obtenerDatos('ventas_tecnorivas');
-        const compras = obtenerDatos('compras_tecnorivas');
-        const articulos = obtenerDatos('articulos_tecnorivas');
-        const clientes = obtenerDatos('clientes_tecnorivas');
-
-        const totalVentas = ventas.reduce((s, v) => s + v.total, 0);
-        const totalCompras = compras.reduce((s, c) => s + c.total, 0);
-        document.getElementById('r-total-ventas').textContent = formatearMoneda(totalVentas);
-        document.getElementById('r-total-compras').textContent = formatearMoneda(totalCompras);
-        document.getElementById('r-utilidad').textContent = formatearMoneda(totalVentas - totalCompras);
-        document.getElementById('r-total-clientes').textContent = clientes.length;
-
-        // Estados ventas
-        const estadosV = { completada: 0, pendiente: 0, anulada: 0 };
-        ventas.forEach(v => { if (estadosV[v.estado] !== undefined) estadosV[v.estado]++; });
-        document.getElementById('reporte-ventas-estados').innerHTML = Object.entries(estadosV).map(([k, v]) => `
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="badge ${k === 'completada' ? 'bg-success' : k === 'pendiente' ? 'bg-warning text-dark' : 'bg-danger'}">${k}</span>
-                <div class="flex-grow-1 mx-3">
-                    <div class="progress" style="height:8px;">
-                        <div class="progress-bar ${k === 'completada' ? 'bg-success' : k === 'pendiente' ? 'bg-warning' : 'bg-danger'}" style="width:${ventas.length ? (v/ventas.length*100).toFixed(0) : 0}%"></div>
-                    </div>
-                </div>
-                <strong>${v} (${ventas.length ? (v/ventas.length*100).toFixed(0) : 0}%)</strong>
-            </div>
-        `).join('');
-
-        // Estados compras
-        const estadosC = { pendiente: 0, pagado: 0, anulado: 0 };
-        compras.forEach(c => { if (estadosC[c.estado] !== undefined) estadosC[c.estado]++; });
-        document.getElementById('reporte-compras-estados').innerHTML = Object.entries(estadosC).map(([k, v]) => `
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="badge ${k === 'pagado' ? 'bg-success' : k === 'pendiente' ? 'bg-warning text-dark' : 'bg-danger'}">${k}</span>
-                <div class="flex-grow-1 mx-3">
-                    <div class="progress" style="height:8px;">
-                        <div class="progress-bar ${k === 'pagado' ? 'bg-success' : k === 'pendiente' ? 'bg-warning' : 'bg-danger'}" style="width:${compras.length ? (v/compras.length*100).toFixed(0) : 0}%"></div>
-                    </div>
-                </div>
-                <strong>${v} (${compras.length ? (v/compras.length*100).toFixed(0) : 0}%)</strong>
-            </div>
-        `).join('');
-
-        // Top artículos
-        const conteoArt = {};
-        ventas.forEach(v => v.detalle && v.detalle.forEach(d => {
-            if (!conteoArt[d.articuloId]) conteoArt[d.articuloId] = { nombre: d.nombre, cantidad: 0, total: 0 };
-            conteoArt[d.articuloId].cantidad += d.cantidad;
-            conteoArt[d.articuloId].total += d.subtotal;
-        }));
-        const topArts = Object.values(conteoArt).sort((a, b) => b.cantidad - a.cantidad).slice(0, 5);
-        const tbodyTop = document.getElementById('top-articulos-body');
-        tbodyTop.innerHTML = topArts.length ? topArts.map((a, i) => `<tr><td><strong>${i + 1}</strong></td><td>${a.nombre}</td><td>${a.cantidad}</td><td>${formatearMoneda(a.total)}</td></tr>`).join('') : '<tr><td colspan="4" class="text-center text-muted">Sin datos</td></tr>';
-
-        // Inventario valorizado
-        const tbodyInv = document.getElementById('inventario-valor-body');
-        const artValor = articulos.sort((a, b) => (b.stock * b.precio) - (a.stock * a.precio)).slice(0, 10);
-        tbodyInv.innerHTML = artValor.map(a => `<tr><td>${a.nombre}</td><td>${a.stock} ${a.unidad}</td><td>${formatearMoneda(a.precio)}</td><td><strong>${formatearMoneda(a.stock * a.precio)}</strong></td></tr>`).join('');
-
-        // Ventas recientes
-        const tbodyVR = document.getElementById('ventas-recientes-body');
-        const ventasRec = ventas.slice(-10).reverse();
-        tbodyVR.innerHTML = ventasRec.length ? ventasRec.map(v => {
-            const cli = clientes.find(c => c.id === v.clienteId);
-            return `<tr><td>${v.numero}</td><td>${formatearFecha(v.fecha)}</td><td>${cli ? cli.nombre : 'General'}</td><td>${formatearMoneda(v.total)}</td><td><span class="badge ${v.estado === 'completada' ? 'bg-success' : 'bg-warning text-dark'}">${v.estado}</span></td><td>${v.vendedor || '-'}</td></tr>`;
-        }).join('') : '<tr><td colspan="6" class="text-center text-muted">Sin ventas</td></tr>';
-    }
-
-    function exportarReporteVentas() {
-        exportarCSV(obtenerDatos('ventas_tecnorivas'), 'reporte_ventas', [
-            { key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' },
-            { key: 'total', label: 'Total' }, { key: 'estado', label: 'Estado' }, { key: 'vendedor', label: 'Vendedor' }
-        ]);
-    }
-    function exportarReporteCompras() {
-        exportarCSV(obtenerDatos('compras_tecnorivas'), 'reporte_compras', [
-            { key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' },
-            { key: 'total', label: 'Total' }, { key: 'estado', label: 'Estado' }
-        ]);
-    }
-    function exportarInventarioValoriz() {
-        const articulos = obtenerDatos('articulos_tecnorivas').map(a => ({ ...a, valor: a.stock * a.precio }));
-        exportarCSV(articulos, 'inventario_valorizado', [
-            { key: 'nombre', label: 'Artículo' }, { key: 'stock', label: 'Stock' },
-            { key: 'precio', label: 'Precio' }, { key: 'valor', label: 'Valor Total' }
-        ]);
-    }
-
-    document.addEventListener('DOMContentLoaded', cargarReportes);
-</script>
+<script src="../js/reportes.js"></script>
 </body>
 </html>

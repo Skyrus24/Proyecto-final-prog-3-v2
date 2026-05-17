@@ -181,6 +181,10 @@ function guardar_proveedores() {
         contacto: document.getElementById('prov-contacto').value.trim()
     };
     const lista = obtenerProveedores();
+    // Validar RNC duplicado
+    if (lista.find(x => x.rnc === obj.rnc && x.id !== parseInt(id))) { alertaError('Ya existe un proveedor con ese RNC.'); return; }
+    // Validar nombre duplicado
+    if (lista.find(x => x.nombre.toLowerCase() === obj.nombre.toLowerCase() && x.id !== parseInt(id))) { alertaError('Ya existe un proveedor con ese nombre.'); return; }
     if (id) {
         const idx = lista.findIndex(x => x.id === parseInt(id));
         lista[idx] = { ...lista[idx], ...obj };
@@ -218,6 +222,8 @@ function guardar_categorias() {
     const id = document.getElementById('cat-id').value;
     const obj = { nombre: document.getElementById('cat-nombre').value.trim(), descripcion: document.getElementById('cat-descripcion').value.trim() };
     const lista = obtenerCategorias();
+    // Validar nombre duplicado
+    if (lista.find(x => x.nombre.toLowerCase() === obj.nombre.toLowerCase() && x.id !== parseInt(id))) { alertaError('Ya existe una categoría con ese nombre.'); return; }
     if (id) { const idx = lista.findIndex(x => x.id === parseInt(id)); lista[idx] = { ...lista[idx], ...obj }; }
     else { lista.push({ id: generarId(lista), ...obj }); }
     guardarCategorias(lista);
@@ -268,7 +274,16 @@ function guardar_articulos() {
         stockMinimo: parseInt(document.getElementById('art-stock-min').value),
         unidad: document.getElementById('art-unidad').value.trim()
     };
+    // Validar código de barras obligatorio
+    if (!obj.codigo) { alertaError('El código de barras es obligatorio.'); return; }
+    // Validar precio mínimo 1
+    if (!obj.precio || obj.precio < 1) { alertaError('El precio debe ser mayor a 0.'); return; }
+    // Validar negativos en stock
+    if (obj.stock < 0) { alertaError('El stock no puede ser negativo.'); return; }
+    if (obj.stockMinimo < 0) { alertaError('El stock mínimo no puede ser negativo.'); return; }
     const lista = obtenerArticulos();
+    // Validar código de barras duplicado
+    if (lista.find(x => x.codigo && x.codigo === obj.codigo && x.id !== parseInt(id))) { alertaError('Ya existe un artículo con ese código de barras.'); return; }
     if (id) { const idx = lista.findIndex(x => x.id === parseInt(id)); lista[idx] = { ...lista[idx], ...obj }; }
     else { lista.push({ id: generarId(lista), ...obj }); }
     guardarArticulos(lista);
@@ -332,7 +347,8 @@ function agregarDetalleCompra() {
     const artId = parseInt(document.getElementById('det-articulo').value);
     const cant = parseInt(document.getElementById('det-cantidad').value);
     const precio = parseFloat(document.getElementById('det-precio').value);
-    if (!artId || !cant || !precio) { alertaError('Complete todos los campos del detalle.'); return; }
+    if (!artId || !cant || isNaN(precio)) { alertaError('Complete todos los campos del detalle.'); return; }
+    if (precio < 1) { alertaError('El precio debe ser mayor a 0.'); return; }
     const art = obtenerArticulos().find(a => a.id === artId);
     if (!art) return;
     const existe = detalleCompra.find(d => d.articuloId === artId);
@@ -439,6 +455,8 @@ function configurarExportarImprimir() {
     ['proveedores', 'categorias', 'articulos', 'compras'].forEach(tab => {
         const btnExp = document.getElementById(`btn-exportar-${tab}`);
         const btnImp = document.getElementById(`btn-imprimir-${tab}`);
+        const btnPdf = document.getElementById(`btn-pdf-${tab}`);
+        const titulo = tab.charAt(0).toUpperCase() + tab.slice(1);
         if (btnExp) btnExp.addEventListener('click', () => {
             const cols = {
                 proveedores: [{ key: 'nombre', label: 'Nombre' }, { key: 'rnc', label: 'RNC' }, { key: 'telefono', label: 'Teléfono' }],
@@ -446,8 +464,10 @@ function configurarExportarImprimir() {
                 articulos: [{ key: 'nombre', label: 'Artículo' }, { key: 'precio', label: 'Precio' }, { key: 'stock', label: 'Stock' }],
                 compras: [{ key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' }, { key: 'total', label: 'Total' }, { key: 'estado', label: 'Estado' }]
             };
-            exportarCSV(filteredData[tab], tab, cols[tab]);
+            exportarExcel(filteredData[tab], tab, cols[tab]);
         });
-        if (btnImp) btnImp.addEventListener('click', () => imprimirTabla(tab.charAt(0).toUpperCase() + tab.slice(1)));
+        if (btnImp) btnImp.addEventListener('click', () => imprimirTabla(titulo, `tabla-body-${tab}`));
+        if (btnPdf) btnPdf.addEventListener('click', () => generarPDF(titulo));
     });
 }
+

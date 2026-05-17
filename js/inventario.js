@@ -160,17 +160,25 @@ function verificarAlertas() {
 function configurarExportarInventario() {
     const btnExpStock = document.getElementById('btn-exportar-stock');
     const btnImpStock = document.getElementById('btn-imprimir-stock');
+    const btnPdfStock = document.getElementById('btn-pdf-stock');
     const btnExpMovs = document.getElementById('btn-exportar-movimientos');
+    const btnImpMovs = document.getElementById('btn-imprimir-movimientos');
+    const btnPdfMovs = document.getElementById('btn-pdf-movimientos');
 
-    if (btnExpStock) btnExpStock.addEventListener('click', () => exportarCSV(filteredInventario, 'inventario_stock', [
+    if (btnExpStock) btnExpStock.addEventListener('click', () => exportarExcel(filteredInventario, 'inventario_stock', [
         { key: 'nombre', label: 'Artículo' }, { key: 'precio', label: 'Precio' },
         { key: 'stock', label: 'Stock' }, { key: 'stockMinimo', label: 'Stock Mínimo' }, { key: 'unidad', label: 'Unidad' }
     ]));
 
-    if (btnImpStock) btnImpStock.addEventListener('click', () => imprimirTabla('Inventario - Stock'));
+    if (btnImpStock) btnImpStock.addEventListener('click', () => imprimirTabla('Stock Actual', 'tabla-body-stock'));
+    if (btnPdfStock) btnPdfStock.addEventListener('click', () => generarPDF('Inventario - Stock'));
 
-    if (btnExpMovs) btnExpMovs.addEventListener('click', () => exportarCSV(filteredMovimientos, 'movimientos', [
+    if (btnExpMovs) btnExpMovs.addEventListener('click', () => exportarExcel(filteredMovimientos, 'movimientos', [
         { key: 'fecha', label: 'Fecha' }, { key: 'tipo', label: 'Tipo' },
         { key: 'articuloId', label: 'ID Artículo' }, { key: 'cantidad', label: 'Cantidad' }, { key: 'referencia', label: 'Referencia' }
     ]));
+
+    if (btnImpMovs) btnImpMovs.addEventListener('click', () => imprimirTabla('Historial de Movimientos', 'tabla-body-movimientos'));
+    if (btnPdfMovs) btnPdfMovs.addEventListener('click', () => generarPDF('Historial de Movimientos'));
 }
+

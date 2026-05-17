@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - TECNORIVAS</title>
+    <script>
+        if (!localStorage.getItem('sesion_tecnorivas')) { window.location.href = '../login.html'; }
+    </script>
     <meta name="description" content="Panel de control - Sistema Administrativo TECNORIVAS">
     <link rel="stylesheet" href="../bt/bootstrap.min.css">
     <link rel="stylesheet" href="../bt-icons/bootstrap-icons.min.css">
@@ -76,9 +79,16 @@
             </div>
 
             <div class="sidebar-section">Reportes</div>
-            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes">
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-reportes">
                 <i class="bi bi-bar-chart-fill"></i> Reportes
+                <i class="bi bi-chevron-down nav-arrow"></i>
             </a>
+            <div class="nav-sub" id="sub-reportes">
+                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-boxes"></i> Inventario</a>
+                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-people-fill"></i> Clientes</a>
+                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
+                <a href="usuarios.html" class="nav-sub-item"><i class="bi bi-person-badge"></i> Usuarios</a>
+            </div>
         </nav>
 
         <div class="sidebar-footer">
@@ -219,78 +229,6 @@
 
 <script src="../bt/bootstrap.min.js"></script>
 <script src="../js/app.js"></script>
-<script>
-// Reloj
-function actualizarReloj() {
-    const el = document.getElementById('reloj');
-    if (el) el.textContent = new Date().toLocaleString('es-DO', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
-actualizarReloj();
-setInterval(actualizarReloj, 60000);
-
-// Sidebar mobile
-document.getElementById('btn-menu').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('abierto');
-    document.getElementById('sidebar-overlay').classList.toggle('visible');
-});
-document.getElementById('sidebar-overlay').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.remove('abierto');
-    document.getElementById('sidebar-overlay').classList.remove('visible');
-});
-
-// Avatar inicial
-const sesion = obtenerSesion();
-if (sesion) {
-    document.getElementById('welcome-nombre').textContent = sesion.nombre;
-    document.getElementById('avatar-inicial').textContent = sesion.nombre.charAt(0).toUpperCase();
-}
-
-// Stats Dashboard
-function cargarDashboard() {
-    const ventas = obtenerDatos('ventas_tecnorivas');
-    const compras = obtenerDatos('compras_tecnorivas');
-    const articulos = obtenerDatos('articulos_tecnorivas');
-    const stockBajos = articulos.filter(a => a.stock <= a.stockMinimo);
-    const clientes = obtenerDatos('clientes_tecnorivas');
-
-    const mesActual = new Date().getMonth();
-    const ventasMes = ventas.filter(v => new Date(v.fecha).getMonth() === mesActual);
-    const comprasMes = compras.filter(c => new Date(c.fecha).getMonth() === mesActual);
-
-    document.getElementById('stat-ventas-total').textContent = formatearMoneda(ventasMes.reduce((s, v) => s + v.total, 0));
-    document.getElementById('stat-compras-total').textContent = formatearMoneda(comprasMes.reduce((s, c) => s + c.total, 0));
-    document.getElementById('stat-articulos').textContent = articulos.length;
-    document.getElementById('stat-stock-bajo').textContent = stockBajos.length;
-
-    // Últimas ventas
-    const ultimasVentas = ventas.slice(-5).reverse();
-    const tbodyVentas = document.getElementById('ultimas-ventas-body');
-    if (ultimasVentas.length > 0) {
-        tbodyVentas.innerHTML = ultimasVentas.map(v => `
-            <tr>
-                <td>${v.numero}</td>
-                <td>${formatearFecha(v.fecha)}</td>
-                <td>${formatearMoneda(v.total)}</td>
-                <td><span class="badge ${v.estado === 'completada' ? 'bg-success' : 'bg-warning text-dark'}">${v.estado}</span></td>
-            </tr>
-        `).join('');
-    }
-
-    // Stock bajo
-    const tbodyStock = document.getElementById('stock-bajo-body');
-    if (stockBajos.length > 0) {
-        tbodyStock.innerHTML = stockBajos.map(a => `
-            <tr>
-                <td>${a.nombre}</td>
-                <td class="text-danger fw-bold">${a.stock} ${a.unidad}</td>
-                <td>${a.stockMinimo} ${a.unidad}</td>
-                <td><span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Stock bajo</span></td>
-            </tr>
-        `).join('');
-    }
-}
-
-document.addEventListener('DOMContentLoaded', cargarDashboard);
-</script>
+<script src="../js/dashboard.js"></script>
 </body>
 </html>

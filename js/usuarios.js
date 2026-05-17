@@ -20,10 +20,32 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarExportar();
     configurarImprimir();
     document.getElementById('btn-nuevo').addEventListener('click', abrirModalNuevo);
+
+    document.querySelectorAll('.toggle-pass').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const input = e.currentTarget.previousElementSibling;
+            const icon = e.currentTarget.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        });
+    });
 });
 
 function cargarTablaUsuarios(filtro = '') {
+    const sesion = obtenerSesion();
     let usuarios = obtenerUsuarios();
+    
+    if (sesion.rol !== 'admin') {
+        usuarios = usuarios.filter(u => u.id === sesion.id);
+        const btnNuevo = document.getElementById('btn-nuevo');
+        if (btnNuevo) btnNuevo.style.display = 'none';
+    }
+
     if (filtro) {
         const f = filtro.toLowerCase();
         usuarios = usuarios.filter(u =>
@@ -71,7 +93,15 @@ function abrirModalNuevo() {
     document.getElementById('form-usuario').reset();
     document.getElementById('usuario-id').value = '';
     document.getElementById('contrasena').required = true;
+    document.getElementById('contrasena-conf').required = true;
     document.getElementById('contrasena-hint').classList.remove('d-none');
+    document.getElementById('contrasena-help').classList.add('d-none');
+    
+    document.getElementById('cedula').disabled = false;
+    document.getElementById('nombre').disabled = false;
+    document.getElementById('celular').disabled = false;
+    document.getElementById('rol').disabled = false;
+
     new bootstrap.Modal(document.getElementById('modal-usuario')).show();
 }
 
@@ -85,9 +115,26 @@ function abrirEditar(id) {
     document.getElementById('celular').value = u.celular;
     document.getElementById('usuario-nombre').value = u.usuario;
     document.getElementById('contrasena').value = '';
+    document.getElementById('contrasena-conf').value = '';
     document.getElementById('contrasena').required = false;
+    document.getElementById('contrasena-conf').required = false;
     document.getElementById('contrasena-hint').classList.add('d-none');
+    document.getElementById('contrasena-help').classList.remove('d-none');
     document.getElementById('rol').value = u.rol;
+
+    const sesion = obtenerSesion();
+    if (sesion.rol !== 'admin') {
+        document.getElementById('cedula').disabled = true;
+        document.getElementById('nombre').disabled = true;
+        document.getElementById('celular').disabled = true;
+        document.getElementById('rol').disabled = true;
+    } else {
+        document.getElementById('cedula').disabled = false;
+        document.getElementById('nombre').disabled = false;
+        document.getElementById('celular').disabled = false;
+        document.getElementById('rol').disabled = false;
+    }
+
     new bootstrap.Modal(document.getElementById('modal-usuario')).show();
 }
 
@@ -103,16 +150,35 @@ function guardarUsuario() {
     const nombre = document.getElementById('nombre').value.trim();
     const celular = document.getElementById('celular').value.trim();
     const usuario = document.getElementById('usuario-nombre').value.trim();
-    const contrasena = document.getElementById('contrasena').value.trim();
+    const contrasena = document.getElementById('contrasena').value;
+    const contrasenaConf = document.getElementById('contrasena-conf').value;
     const rol = document.getElementById('rol').value;
     const usuarios = obtenerUsuarios();
 
     if (usuarios.find(u => u.cedula === cedula && u.id !== parseInt(id))) { alertaError('Ya existe un usuario con esa cédula.'); return; }
     if (usuarios.find(u => u.usuario === usuario && u.id !== parseInt(id))) { alertaError('El nombre de usuario ya está en uso.'); return; }
 
+    const passRegex = /^(?=(.*[A-Z]){2,})(?=(.*[a-z]){2,})(?=(.*\d){2,})(?=(.*[\W_]){2,}).{8,}$/;
+
+    if (contrasena) {
+        if (!passRegex.test(contrasena)) {
+            alertaError('La contraseña debe tener mínimo 8 caracteres, 2 mayúsculas, 2 minúsculas, 2 números y 2 caracteres especiales.');
+            return;
+        }
+        if (contrasena !== contrasenaConf) {
+            alertaError('Las contraseñas no coinciden.');
+            return;
+        }
+    }
+
     if (id) {
         const idx = usuarios.findIndex(u => u.id === parseInt(id));
-        usuarios[idx] = { ...usuarios[idx], cedula, nombre, celular, usuario, rol };
+        const sesion = obtenerSesion();
+        if (sesion.rol === 'admin') {
+            usuarios[idx] = { ...usuarios[idx], cedula, nombre, celular, usuario, rol };
+        } else {
+            usuarios[idx].usuario = usuario;
+        }
         if (contrasena) usuarios[idx].contrasena = contrasena;
     } else {
         if (!contrasena) { alertaError('La contraseña es obligatoria.'); return; }
@@ -138,13 +204,17 @@ async function eliminarUsuario(id) {
 
 function configurarExportar() {
     const btn = document.getElementById('btn-exportar');
-    if (btn) btn.addEventListener('click', () => exportarCSV(usuariosFiltered, 'usuarios', [
+    if (btn) btn.addEventListener('click', () => exportarExcel(usuariosFiltered, 'usuarios', [
         { key: 'cedula', label: 'Cédula' }, { key: 'nombre', label: 'Nombre' },
         { key: 'celular', label: 'Celular' }, { key: 'usuario', label: 'Usuario' }, { key: 'rol', label: 'Rol' }
     ]));
 }
 
 function configurarImprimir() {
-    const btn = document.getElementById('btn-imprimir');
-    if (btn) btn.addEventListener('click', () => imprimirTabla('Usuarios'));
+    const btnImp = document.getElementById('btn-imprimir');
+    if (btnImp) btnImp.addEventListener('click', () => imprimirTabla('Usuarios'));
+
+    const btnPdf = document.getElementById('btn-pdf');
+    if (btnPdf) btnPdf.addEventListener('click', () => generarPDF('Usuarios'));
 }
+

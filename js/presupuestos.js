@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarBusquedoresPresupuestos();
     configurarBotonesNuevosPresupuestos();
     configurarFormulariosPresupuestos();
+    configurarExportarImprimirPresupuestos();
 });
 
 function cargarTabPresupuestos(tab) {
@@ -185,6 +186,12 @@ function guardarCategoriaPres() {
         nombre: document.getElementById('cat-nombre').value.trim(),
         descripcion: document.getElementById('cat-descripcion').value.trim()
     };
+    const lista = obtenerDatos(CLAVE_CATEGORIAS_PRES);
+    // Validar nombre duplicado
+    if (lista.find(x => x.nombre.toLowerCase() === cat.nombre.toLowerCase() && x.id !== parseInt(id))) {
+        alertaError('Ya existe una categoría de presupuesto con ese nombre.');
+        return;
+    }
     if (id) {
         actualizarDato(CLAVE_CATEGORIAS_PRES, parseInt(id), cat);
         Swal.fire('Actualizado', 'Categoría actualizada exitosamente', 'success');
@@ -255,8 +262,8 @@ function agregarItemPresupuesto() {
     const iva = parseFloat(option.dataset.iva || 10);
     const cant = parseFloat(document.getElementById('pres-item-cant').value);
 
-    if (isNaN(cant) || cant <= 0 || isNaN(precio) || precio < 0) {
-        Swal.fire({ icon: 'warning', title: 'Atención', text: 'Ingrese una cantidad válida.' });
+    if (isNaN(cant) || cant <= 0 || isNaN(precio) || precio < 1) {
+        Swal.fire({ icon: 'warning', title: 'Atención', text: 'Ingrese una cantidad y precio válidos.' });
         return;
     }
 
@@ -418,3 +425,22 @@ window.eliminarDato = function(clave, id, callbackRender) {
         }
     });
 };
+
+function configurarExportarImprimirPresupuestos() {
+    ['categorias', 'lista'].forEach(tab => {
+        const btnExp = document.getElementById(`btn-exportar-${tab}`);
+        const btnImp = document.getElementById(`btn-imprimir-${tab}`);
+        const btnPdf = document.getElementById(`btn-pdf-${tab}`);
+        const titulo = tab === 'categorias' ? 'Categorías de Trabajos' : 'Presupuestos';
+        if (btnExp) btnExp.addEventListener('click', () => {
+            const cols = {
+                categorias: [{ key: 'nombre', label: 'Nombre' }, { key: 'descripcion', label: 'Descripción' }],
+                lista: [{ key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' }, { key: 'clienteNombre', label: 'Cliente' }, { key: 'categoriaNombre', label: 'Categoría' }, { key: 'total', label: 'Total' }, { key: 'estado', label: 'Estado' }]
+            };
+            exportarExcel(filteredPresupuestos[tab], tab, cols[tab]);
+        });
+        if (btnImp) btnImp.addEventListener('click', () => imprimirTabla(titulo, `tabla-body-${tab}`));
+        if (btnPdf) btnPdf.addEventListener('click', () => generarPDF(titulo));
+    });
+}
+

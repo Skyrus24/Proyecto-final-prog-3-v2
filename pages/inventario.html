@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario - TECNORIVAS</title>
+    <script>
+        if (!localStorage.getItem('sesion_tecnorivas')) { window.location.href = '../login.html'; }
+    </script>
     <link rel="stylesheet" href="../bt/bootstrap.min.css">
     <link rel="stylesheet" href="../bt-icons/bootstrap-icons.min.css">
     <link rel="stylesheet" href="../css/styles.css">
@@ -54,7 +57,16 @@
                 <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
             </div>
             <div class="sidebar-section">Reportes</div>
-            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes"><i class="bi bi-bar-chart-fill"></i> Reportes</a>
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-reportes">
+                <i class="bi bi-bar-chart-fill"></i> Reportes
+                <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-reportes">
+                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-boxes"></i> Inventario</a>
+                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-people-fill"></i> Clientes</a>
+                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
+                <a href="usuarios.html" class="nav-sub-item"><i class="bi bi-person-badge"></i> Usuarios</a>
+            </div>
         </nav>
         <div class="sidebar-footer">
             <div class="usuario-sidebar">
@@ -114,11 +126,15 @@
                     <div class="modulo-header">
                         <h1 class="modulo-titulo">Stock Actual</h1>
                         <div class="modulo-acciones">
-                            <button class="btn btn-outline-secondary" id="btn-exportar-stock"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar</button>
-                            <button class="btn btn-outline-secondary" id="btn-imprimir-stock"><i class="bi bi-printer me-1"></i>Imprimir</button>
-                            <div class="buscador-wrapper">
+                            <button class="btn btn-info text-white" id="btn-imprimir-stock"><i class="bi bi-printer me-1"></i>Imprimir</button>
+                            <button class="btn btn-success" id="btn-exportar-stock"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
+                            <button class="btn btn-danger" id="btn-pdf-stock"><i class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
+                            <div class="d-flex align-items-center ms-2">
+                                <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
+                                <div class="buscador-wrapper">
                                 <i class="bi bi-search"></i>
                                 <input type="text" class="buscador-input" id="buscador-stock" placeholder="Buscar artículo...">
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -141,10 +157,15 @@
                     <div class="modulo-header">
                         <h1 class="modulo-titulo">Historial de Movimientos</h1>
                         <div class="modulo-acciones">
-                            <button class="btn btn-outline-secondary" id="btn-exportar-movimientos"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar</button>
-                            <div class="buscador-wrapper">
+                            <button class="btn btn-info text-white" id="btn-imprimir-movimientos"><i class="bi bi-printer me-1"></i>Imprimir</button>
+                            <button class="btn btn-success" id="btn-exportar-movimientos"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
+                            <button class="btn btn-danger" id="btn-pdf-movimientos"><i class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
+                            <div class="d-flex align-items-center ms-2">
+                                <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
+                                <div class="buscador-wrapper">
                                 <i class="bi bi-search"></i>
                                 <input type="text" class="buscador-input" id="buscador-movimientos" placeholder="Buscar...">
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -167,18 +188,21 @@
 <script src="../bt/bootstrap.min.js"></script>
 <script src="../js/app.js"></script>
 <script src="../js/inventario.js"></script>
-<script>
-    const sesionI = obtenerSesion();
-    if (sesionI) document.getElementById('avatar-inicial').textContent = sesionI.nombre.charAt(0).toUpperCase();
-    document.getElementById('btn-menu').addEventListener('click', () => {
-        document.getElementById('sidebar').classList.toggle('abierto');
-        document.getElementById('sidebar-overlay').classList.toggle('visible');
-    });
-    document.getElementById('sidebar-overlay').addEventListener('click', () => {
-        document.getElementById('sidebar').classList.remove('abierto');
-        document.getElementById('sidebar-overlay').classList.remove('visible');
-    });
 
-</script>
+
+
+
+
+
+
+
+
+
+
+
+
 </body>
 </html>
+
+
+

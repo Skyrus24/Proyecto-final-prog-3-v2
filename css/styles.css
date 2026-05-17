@@ -455,6 +455,27 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-outline-primario:hover { background: var(--primario); color: white; }
 
+.btn-info {
+    background: var(--info);
+    color: white;
+    border: none;
+}
+.btn-info:hover { background: var(--primario-claro); color: white; }
+
+.btn-success {
+    background: var(--success);
+    color: white;
+    border: none;
+}
+.btn-success:hover { background: #059669; color: white; }
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+    border: none;
+}
+.btn-danger:hover { background: #dc2626; color: white; }
+
 /* Panel fix: sin tabs encima, restaurar borde superior */
 [id^="panel-"].card {
     border-radius: var(--radio) !important;

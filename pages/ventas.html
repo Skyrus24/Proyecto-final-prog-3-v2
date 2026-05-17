@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ventas - TECNORIVAS</title>
+    <script>
+        if (!localStorage.getItem('sesion_tecnorivas')) { window.location.href = '../login.html'; }
+    </script>
     <link rel="stylesheet" href="../bt/bootstrap.min.css">
     <link rel="stylesheet" href="../bt-icons/bootstrap-icons.min.css">
     <link rel="stylesheet" href="../css/styles.css">
@@ -54,7 +57,16 @@
                 <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
             </div>
             <div class="sidebar-section">Reportes</div>
-            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes"><i class="bi bi-bar-chart-fill"></i> Reportes</a>
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-reportes">
+                <i class="bi bi-bar-chart-fill"></i> Reportes
+                <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-reportes">
+                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-boxes"></i> Inventario</a>
+                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-people-fill"></i> Clientes</a>
+                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
+                <a href="usuarios.html" class="nav-sub-item"><i class="bi bi-person-badge"></i> Usuarios</a>
+            </div>
         </nav>
         <div class="sidebar-footer">
             <div class="usuario-sidebar">
@@ -87,11 +99,16 @@
                     <div class="modulo-header">
                         <h1 class="modulo-titulo">Clientes</h1>
                         <div class="modulo-acciones">
-                            <button class="btn btn-primario" id="btn-nuevo-clientes"><i class="bi bi-person-plus me-1"></i>Nuevo</button>
-                            <button class="btn btn-outline-secondary" id="btn-exportar-clientes"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar</button>
-                            <div class="buscador-wrapper">
+                            <button class="btn btn-info text-white" id="btn-imprimir-clientes"><i class="bi bi-printer me-1"></i>Imprimir</button>
+                            <button class="btn btn-success" id="btn-exportar-clientes"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
+                            <button class="btn btn-danger" id="btn-pdf-clientes"><i class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
+                            <button class="btn btn-primario" id="btn-nuevo-clientes"><i class="bi bi-person-plus me-1"></i>Nuevo cliente</button>
+                            <div class="d-flex align-items-center ms-2">
+                                <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
+                                <div class="buscador-wrapper">
                                 <i class="bi bi-search"></i>
                                 <input type="text" class="buscador-input" id="buscador-clientes" placeholder="Buscar cliente...">
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -114,11 +131,16 @@
                     <div class="modulo-header">
                         <h1 class="modulo-titulo">Registro de Ventas</h1>
                         <div class="modulo-acciones">
+                            <button class="btn btn-info text-white" id="btn-imprimir-ventas"><i class="bi bi-printer me-1"></i>Imprimir</button>
+                            <button class="btn btn-success" id="btn-exportar-ventas"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
+                            <button class="btn btn-danger" id="btn-pdf-ventas"><i class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
                             <button class="btn btn-primario" id="btn-nueva-venta"><i class="bi bi-bag-plus me-1"></i>Nueva Venta</button>
-                            <button class="btn btn-outline-secondary" id="btn-exportar-ventas"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar</button>
-                            <div class="buscador-wrapper">
+                            <div class="d-flex align-items-center ms-2">
+                                <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
+                                <div class="buscador-wrapper">
                                 <i class="bi bi-search"></i>
                                 <input type="text" class="buscador-input" id="buscador-ventas" placeholder="Buscar venta...">
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -176,7 +198,7 @@
                 <div class="modal-body">
                     <input type="hidden" id="cli-id">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label">Cédula/RNC *</label><input type="text" class="form-control" id="cli-cedula" required></div>
+                        <div class="col-md-6"><label class="form-label">Cédula/RNC *</label><input type="number" class="form-control" id="cli-cedula" min="100000" max="10000000" required></div>
                         <div class="col-md-6"><label class="form-label">Teléfono</label><input type="text" class="form-control" id="cli-telefono"></div>
                         <div class="col-12"><label class="form-label">Nombre *</label><input type="text" class="form-control" id="cli-nombre" required></div>
                         <div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" id="cli-email"></div>
@@ -232,12 +254,12 @@
                     <h6 class="fw-bold mb-2">Agregar Productos</h6>
                     <div class="row g-2 align-items-end mb-3">
                         <div class="col-md-4"><label class="form-label">Artículo</label><select class="form-select form-select-sm" id="venta-articulo"><option value="">-- Seleccionar --</option></select></div>
-                        <div class="col-md-2"><label class="form-label">Stock</label><input type="number" class="form-control form-control-sm bg-light" id="venta-stock-actual" readonly></div>
+                        <div class="col-md-2"><label class="form-label">Stock</label><input type="number" min="0" class="form-control form-control-sm bg-light" id="venta-stock-actual" readonly></div>
                         <div class="col-md-2"><label class="form-label">Cantidad</label><input type="number" class="form-control form-control-sm" id="venta-cantidad" min="1" value="1"></div>
                         <div class="col-md-3">
                             <label class="form-label">Precio unit.</label>
                             <div class="input-group input-group-sm">
-                                <input type="number" class="form-control" id="venta-precio" min="0" step="100">
+                                <input type="number" class="form-control" id="venta-precio" min="1">
                                 <button class="btn btn-outline-secondary d-none" type="button" id="btn-unlock-precio" title="Autorizar cambio">
                                     <i class="bi bi-lock-fill" id="icon-lock-precio"></i>
                                 </button>
@@ -265,18 +287,21 @@
 <script src="../bt/bootstrap.min.js"></script>
 <script src="../js/app.js"></script>
 <script src="../js/ventas.js"></script>
-<script>
-    const sesionV = obtenerSesion();
-    if (sesionV) document.getElementById('avatar-inicial').textContent = sesionV.nombre.charAt(0).toUpperCase();
-    document.getElementById('btn-menu').addEventListener('click', () => {
-        document.getElementById('sidebar').classList.toggle('abierto');
-        document.getElementById('sidebar-overlay').classList.toggle('visible');
-    });
-    document.getElementById('sidebar-overlay').addEventListener('click', () => {
-        document.getElementById('sidebar').classList.remove('abierto');
-        document.getElementById('sidebar-overlay').classList.remove('visible');
-    });
 
-</script>
+
+
+
+
+
+
+
+
+
+
+
+
 </body>
 </html>
+
+
+
