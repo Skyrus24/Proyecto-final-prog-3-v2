@@ -394,6 +394,15 @@ function alertaInfo(msg) { Swal.fire({ icon: 'info', title: 'Información', text
 function alertaAdvertencia(msg) { Swal.fire({ icon: 'warning', title: 'Atención', text: msg }); }
 
 async function confirmarEliminar(nombre) {
+    const sesion = obtenerSesion();
+    if (!sesion || sesion.rol !== 'admin') {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Acceso Denegado',
+            text: 'Tu rol de Vendedor no tiene permisos para eliminar registros.'
+        });
+        return false;
+    }
     const result = await Swal.fire({
         title: '¿Eliminar registro?',
         html: `Se eliminará: <strong>${nombre}</strong><br>Esta acción no se puede deshacer.`,
