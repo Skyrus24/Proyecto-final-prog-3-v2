@@ -78,9 +78,11 @@ function renderFilaVentas(tab, lista, cont) {
 }
 
 function filaHTMLVentas(tab, item) {
+    const sesion = obtenerSesion();
+    const esAdmin = sesion && sesion.rol === 'admin';
     const acciones = `
         <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirEditar_${tab}(${item.id})"><i class="bi bi-pencil-square"></i></button>
-        <button class="btn btn-sm btn-outline-danger" onclick="eliminar_${tab}(${item.id})"><i class="bi bi-trash3"></i></button>
+        ${esAdmin ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminar_${tab}(${item.id})"><i class="bi bi-trash3"></i></button>` : ''}
     `;
     switch (tab) {
         case 'clientes':
@@ -91,7 +93,7 @@ function filaHTMLVentas(tab, item) {
             return `<td>${item.numero}</td><td>${formatearFecha(item.fecha)}</td><td>${cli ? cli.nombre : '-'}</td><td>${formatearMoneda(item.total)}</td><td><span class="badge ${est[item.estado] || 'bg-secondary'}">${item.estado}</span></td><td>
                 <button class="btn btn-sm btn-outline-info me-1" onclick="verVenta(${item.id})"><i class="bi bi-eye"></i></button>
                 <button class="btn btn-sm btn-outline-warning me-1" onclick="generarComprobante(${item.id})"><i class="bi bi-receipt"></i></button>
-                <button class="btn btn-sm btn-outline-danger" onclick="eliminar_ventas(${item.id})"><i class="bi bi-x-circle"></i></button>
+                ${esAdmin ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminar_ventas(${item.id})"><i class="bi bi-x-circle"></i></button>` : ''}
             </td>`;
         case 'cajas':
             const estadoCaja = item.abierta ? '<span class="badge bg-success">Abierta</span>' : '<span class="badge bg-danger">Cerrada</span>';

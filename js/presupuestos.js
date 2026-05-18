@@ -162,6 +162,8 @@ function cargarItemsPorCategoria(catId) {
    CATEGORÍAS DE PRESUPUESTOS
 ========================================= */
 function renderFilaCategoriasPres(lista, tbody) {
+    const sesion = obtenerSesion();
+    const esAdmin = sesion && sesion.rol === 'admin';
     if (lista.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No hay categorías registradas</td></tr>';
     } else {
@@ -172,7 +174,7 @@ function renderFilaCategoriasPres(lista, tbody) {
                     <td>${cat.descripcion || '-'}</td>
                     <td>
                         <button class="btn-icon btn-edit" onclick="editarCategoriaPres(${cat.id})" title="Editar"><i class="bi bi-pencil"></i></button>
-                        <button class="btn-icon btn-delete" onclick="eliminarDato('${CLAVE_CATEGORIAS_PRES}', ${cat.id}, () => cargarTabPresupuestos('categorias'))" title="Eliminar"><i class="bi bi-trash"></i></button>
+                        ${esAdmin ? `<button class="btn-icon btn-delete" onclick="eliminarDato('${CLAVE_CATEGORIAS_PRES}', ${cat.id}, () => cargarTabPresupuestos('categorias'))" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
                     </td>
                 </tr>
             `);
@@ -346,6 +348,8 @@ function registrarPresupuesto() {
 }
 
 function renderFilaListaPresupuestos(lista, tbody) {
+    const sesion = obtenerSesion();
+    const esAdmin = sesion && sesion.rol === 'admin';
     if (lista.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay presupuestos registrados</td></tr>';
     } else {
@@ -361,7 +365,7 @@ function renderFilaListaPresupuestos(lista, tbody) {
                     <td><span class="badge ${badgeColor}">${p.estado.toUpperCase()}</span></td>
                     <td>
                         <button class="btn-icon btn-edit" onclick="verPresupuesto(${p.id})" title="Ver Detalle"><i class="bi bi-eye"></i></button>
-                        <button class="btn-icon btn-delete" onclick="eliminarDato('${CLAVE_PRESUPUESTOS}', ${p.id}, () => cargarTabPresupuestos('lista'))" title="Eliminar"><i class="bi bi-trash"></i></button>
+                        ${esAdmin ? `<button class="btn-icon btn-delete" onclick="eliminarDato('${CLAVE_PRESUPUESTOS}', ${p.id}, () => cargarTabPresupuestos('lista'))" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
                     </td>
                 </tr>
             `);

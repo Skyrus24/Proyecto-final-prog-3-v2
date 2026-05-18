@@ -93,9 +93,11 @@ function renderFila(tab, lista, cont) {
 }
 
 function filaHTML(tab, item) {
+    const sesion = obtenerSesion();
+    const esAdmin = sesion && sesion.rol === 'admin';
     const acciones = `
         <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirEditar_${tab}(${item.id})" title="Editar"><i class="bi bi-pencil-square"></i></button>
-        <button class="btn btn-sm btn-outline-danger" onclick="eliminar_${tab}(${item.id})" title="Eliminar"><i class="bi bi-trash3"></i></button>
+        ${esAdmin ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminar_${tab}(${item.id})" title="Eliminar"><i class="bi bi-trash3"></i></button>` : ''}
     `;
     switch (tab) {
         case 'proveedores':
@@ -111,7 +113,7 @@ function filaHTML(tab, item) {
             const estadoBadge = { pendiente: 'bg-warning text-dark', pagado: 'bg-success', anulado: 'bg-danger' };
             return `<td>${item.numero}</td><td>${formatearFecha(item.fecha)}</td><td>${prov ? prov.nombre : '-'}</td><td>${formatearMoneda(item.total)}</td><td><span class="badge ${estadoBadge[item.estado] || 'bg-secondary'}">${item.estado}</span></td><td>
                 <button class="btn btn-sm btn-outline-info me-1" onclick="verCompra(${item.id})" title="Ver"><i class="bi bi-eye"></i></button>
-                <button class="btn btn-sm btn-outline-danger" onclick="eliminar_compras(${item.id})" title="Anular"><i class="bi bi-x-circle"></i></button>
+                ${esAdmin ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminar_compras(${item.id})" title="Anular"><i class="bi bi-x-circle"></i></button>` : ''}
             </td>`;
     }
     return '';
