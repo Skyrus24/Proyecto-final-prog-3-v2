@@ -227,9 +227,51 @@ function generarPDF(titulo) {
 }
 
 function _crearPDF(titulo) {
-    const contenido = document.getElementById('tabla-body') || document.querySelector('tbody');
-    const tabla = contenido ? contenido.closest('table') : null;
-    if (!tabla) { alertaError('No hay tabla para exportar'); return; }
+    let tablaOriginal = null;
+    
+    // Primero, buscar tabla en una pestaña activa si existen pestañas
+    const activeTab = document.querySelector('.tab-pane.active.show');
+    if (activeTab) {
+        tablaOriginal = activeTab.querySelector('table');
+    }
+    
+    // Si no hay pestaña activa, buscar la primera tabla que no esté oculta
+    if (!tablaOriginal) {
+        const tablas = document.querySelectorAll('table:not(.d-none)');
+        for (let t of tablas) {
+            if (t.offsetParent !== null) { // visible
+                tablaOriginal = t;
+                break;
+            }
+        }
+    }
+    
+    if (!tablaOriginal) { 
+        alertaError('No hay tabla visible para exportar'); 
+        return; 
+    }
+
+    // Clonar la tabla para no afectar la vista
+    const tablaClon = tablaOriginal.cloneNode(true);
+    
+    // Eliminar columnas de 'Acción'
+    const ths = tablaClon.querySelectorAll('th');
+    let indexAccion = -1;
+    ths.forEach((th, idx) => {
+        if (th.textContent.trim().toLowerCase().includes('acción') || 
+            th.textContent.trim().toLowerCase().includes('acciones')) {
+            indexAccion = idx;
+            th.remove();
+        }
+    });
+    
+    if (indexAccion !== -1) {
+        const trs = tablaClon.querySelectorAll('tbody tr');
+        trs.forEach(tr => {
+            const tds = tr.querySelectorAll('td');
+            if (tds[indexAccion]) tds[indexAccion].remove();
+        });
+    }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'pt', 'a4');
@@ -251,7 +293,7 @@ function _crearPDF(titulo) {
     doc.text(`Fecha y hora: ${new Date().toLocaleString('es-DO')}`, doc.internal.pageSize.width - 40, 80, { align: 'right' });
 
     doc.autoTable({
-        html: tabla,
+        html: tablaClon,
         startY: 100,
         theme: 'striped',
         headStyles: { fillColor: [30, 58, 95] },
