@@ -126,9 +126,37 @@ function configurarFormulariosPresupuestos() {
     });
 
     const formPres = document.getElementById('form-presupuesto');
-    if (formPres) formPres.addEventListener('submit', e => {
-        e.preventDefault();
-        registrarPresupuesto();
+    if (formPres) {
+        formPres.addEventListener('submit', (e) => { e.preventDefault(); registrarPresupuesto(); });
+    }
+
+    const condicionSelect = document.getElementById('pres-condicion');
+    if (condicionSelect) {
+        condicionSelect.addEventListener('change', (e) => {
+            const divCuotas = document.getElementById('div-pres-cuotas');
+            const inputCuotas = document.getElementById('pres-cuotas');
+            if (e.target.value === 'credito') {
+                divCuotas.classList.remove('d-none');
+                inputCuotas.required = true;
+            } else {
+                divCuotas.classList.add('d-none');
+                inputCuotas.required = false;
+            }
+        });
+    }
+
+    const formCobrarPres = document.getElementById('form-cobrar-presupuesto');
+    if (formCobrarPres) formCobrarPres.addEventListener('submit', procesarCobroPresupuesto);
+    
+    document.getElementById('cobro-pres-condicion')?.addEventListener('change', (e) => {
+        const divCuotas = document.getElementById('div-cobro-cuotas');
+        if (e.target.value === 'credito') {
+            divCuotas.classList.remove('d-none');
+            document.getElementById('cobro-pres-cuotas').required = true;
+        } else {
+            divCuotas.classList.add('d-none');
+            document.getElementById('cobro-pres-cuotas').required = false;
+        }
     });
 
     const selectCat = document.getElementById('pres-categoria');
@@ -494,6 +522,9 @@ function registrarPresupuesto() {
     const numero = `P-${String(maxNum + 1).padStart(4, '0')}`;
     const total = detallePresupuesto.reduce((s, i) => s + i.subtotal, 0);
 
+    const condicion = document.getElementById('pres-condicion').value;
+    const cuotas = condicion === 'credito' ? parseInt(document.getElementById('pres-cuotas').value) : 1;
+
     const nuevoPres = {
         numero,
         fecha: document.getElementById('pres-fecha').value,
@@ -501,6 +532,9 @@ function registrarPresupuesto() {
         clienteNombre: clienteObj ? clienteObj.nombre : 'Desconocido',
         categoriaId: parseInt(catId),
         categoriaNombre: catObj ? catObj.nombre : 'General',
+        condicion: condicion,
+        cantidadCuotas: cuotas,
+        planPagos: [],
         detalle: [...detallePresupuesto],
         total,
         estado: 'pendiente', // pendiente, aprobado, rechazado, cobrado
@@ -614,12 +648,10 @@ window.cambiarEstadoPresupuesto = async function(id, nuevoEstado) {
     alertaExito(`Presupuesto actualizado a ${nuevoEstado}.`);
 };
 
-window.cobrarPresupuesto = async function(id) {
+window.cobrarPresupuesto = function(id) {
     const presupuestos = obtenerDatos(CLAVE_PRESUPUESTOS);
-    const idx = presupuestos.findIndex(p => p.id === id);
-    if (idx === -1) return;
-    
-    const p = presupuestos[idx];
+    const p = presupuestos.find(x => x.id === id);
+    if (!p) return;
     
     const cajas = obtenerDatos('cajas_tecnorivas');
     const idxCaja = cajas.findIndex(c => c.estado === 'abierta');
@@ -628,25 +660,109 @@ window.cobrarPresupuesto = async function(id) {
         return;
     }
     
-    if (!(await confirmarAccion(`¿Registrar cobro de ${formatearMoneda(p.total)} en la caja actual?`, `Cobrar ${p.numero}`))) return;
+    document.getElementById('cobro-pres-id').value = id;
+    document.getElementById('cobro-pres-total').textContent = formatearMoneda(p.total);
+    document.getElementById('form-cobrar-presupuesto').reset();
+    document.getElementById('div-cobro-cuotas').classList.add('d-none');
     
-    // Registrar el ingreso en la caja activa
-    const mov = {
-        hora: fechaHoraAhora(),
-        tipo: 'ingreso',
-        concepto: `Cobro Presupuesto ${p.numero}`,
-        monto: p.total
-    };
-    cajas[idxCaja].movimientos.push(mov);
-    cajas[idxCaja].ingresos += p.total;
-    guardarDatos('cajas_tecnorivas', cajas);
-    
-    // Cambiar el estado del presupuesto
-    presupuestos[idx].estado = 'cobrado';
-    guardarDatos(CLAVE_PRESUPUESTOS, presupuestos);
-    cargarTabPresupuestos('lista');
-    Swal.fire('Cobro Exitoso', 'El monto ha sido ingresado a la caja.', 'success');
+    new bootstrap.Modal(document.getElementById('modal-cobro-presupuesto')).show();
 };
+
+async function procesarCobroPresupuesto(e) {
+    e.preventDefault();
+    const id = parseInt(document.getElementById('cobro-pres-id').value);
+    const condicion = document.getElementById('cobro-pres-condicion').value; // contado o credito
+    const metodo = document.getElementById('cobro-pres-metodo').value;
+    const cuotas = condicion === 'credito' ? parseInt(document.getElementById('cobro-pres-cuotas').value) : 1;
+
+    const presupuestos = obtenerDatos(CLAVE_PRESUPUESTOS);
+    const idx = presupuestos.findIndex(p => p.id === id);
+    if (idx === -1) return;
+    
+    const p = presupuestos[idx];
+    
+    const cajas = obtenerDatos('cajas_tecnorivas');
+    const idxCaja = cajas.findIndex(c => c.estado === 'abierta');
+    if (idxCaja === -1) return;
+    
+    if (!(await confirmarAccion(`¿Confirmar cobro por ${condicion}?`, `Presupuesto ${p.numero}`))) return;
+    
+    p.condicion = condicion;
+    p.metodoPago = metodo;
+    p.cantidadCuotas = cuotas;
+    p.planPagos = [];
+    
+    if (condicion === 'contado') {
+        p.estado = 'cobrado';
+        p.planPagos.push({
+            nroCuota: 1,
+            monto: p.total,
+            vencimiento: fechaHoraAhora().split('T')[0],
+            estado: 'pagado',
+            fechaPago: fechaHoraAhora()
+        });
+        
+        // Ingresa a la caja
+        cajas[idxCaja].movimientos.push({
+            hora: fechaHoraAhora(),
+            tipo: 'ingreso',
+            concepto: `Cobro Presupuesto ${p.numero} (${metodo})`,
+            monto: p.total
+        });
+        cajas[idxCaja].ingresos += p.total;
+        guardarDatos('cajas_tecnorivas', cajas);
+        
+    } else {
+        // Crédito
+        p.estado = 'credito'; // Opcional, pero util para diferenciar de "cobrado" al 100%
+        const montoCuota = Math.round(p.total / cuotas);
+        let fechaActual = new Date();
+        
+        for (let i = 1; i <= cuotas; i++) {
+            fechaActual.setDate(fechaActual.getDate() + 30);
+            p.planPagos.push({
+                nroCuota: i,
+                monto: montoCuota,
+                vencimiento: fechaActual.toISOString().split('T')[0],
+                estado: 'pendiente',
+                fechaPago: null
+            });
+        }
+        // No afecta caja al momento de crear el credito
+    }
+    
+    // Bajar stock (ya sea credito o contado, el articulo se entrego)
+    const articulos = obtenerDatos('articulos_tecnorivas');
+    const movimientosInv = obtenerDatos('movimientos_inventario');
+    
+    p.detalles.forEach(det => {
+        const artIdx = articulos.findIndex(a => a.id === det.idArticulo);
+        if (artIdx !== -1) {
+            const saldoA = articulos[artIdx].stock;
+            articulos[artIdx].stock -= det.cantidad;
+            const saldoB = articulos[artIdx].stock;
+            movimientosInv.push({
+                fecha: fechaHoraAhora(),
+                idArticulo: det.idArticulo,
+                tipo: 'salida',
+                cantidad: det.cantidad,
+                saldoA: saldoA,
+                saldoB: saldoB,
+                motivo: `Venta Presupuesto ${p.numero}`
+            });
+        }
+    });
+    
+    guardarDatos('articulos_tecnorivas', articulos);
+    guardarDatos('movimientos_inventario', movimientosInv);
+    
+    presupuestos[idx] = p;
+    guardarDatos(CLAVE_PRESUPUESTOS, presupuestos);
+    
+    bootstrap.Modal.getInstance(document.getElementById('modal-cobro-presupuesto')).hide();
+    alertaExito(`Presupuesto procesado a ${condicion}`);
+    cargarPresupuestos('lista');
+}
 
 /* =========================================
    HELPERS LOCALES (CRUD genérico)

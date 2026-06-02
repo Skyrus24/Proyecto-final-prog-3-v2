@@ -118,6 +118,7 @@
                             <button class="btn btn-info text-white" id="btn-imprimir-stock"><i class="bi bi-printer me-1"></i>Imprimir</button>
                             <button class="btn btn-success" id="btn-exportar-stock"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
                             <button class="btn btn-danger" id="btn-pdf-stock"><i class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
+                            <button class="btn btn-warning text-dark fw-bold" id="btn-ajuste-stock"><i class="bi bi-sliders me-1"></i>Ajuste de Stock</button>
                             <div class="d-flex align-items-center ms-2">
                                 <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
                                 <div class="buscador-wrapper">
@@ -171,6 +172,47 @@
                 </div>
             </div>
         </main>
+    </div>
+</div>
+
+<!-- MODAL AJUSTE DE STOCK -->
+<div class="modal fade" id="modal-ajuste-stock" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="bi bi-sliders me-2"></i>Ajuste de Stock Manual</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-ajuste-stock">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Artículo *</label>
+                        <select class="form-select select-search" id="ajuste-articulo" required>
+                            <option value="">-- Buscar artículo --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Ajuste *</label>
+                        <select class="form-select" id="ajuste-tipo" required>
+                            <option value="entrada">Entrada (Sumar)</option>
+                            <option value="salida">Salida (Restar)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cantidad a Ajustar *</label>
+                        <input type="number" class="form-control" id="ajuste-cantidad" min="1" step="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Motivo / Observación *</label>
+                        <input type="text" class="form-control" id="ajuste-motivo" placeholder="Ej: Mercadería dañada, Error de inventario" required minlength="3">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-save me-1"></i>Aplicar Ajuste</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

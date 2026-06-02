@@ -45,7 +45,7 @@ function protegerPagina() {
             'compras.html': ['superusuario', 'admin', 'supervisor'],
             'reportes.html': ['superusuario', 'admin', 'supervisor'],
             'inventario.html': ['superusuario', 'admin', 'supervisor', 'asesor'],
-            'presupuestos.html': ['superusuario', 'admin', 'asesor', 'cajero'],
+            'presupuestos.html': ['superusuario', 'admin', 'asesor'],
             'caja.html': ['superusuario', 'admin', 'cajero']
         };
         const rolesPermitidos = accesos[pagina];
@@ -290,7 +290,7 @@ function renderizarSesionNavbar() {
             'admin': ['usuarios', 'compras', 'inventario', 'presupuestos', 'reportes', 'caja'],
             'supervisor': ['compras', 'inventario', 'reportes'],
             'asesor': ['inventario', 'presupuestos'],
-            'cajero': ['presupuestos', 'caja']
+            'cajero': ['caja']
         };
 
         const modulosPermitidos = permisos[sesion.rol] || [];

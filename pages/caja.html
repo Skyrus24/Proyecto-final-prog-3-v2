@@ -122,6 +122,12 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="tab-caja-historial" data-bs-toggle="tab" data-bs-target="#caja-historial" type="button" role="tab"><i class="bi bi-clock-history"></i> Historial de Sesiones</button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-cuentas-cobrar" data-bs-toggle="tab" data-bs-target="#cuentas-cobrar" type="button" role="tab"><i class="bi bi-arrow-down-circle text-success"></i> Cuentas por Cobrar</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-cuentas-pagar" data-bs-toggle="tab" data-bs-target="#cuentas-pagar" type="button" role="tab"><i class="bi bi-arrow-up-circle text-danger"></i> Cuentas por Pagar</button>
+                </li>
             </ul>
             
             <div class="tab-content" id="cajaTabsContent">
@@ -155,6 +161,7 @@
                                 <button class="btn btn-success flex-fill fw-bold" id="btn-abrir-caja"><i class="bi bi-unlock-fill me-2"></i>ABRIR CAJA</button>
                                 <button class="btn btn-danger flex-fill fw-bold d-none" id="btn-cerrar-caja"><i class="bi bi-lock-fill me-2"></i>CERRAR CAJA</button>
                                 <button class="btn btn-primary flex-fill fw-bold d-none" id="btn-movimiento-manual"><i class="bi bi-plus-circle me-2"></i>NUEVO MOVIMIENTO</button>
+                                <button class="btn btn-warning flex-fill fw-bold d-none text-dark" id="btn-cobrar-presupuesto-caja"><i class="bi bi-search me-2"></i>COBRAR PRESUPUESTO</button>
                             </div>
                             
                             <!-- MOVIMIENTOS -->
@@ -207,6 +214,59 @@
                             <ul class="pagination pagination-sm mb-0" id="paginacion-historial"></ul>
                         </div>
                     </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA CUENTAS POR COBRAR -->
+                <div class="tab-pane fade" id="cuentas-cobrar" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-header d-flex justify-content-between align-items-center bg-success text-white">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-arrow-down-circle me-2"></i>Cuentas por Cobrar (Clientes)</h5>
+                        </div>
+                        <div class="tabla-wrapper">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Ref.</th>
+                                        <th>Cliente</th>
+                                        <th>Cuota</th>
+                                        <th>Vencimiento</th>
+                                        <th>Monto</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-cuentas-cobrar">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA CUENTAS POR PAGAR -->
+                <div class="tab-pane fade" id="cuentas-pagar" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-header d-flex justify-content-between align-items-center bg-danger text-white">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-arrow-up-circle me-2"></i>Cuentas por Pagar (Proveedores)</h5>
+                        </div>
+                        <div class="tabla-wrapper">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Ref.</th>
+                                        <th>Proveedor</th>
+                                        <th>Cuota</th>
+                                        <th>Vencimiento</th>
+                                        <th>Monto</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-cuentas-pagar">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -242,6 +302,44 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar Movimiento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL COBRAR PRESUPUESTO EN CAJA -->
+<div class="modal fade" id="modal-cobrar-presupuesto-caja" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="bi bi-search me-2"></i>Buscar Presupuesto a Cobrar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-cobrar-presupuesto-caja">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Seleccione un Presupuesto (Solo Aprobados) *</label>
+                        <select class="form-select" id="caja-presupuesto-id" required>
+                            <option value="">-- Seleccionar --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Condición Pactada</label>
+                        <input type="text" class="form-control bg-light fw-bold text-primary" id="caja-presupuesto-info" readonly placeholder="--">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Método de Pago *</label>
+                        <select class="form-select" id="caja-presupuesto-metodo" required>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                            <option value="Transferencia">Transferencia Bancaria</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-cash-coin me-1"></i>Registrar Cobro</button>
                 </div>
             </form>
         </div>

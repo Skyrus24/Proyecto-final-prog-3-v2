@@ -343,6 +343,17 @@ function configurarCompra() {
     document.getElementById('btn-add-detalle').addEventListener('click', agregarDetalleCompra);
     poblarSelectProveedores();
     poblarSelectArticulosCompra();
+    
+    document.getElementById('compra-condicion')?.addEventListener('change', (e) => {
+        const divCuotas = document.getElementById('div-compra-cuotas');
+        if (e.target.value === 'credito') {
+            divCuotas.classList.remove('d-none');
+            document.getElementById('compra-cuotas').required = true;
+        } else {
+            divCuotas.classList.add('d-none');
+            document.getElementById('compra-cuotas').required = false;
+        }
+    });
 }
 
 function poblarSelectProveedores() {
@@ -422,18 +433,71 @@ function registrarCompra() {
     if (detalleCompra.length === 0) { alertaError('Agregue al menos un artículo.'); return; }
     const provId = parseInt(document.getElementById('compra-proveedor').value);
     if (!provId) { alertaError('Seleccione un proveedor.'); return; }
+    const condicion = document.getElementById('compra-condicion').value;
+    const metodo = document.getElementById('compra-metodo').value;
+    const cuotas = condicion === 'credito' ? parseInt(document.getElementById('compra-cuotas').value) : 1;
+
     const compras = obtenerCompras();
     const total = detalleCompra.reduce((s, d) => s + d.subtotal, 0);
+    
     const nuevaCompra = {
         id: generarId(compras),
         numero: `C-${String(generarId(compras)).padStart(4, '0')}`,
         proveedorId: provId,
         fecha: document.getElementById('compra-fecha').value,
-        estado: document.getElementById('compra-estado').value || 'pendiente',
+        estado: condicion === 'contado' ? 'pagado' : 'credito',
+        condicion: condicion,
+        metodoPago: metodo,
+        cantidadCuotas: cuotas,
+        planPagos: [],
         detalle: [...detalleCompra],
         total,
         fechaRegistro: fechaHoraAhora()
     };
+    
+    const cajas = obtenerDatos('cajas_tecnorivas');
+    const idxCaja = cajas.findIndex(c => c.estado === 'abierta');
+    
+    if (condicion === 'contado') {
+        nuevaCompra.planPagos.push({
+            nroCuota: 1,
+            monto: total,
+            vencimiento: fechaHoraAhora().split('T')[0],
+            estado: 'pagado',
+            fechaPago: fechaHoraAhora()
+        });
+        if (idxCaja !== -1) {
+            const saldoActual = cajas[idxCaja].montoInicial + cajas[idxCaja].ingresos - cajas[idxCaja].egresos;
+            if (saldoActual - total < 0) {
+                alertaError('La caja no tiene fondos suficientes para realizar esta compra al contado.');
+                return;
+            }
+            cajas[idxCaja].movimientos.push({
+                hora: fechaHoraAhora(),
+                tipo: 'egreso',
+                concepto: `Pago Compra ${nuevaCompra.numero} (${metodo})`,
+                monto: total
+            });
+            cajas[idxCaja].egresos += total;
+            guardarDatos('cajas_tecnorivas', cajas);
+        } else {
+            alertaError('No hay caja abierta para realizar compras al contado.');
+            return;
+        }
+    } else {
+        const montoCuota = Math.round(total / cuotas);
+        let fechaActual = new Date();
+        for (let i = 1; i <= cuotas; i++) {
+            fechaActual.setDate(fechaActual.getDate() + 30);
+            nuevaCompra.planPagos.push({
+                nroCuota: i,
+                monto: montoCuota,
+                vencimiento: fechaActual.toISOString().split('T')[0],
+                estado: 'pendiente',
+                fechaPago: null
+            });
+        }
+    }
     // Actualizar stock
     const articulos = obtenerArticulos();
     detalleCompra.forEach(d => {

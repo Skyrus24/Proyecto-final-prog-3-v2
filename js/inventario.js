@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     configurarBusquedorInventario();
     configurarExportarInventario();
+    configurarAjusteStock();
     verificarAlertas();
 });
 
@@ -184,5 +185,80 @@ function configurarExportarInventario() {
 
     if (btnImpMovs) btnImpMovs.addEventListener('click', () => imprimirTabla('Historial de Movimientos', 'tabla-body-movimientos'));
     if (btnPdfMovs) btnPdfMovs.addEventListener('click', () => generarPDF('Historial de Movimientos'));
+}
+
+// ============================================================
+// AJUSTE DE STOCK
+// ============================================================
+function configurarAjusteStock() {
+    const btnAjuste = document.getElementById('btn-ajuste-stock');
+    if (btnAjuste) {
+        btnAjuste.addEventListener('click', () => {
+            const selectArt = document.getElementById('ajuste-articulo');
+            selectArt.innerHTML = '<option value="">-- Buscar artículo --</option>';
+            const articulos = obtenerDatos('articulos_tecnorivas');
+            articulos.forEach(a => {
+                selectArt.insertAdjacentHTML('beforeend', `<option value="${a.id}">${a.nombre} (Stock: ${a.stock})</option>`);
+            });
+            document.getElementById('form-ajuste-stock').reset();
+            new bootstrap.Modal(document.getElementById('modal-ajuste-stock')).show();
+        });
+    }
+
+    const formAjuste = document.getElementById('form-ajuste-stock');
+    if (formAjuste) {
+        formAjuste.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const idArt = parseInt(document.getElementById('ajuste-articulo').value);
+            const tipo = document.getElementById('ajuste-tipo').value;
+            const cantidad = parseInt(document.getElementById('ajuste-cantidad').value);
+            const motivo = document.getElementById('ajuste-motivo').value.trim();
+
+            if (!idArt || !cantidad || !motivo) return;
+
+            const articulos = obtenerDatos('articulos_tecnorivas');
+            const movs = obtenerMovimientos();
+            const artIdx = articulos.findIndex(a => a.id === idArt);
+
+            if (artIdx === -1) return;
+
+            if (tipo === 'salida' && articulos[artIdx].stock < cantidad) {
+                alertaError('La cantidad a restar supera el stock actual.');
+                return;
+            }
+
+            if (!(await confirmarAccion(`¿Confirmar ${tipo} de ${cantidad} unidades?`, 'Ajuste de Stock'))) return;
+
+            const saldoA = articulos[artIdx].stock;
+            if (tipo === 'entrada') {
+                articulos[artIdx].stock += cantidad;
+            } else {
+                articulos[artIdx].stock -= cantidad;
+            }
+            const saldoB = articulos[artIdx].stock;
+
+            movs.push({
+                fecha: fechaHoraAhora(),
+                articuloId: idArt,
+                tipo: tipo,
+                cantidad: cantidad,
+                saldoA: saldoA,
+                saldoB: saldoB,
+                referencia: `AJUSTE: ${motivo}`
+            });
+
+            guardarDatos('articulos_tecnorivas', articulos);
+            guardarDatos(CLAVE_MOVIMIENTOS, movs);
+
+            bootstrap.Modal.getInstance(document.getElementById('modal-ajuste-stock')).hide();
+            setTimeout(() => {
+                alertaExito('Ajuste de stock realizado correctamente.');
+            }, 300);
+            
+            cargarInventario('stock');
+            cargarInventario('movimientos');
+            verificarAlertas();
+        });
+    }
 }
 

@@ -316,11 +316,22 @@
                                 <select class="form-select" id="compra-proveedor" required><option value="">-- Seleccionar --</option></select>
                             </div>
                             <div class="col-md-3"><label class="form-label">Fecha *</label><input type="date" class="form-control" id="compra-fecha" required></div>
-                            <div class="col-md-4"><label class="form-label">Estado</label>
-                                <select class="form-select" id="compra-estado">
-                                    <option value="pendiente">Pendiente</option>
-                                    <option value="pagado">Pagado</option>
+                            <div class="col-md-4"><label class="form-label">Condición</label>
+                                <select class="form-select" id="compra-condicion" required>
+                                    <option value="contado">Contado</option>
+                                    <option value="credito">Crédito</option>
                                 </select>
+                            </div>
+                            <div class="col-md-6 mt-2"><label class="form-label">Método de Pago</label>
+                                <select class="form-select" id="compra-metodo" required>
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="Tarjeta">Tarjeta</option>
+                                    <option value="Transferencia">Transferencia Bancaria</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mt-2 d-none" id="div-compra-cuotas">
+                                <label class="form-label">Cantidad de Cuotas</label>
+                                <input type="number" class="form-control" id="compra-cuotas" min="1" value="1">
                             </div>
                         </div>
                         <hr>

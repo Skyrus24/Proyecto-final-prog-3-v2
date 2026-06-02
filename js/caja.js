@@ -59,6 +59,7 @@ function actualizarVistaCaja() {
         btnAbrir?.classList.add('d-none');
         btnCerrar?.classList.remove('d-none');
         btnMovimiento?.classList.remove('d-none');
+        document.getElementById('btn-cobrar-presupuesto-caja')?.classList.remove('d-none');
         saldoContainer?.classList.remove('d-none');
         contMov?.classList.remove('d-none');
 
@@ -73,6 +74,7 @@ function actualizarVistaCaja() {
         btnAbrir?.classList.remove('d-none');
         btnCerrar?.classList.add('d-none');
         btnMovimiento?.classList.add('d-none');
+        document.getElementById('btn-cobrar-presupuesto-caja')?.classList.add('d-none');
         saldoContainer?.classList.add('d-none');
         contMov?.classList.add('d-none');
 
@@ -81,16 +83,25 @@ function actualizarVistaCaja() {
     }
 
     renderHistorialCajas();
+    renderCuentasCobrar();
+    renderCuentasPagar();
 }
 
 // Configura los event listeners para los botones principales (Abrir, Cerrar, Nuevo Movimiento)
 function configurarBotonesCaja() {
     document.getElementById('btn-abrir-caja')?.addEventListener('click', () => {
+        let saldoAnterior = 0;
+        const cajas = obtenerCajas().filter(c => c.estado === 'cerrada');
+        if (cajas.length > 0) {
+            const ultimaCaja = cajas[cajas.length - 1];
+            saldoAnterior = ultimaCaja.montoInicial + ultimaCaja.ingresos - ultimaCaja.egresos;
+        }
+
         Swal.fire({
             title: 'Abrir Caja',
             input: 'number',
             inputLabel: 'Monto Inicial (Gs.)',
-            inputValue: 0,
+            inputValue: saldoAnterior,
             inputAttributes: { min: 0, step: 1 },
             showCancelButton: true,
             confirmButtonText: 'Abrir Caja',
@@ -114,6 +125,31 @@ function configurarBotonesCaja() {
     document.getElementById('btn-movimiento-manual')?.addEventListener('click', () => {
         document.getElementById('form-movimiento').reset();
         new bootstrap.Modal(document.getElementById('modal-movimiento')).show();
+    });
+
+    document.getElementById('btn-cobrar-presupuesto-caja')?.addEventListener('click', () => {
+        const selectId = document.getElementById('caja-presupuesto-id');
+        selectId.innerHTML = '<option value="">-- Seleccionar --</option>';
+        const presupuestos = obtenerDatos('presupuestos_tecnorivas').filter(p => p.estado === 'aprobado');
+        presupuestos.forEach(p => {
+            selectId.insertAdjacentHTML('beforeend', `<option value="${p.id}" data-total="${p.total}">${p.numero} - ${formatearMoneda(p.total)}</option>`);
+        });
+        document.getElementById('form-cobrar-presupuesto-caja').reset();
+        document.getElementById('caja-presupuesto-info').value = '';
+        new bootstrap.Modal(document.getElementById('modal-cobrar-presupuesto-caja')).show();
+    });
+
+    document.getElementById('caja-presupuesto-id')?.addEventListener('change', (e) => {
+        const id = parseInt(e.target.value);
+        if (!id) { document.getElementById('caja-presupuesto-info').value = ''; return; }
+        const p = obtenerDatos('presupuestos_tecnorivas').find(x => x.id === id);
+        if (p) {
+            if (p.condicion === 'credito') {
+                document.getElementById('caja-presupuesto-info').value = `Crédito - ${p.cantidadCuotas} cuotas`;
+            } else {
+                document.getElementById('caja-presupuesto-info').value = 'Contado';
+            }
+        }
     });
 }
 
@@ -175,7 +211,9 @@ function registrarMovimientoManual(e) {
 
     agregarMovimientoCaja(tipo, concepto, monto);
     bootstrap.Modal.getInstance(document.getElementById('modal-movimiento')).hide();
-    alertaExito('Movimiento registrado.');
+    setTimeout(() => {
+        alertaExito('Movimiento registrado.');
+    }, 300);
 }
 
 // Funcion core para agregar cualquier tipo de movimiento al arreglo
@@ -184,6 +222,13 @@ function agregarMovimientoCaja(tipo, concepto, monto) {
     const idx = cajas.findIndex(c => c.estado === 'abierta');
     if (idx === -1) {
         alertaError('No hay caja abierta para registrar el movimiento.'); return false;
+    }
+
+    if (tipo === 'egreso') {
+        const saldoActual = cajas[idx].montoInicial + cajas[idx].ingresos - cajas[idx].egresos;
+        if (saldoActual - monto < 0) {
+            alertaError('La caja no puede quedar con saldo negativo.'); return false;
+        }
     }
 
     const mov = {
@@ -272,4 +317,231 @@ document.addEventListener('DOMContentLoaded', () => {
         const monto = parseFloat(document.getElementById('mov-monto').value);
         registrarMovimientoManual(tipo, concepto, monto);
     });
+
+    document.getElementById('form-cobrar-presupuesto-caja')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const idStr = document.getElementById('caja-presupuesto-id').value;
+        if (!idStr) { alertaError('Seleccione un presupuesto.'); return; }
+        const id = parseInt(idStr);
+        const metodo = document.getElementById('caja-presupuesto-metodo').value;
+
+        const presupuestos = obtenerDatos('presupuestos_tecnorivas');
+        const p = presupuestos.find(x => x.id === id);
+        if (!p) return;
+
+        const condicion = p.condicion || 'contado';
+        const cuotas = p.cantidadCuotas || 1;
+
+        if (!(await confirmarAccion(`¿Confirmar cobro por ${condicion}?`, `Presupuesto ${p.numero}`))) return;
+        
+        p.metodoPago = metodo;
+        p.planPagos = [];
+        
+        if (condicion === 'contado') {
+            p.estado = 'cobrado';
+            p.planPagos.push({
+                nroCuota: 1,
+                monto: p.total,
+                vencimiento: fechaHoraAhora().split('T')[0],
+                estado: 'pagado',
+                fechaPago: fechaHoraAhora()
+            });
+            agregarMovimientoCaja('ingreso', `Cobro Presupuesto ${p.numero} (${metodo})`, p.total);
+        } else {
+            p.estado = 'credito';
+            const montoCuota = Math.round(p.total / cuotas);
+            let fechaActual = new Date();
+            for (let i = 1; i <= cuotas; i++) {
+                fechaActual.setDate(fechaActual.getDate() + 30);
+                p.planPagos.push({
+                    nroCuota: i,
+                    monto: montoCuota,
+                    vencimiento: fechaActual.toISOString().split('T')[0],
+                    estado: 'pendiente',
+                    fechaPago: null
+                });
+            }
+        }
+        
+        // Modificar stock
+        const articulos = obtenerDatos('articulos_tecnorivas');
+        const movimientosInv = obtenerDatos('movimientos_inventario');
+        p.detalles.forEach(det => {
+            const artIdx = articulos.findIndex(a => a.id === det.idArticulo);
+            if (artIdx !== -1) {
+                const saldoA = articulos[artIdx].stock;
+                articulos[artIdx].stock -= det.cantidad;
+                const saldoB = articulos[artIdx].stock;
+                movimientosInv.push({
+                    fecha: fechaHoraAhora(),
+                    idArticulo: det.idArticulo,
+                    tipo: 'salida',
+                    cantidad: det.cantidad,
+                    saldoA: saldoA,
+                    saldoB: saldoB,
+                    motivo: `Venta Presupuesto ${p.numero}`
+                });
+            }
+        });
+        guardarDatos('articulos_tecnorivas', articulos);
+        guardarDatos('movimientos_inventario', movimientosInv);
+        
+        guardarDatos('presupuestos_tecnorivas', presupuestos);
+        bootstrap.Modal.getInstance(document.getElementById('modal-cobrar-presupuesto-caja')).hide();
+        setTimeout(() => {
+            alertaExito(`Presupuesto cobrado a ${condicion}`);
+        }, 300);
+        
+        renderCuentasCobrar();
+        renderCuentasPagar();
+    });
 });
+
+// ==========================================
+// CUENTAS POR COBRAR (CLIENTES)
+// ==========================================
+
+function renderCuentasCobrar() {
+    const tbody = document.getElementById('tabla-cuentas-cobrar');
+    if (!tbody) return;
+    
+    const presupuestos = obtenerDatos('presupuestos_tecnorivas');
+    const clientes = obtenerDatos('clientes_tecnorivas');
+    let html = '';
+    
+    presupuestos.forEach(p => {
+        if (p.planPagos && p.planPagos.length > 0) {
+            const cliente = clientes.find(c => c.id === p.idCliente);
+            const nombreCliente = cliente ? cliente.nombre : 'Desconocido';
+            
+            p.planPagos.forEach(cuota => {
+                if (cuota.estado === 'pendiente') {
+                    html += `
+                        <tr>
+                            <td>${p.numero}</td>
+                            <td>${nombreCliente}</td>
+                            <td>${cuota.nroCuota} / ${p.cantidadCuotas}</td>
+                            <td>${cuota.vencimiento}</td>
+                            <td>${formatearMoneda(cuota.monto)}</td>
+                            <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-success" onclick="cobrarCuota(${p.id}, ${cuota.nroCuota}, ${cuota.monto})" title="Cobrar Cuota">
+                                    <i class="bi bi-cash-coin"></i> Cobrar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+    });
+    
+    if (html === '') {
+        html = '<tr><td colspan="7" class="text-center text-muted py-4">No hay cuotas pendientes por cobrar</td></tr>';
+    }
+    tbody.innerHTML = html;
+}
+
+window.cobrarCuota = async function(idPresupuesto, nroCuota, monto) {
+    const cajaActiva = obtenerCajaActiva();
+    if (!cajaActiva) { alertaError('Abre la caja primero.'); return; }
+    
+    if (!(await confirmarAccion(`¿Registrar cobro de la Cuota ${nroCuota} por ${formatearMoneda(monto)}?`, 'Cobrar Cuota'))) return;
+    
+    const presupuestos = obtenerDatos('presupuestos_tecnorivas');
+    const idx = presupuestos.findIndex(p => p.id === idPresupuesto);
+    if (idx === -1) return;
+    
+    const p = presupuestos[idx];
+    const cuota = p.planPagos.find(c => c.nroCuota === nroCuota);
+    if (cuota) {
+        cuota.estado = 'pagado';
+        cuota.fechaPago = fechaHoraAhora();
+        
+        // Verificar si se completaron todas las cuotas
+        if (p.planPagos.every(c => c.estado === 'pagado')) {
+            p.estado = 'cobrado';
+        }
+    }
+    guardarDatos('presupuestos_tecnorivas', presupuestos);
+    
+    agregarMovimientoCaja('ingreso', `Cobro Cuota ${nroCuota} - Pres. ${p.numero}`, monto);
+    renderCuentasCobrar();
+    alertaExito('Cuota cobrada correctamente.');
+};
+
+// ==========================================
+// CUENTAS POR PAGAR (PROVEEDORES)
+// ==========================================
+
+function renderCuentasPagar() {
+    const tbody = document.getElementById('tabla-cuentas-pagar');
+    if (!tbody) return;
+    
+    const compras = obtenerDatos('compras_tecnorivas');
+    const proveedores = obtenerDatos('proveedores_tecnorivas');
+    let html = '';
+    
+    compras.forEach(c => {
+        if (c.planPagos && c.planPagos.length > 0) {
+            const proveedor = proveedores.find(p => p.id === c.proveedorId);
+            const nombreProveedor = proveedor ? proveedor.nombre : 'Desconocido';
+            
+            c.planPagos.forEach(cuota => {
+                if (cuota.estado === 'pendiente') {
+                    html += `
+                        <tr>
+                            <td>${c.numero}</td>
+                            <td>${nombreProveedor}</td>
+                            <td>${cuota.nroCuota} / ${c.cantidadCuotas}</td>
+                            <td>${cuota.vencimiento}</td>
+                            <td>${formatearMoneda(cuota.monto)}</td>
+                            <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="pagarCuota(${c.id}, ${cuota.nroCuota}, ${cuota.monto})" title="Pagar Cuota">
+                                    <i class="bi bi-wallet2"></i> Pagar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+    });
+    
+    if (html === '') {
+        html = '<tr><td colspan="7" class="text-center text-muted py-4">No hay cuotas pendientes por pagar</td></tr>';
+    }
+    tbody.innerHTML = html;
+}
+
+window.pagarCuota = async function(idCompra, nroCuota, monto) {
+    const cajaActiva = obtenerCajaActiva();
+    if (!cajaActiva) { alertaError('Abre la caja primero.'); return; }
+    
+    if (!(await confirmarAccion(`¿Registrar pago de la Cuota ${nroCuota} por ${formatearMoneda(monto)}?`, 'Pagar Cuota'))) return;
+    
+    const compras = obtenerDatos('compras_tecnorivas');
+    const idx = compras.findIndex(c => c.id === idCompra);
+    if (idx === -1) return;
+    
+    const c = compras[idx];
+    const cuota = c.planPagos.find(ct => ct.nroCuota === nroCuota);
+    if (!cuota) return;
+
+    if (!agregarMovimientoCaja('egreso', `Pago Cuota ${nroCuota} - Compra ${c.numero}`, monto)) {
+        return;
+    }
+
+    cuota.estado = 'pagado';
+    cuota.fechaPago = fechaHoraAhora();
+    
+    // Verificar si se completaron todas
+    if (c.planPagos.every(ct => ct.estado === 'pagado')) {
+        c.estado = 'pagado';
+    }
+    
+    guardarDatos('compras_tecnorivas', compras);
+    renderCuentasPagar();
+    alertaExito('Cuota pagada correctamente.');
+};
