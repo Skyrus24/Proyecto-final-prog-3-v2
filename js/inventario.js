@@ -150,18 +150,37 @@ function configurarExportarInventario() {
     const btnImpMovs = document.getElementById('btn-imprimir-movimientos');
     const btnPdfMovs = document.getElementById('btn-pdf-movimientos');
 
-    if (btnExpStock) btnExpStock.addEventListener('click', () => exportarExcel(filteredInventario, 'inventario_stock', [
-        { key: 'nombre', label: 'Artículo' }, { key: 'precio', label: 'Precio' },
-        { key: 'stock', label: 'Stock' }, { key: 'unidad', label: 'Unidad' }
-    ]));
+    if (btnExpStock) btnExpStock.addEventListener('click', () => {
+        const categorias = obtenerDatos('categorias_tecnorivas');
+        const dataExport = filteredInventario.map(a => {
+            const cat = categorias.find(c => c.id === a.categoriaId);
+            return {
+                ...a,
+                categoriaNombre: cat ? cat.nombre : '-',
+                stockStr: `${a.stock} ${a.unidad || ''}`,
+                valorTotal: a.stock * a.precio
+            };
+        });
+        exportarExcel(dataExport, 'inventario_stock', [
+            { key: 'nombre', label: 'Artículo' }, { key: 'categoriaNombre', label: 'Categoría' },
+            { key: 'precio', label: 'Precio' }, { key: 'stockStr', label: 'Stock' }, { key: 'valorTotal', label: 'Valor Total' }
+        ]);
+    });
 
     if (btnImpStock) btnImpStock.addEventListener('click', () => imprimirTabla('Stock Actual', 'tabla-body-stock'));
     if (btnPdfStock) btnPdfStock.addEventListener('click', () => generarPDF('Inventario - Stock'));
 
-    if (btnExpMovs) btnExpMovs.addEventListener('click', () => exportarExcel(filteredMovimientos, 'movimientos', [
-        { key: 'fecha', label: 'Fecha' }, { key: 'tipo', label: 'Tipo' },
-        { key: 'articuloId', label: 'ID Artículo' }, { key: 'cantidad', label: 'Cantidad' }, { key: 'referencia', label: 'Referencia' }
-    ]));
+    if (btnExpMovs) btnExpMovs.addEventListener('click', () => {
+        const articulos = obtenerDatos('articulos_tecnorivas');
+        const dataExport = filteredMovimientos.map(m => {
+            const art = articulos.find(a => a.id === m.articuloId);
+            return { ...m, articuloNombre: art ? art.nombre : `ID: ${m.articuloId}` };
+        });
+        exportarExcel(dataExport, 'movimientos', [
+            { key: 'fecha', label: 'Fecha' }, { key: 'tipo', label: 'Tipo' },
+            { key: 'articuloNombre', label: 'Artículo' }, { key: 'cantidad', label: 'Cantidad' }, { key: 'referencia', label: 'Referencia' }
+        ]);
+    });
 
     if (btnImpMovs) btnImpMovs.addEventListener('click', () => imprimirTabla('Historial de Movimientos', 'tabla-body-movimientos'));
     if (btnPdfMovs) btnPdfMovs.addEventListener('click', () => generarPDF('Historial de Movimientos'));

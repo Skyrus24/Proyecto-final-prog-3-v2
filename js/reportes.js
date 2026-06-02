@@ -190,8 +190,15 @@ function imprimirReportePresupuestos() {
 // COMPRAS
 // ============================================================
 function exportarReporteCompras() {
-    exportarExcel(obtenerDatos('compras_tecnorivas'), 'reporte_compras', [
+    const compras = obtenerDatos('compras_tecnorivas');
+    const proveedores = obtenerDatos('proveedores_tecnorivas');
+    const dataExport = compras.map(c => {
+        const p = proveedores.find(x => x.id === c.proveedorId);
+        return { ...c, proveedorNombre: p ? p.nombre : '-' };
+    });
+    exportarExcel(dataExport, 'reporte_compras', [
         { key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' },
+        { key: 'proveedorNombre', label: 'Proveedor' },
         { key: 'total', label: 'Total (Gs.)' }, { key: 'estado', label: 'Estado' }
     ]);
 }
@@ -237,10 +244,14 @@ function imprimirInventario() {
 // CAJA
 // ============================================================
 function exportarSesionesCaja() {
-    exportarExcel(obtenerDatos('cajas_tecnorivas'), 'sesiones_caja', [
+    const cajas = obtenerDatos('cajas_tecnorivas').map(c => ({
+        ...c,
+        saldo: (c.montoInicial || 0) + (c.ingresos || 0) - (c.egresos || 0)
+    }));
+    exportarExcel(cajas, 'sesiones_caja', [
         { key: 'cajero', label: 'Cajero' }, { key: 'fechaApertura', label: 'Apertura' },
         { key: 'montoInicial', label: 'Monto Inicial (Gs.)' }, { key: 'ingresos', label: 'Ingresos (Gs.)' },
-        { key: 'egresos', label: 'Egresos (Gs.)' }, { key: 'estado', label: 'Estado' }
+        { key: 'egresos', label: 'Egresos (Gs.)' }, { key: 'saldo', label: 'Saldo (Gs.)' }, { key: 'estado', label: 'Estado' }
     ]);
 }
 

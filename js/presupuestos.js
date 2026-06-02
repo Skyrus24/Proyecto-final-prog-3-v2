@@ -402,21 +402,37 @@ function agregarItemPresupuesto() {
         return;
     }
 
-    if (selectItem.value.startsWith('A-')) {
+    const isArticulo = selectItem.value.startsWith('A-');
+    const itemId = parseInt(selectItem.value.substring(2));
+    const tipoItem = isArticulo ? 'articulo' : 'servicio';
+
+    if (isArticulo) {
         const stock = parseFloat(option.dataset.stock);
-        if (cant > stock) {
-            Swal.fire({ icon: 'warning', title: 'Stock Insuficiente', text: `La cantidad solicitada (${cant}) supera el stock disponible (${stock}).` });
+        const cantidadYaAgregada = detallePresupuesto
+            .filter(item => item.tipoItem === 'articulo' && item.itemId === itemId)
+            .reduce((sum, item) => sum + item.cantidad, 0);
+
+        if ((cant + cantidadYaAgregada) > stock) {
+            Swal.fire({ icon: 'warning', title: 'Stock Insuficiente', text: `La cantidad solicitada total (${cant + cantidadYaAgregada}) supera el stock disponible (${stock}). Ya tienes ${cantidadYaAgregada} agregados.` });
             return;
         }
     }
 
-    detallePresupuesto.push({
-        descripcion: desc,
-        cantidad: cant,
-        precio: precio,
-        iva: iva,
-        subtotal: cant * precio
-    });
+    const indexExistente = detallePresupuesto.findIndex(item => item.tipoItem === tipoItem && item.itemId === itemId);
+    if (indexExistente !== -1) {
+        detallePresupuesto[indexExistente].cantidad += cant;
+        detallePresupuesto[indexExistente].subtotal = detallePresupuesto[indexExistente].cantidad * precio;
+    } else {
+        detallePresupuesto.push({
+            itemId: itemId,
+            tipoItem: tipoItem,
+            descripcion: desc,
+            cantidad: cant,
+            precio: precio,
+            iva: iva,
+            subtotal: cant * precio
+        });
+    }
 
     renderDetallePresupuesto();
     selectItem.value = '';
@@ -466,7 +482,16 @@ function registrarPresupuesto() {
     const catObj = obtenerDatos(CLAVE_CATEGORIAS_PRES).find(c => c.id == catId);
     
     const presupuestos = obtenerDatos(CLAVE_PRESUPUESTOS);
-    const numero = `P-${String(presupuestos.length + 1).padStart(4, '0')}`;
+    let maxNum = 0;
+    presupuestos.forEach(p => {
+        if (p.numero && p.numero.startsWith('P-')) {
+            const num = parseInt(p.numero.replace('P-', ''), 10);
+            if (!isNaN(num) && num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    const numero = `P-${String(maxNum + 1).padStart(4, '0')}`;
     const total = detallePresupuesto.reduce((s, i) => s + i.subtotal, 0);
 
     const nuevoPres = {
@@ -481,6 +506,22 @@ function registrarPresupuesto() {
         estado: 'pendiente', // pendiente, aprobado, rechazado, cobrado
         creadoPor: obtenerSesion() ? obtenerSesion().nombre : 'Sistema'
     };
+
+    // Descontar stock
+    const articulos = obtenerDatos('articulos_tecnorivas');
+    let stockModificado = false;
+    nuevoPres.detalle.forEach(item => {
+        if (item.tipoItem === 'articulo') {
+            const artIdx = articulos.findIndex(a => a.id === item.itemId);
+            if (artIdx !== -1) {
+                articulos[artIdx].stock -= item.cantidad;
+                stockModificado = true;
+            }
+        }
+    });
+    if (stockModificado) {
+        guardarDatos('articulos_tecnorivas', articulos);
+    }
 
     crearDato(CLAVE_PRESUPUESTOS, nuevoPres);
     Swal.fire({ icon: 'success', title: 'Éxito', text: `Presupuesto ${numero} registrado correctamente.` });
@@ -551,6 +592,22 @@ window.cambiarEstadoPresupuesto = async function(id, nuevoEstado) {
     
     if (!(await confirmarAccion(`¿Cambiar estado a ${nuevoEstado.toUpperCase()}?`, `Presupuesto ${presupuestos[idx].numero}`))) return;
     
+    // Restaurar stock si se rechaza
+    if (nuevoEstado === 'rechazado' && presupuestos[idx].estado !== 'rechazado') {
+        const articulos = obtenerDatos('articulos_tecnorivas');
+        let stockModificado = false;
+        presupuestos[idx].detalle.forEach(item => {
+            if (item.tipoItem === 'articulo') {
+                const artIdx = articulos.findIndex(a => a.id === item.itemId);
+                if (artIdx !== -1) {
+                    articulos[artIdx].stock += item.cantidad;
+                    stockModificado = true;
+                }
+            }
+        });
+        if (stockModificado) guardarDatos('articulos_tecnorivas', articulos);
+    }
+
     presupuestos[idx].estado = nuevoEstado;
     guardarDatos(CLAVE_PRESUPUESTOS, presupuestos);
     cargarTabPresupuestos('lista');
@@ -615,6 +672,26 @@ window.eliminarDato = function(clave, id, callbackRender) {
     confirmarEliminar('este registro').then(conf => {
         if (conf) {
             let lista = obtenerDatos(clave);
+            
+            // Si es un presupuesto y no estaba rechazado, devolver el stock
+            if (clave === CLAVE_PRESUPUESTOS) {
+                const pres = lista.find(p => p.id === id);
+                if (pres && pres.estado !== 'rechazado') {
+                    const articulos = obtenerDatos('articulos_tecnorivas');
+                    let stockModificado = false;
+                    pres.detalle.forEach(item => {
+                        if (item.tipoItem === 'articulo') {
+                            const artIdx = articulos.findIndex(a => a.id === item.itemId);
+                            if (artIdx !== -1) {
+                                articulos[artIdx].stock += item.cantidad;
+                                stockModificado = true;
+                            }
+                        }
+                    });
+                    if (stockModificado) guardarDatos('articulos_tecnorivas', articulos);
+                }
+            }
+            
             lista = lista.filter(i => i.id !== id);
             guardarDatos(clave, lista);
             if (callbackRender) callbackRender();
@@ -631,7 +708,7 @@ function configurarExportarImprimirPresupuestos() {
         const titulos = { clientes: 'Clientes', categorias: 'Categorías de Trabajos', lista: 'Presupuestos' };
         if (btnExp) btnExp.addEventListener('click', () => {
             const cols = {
-                clientes: [{ key: 'cedula', label: 'Cédula' }, { key: 'nombre', label: 'Nombre' }, { key: 'telefono', label: 'Teléfono' }, { key: 'email', label: 'Email' }],
+                clientes: [{ key: 'cedula', label: 'Cédula' }, { key: 'nombre', label: 'Nombre' }, { key: 'telefono', label: 'Teléfono' }, { key: 'email', label: 'Email' }, { key: 'direccion', label: 'Dirección' }],
                 categorias: [{ key: 'nombre', label: 'Nombre' }, { key: 'descripcion', label: 'Descripción' }],
                 lista: [{ key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' }, { key: 'clienteNombre', label: 'Cliente' }, { key: 'categoriaNombre', label: 'Categoría' }, { key: 'total', label: 'Total' }, { key: 'estado', label: 'Estado' }]
             };

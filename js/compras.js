@@ -535,12 +535,28 @@ function configurarExportarImprimir() {
         const titulo = tab.charAt(0).toUpperCase() + tab.slice(1);
         if (btnExp) btnExp.addEventListener('click', () => {
             const cols = {
-                proveedores: [{ key: 'nombre', label: 'Nombre' }, { key: 'ruc', label: 'RUC' }, { key: 'telefono', label: 'Teléfono' }],
+                proveedores: [{ key: 'nombre', label: 'Nombre' }, { key: 'ruc', label: 'RUC' }, { key: 'telefono', label: 'Teléfono' }, { key: 'email', label: 'Email' }, { key: 'contacto', label: 'Contacto' }],
                 categorias: [{ key: 'nombre', label: 'Nombre' }, { key: 'descripcion', label: 'Descripción' }],
-                articulos: [{ key: 'nombre', label: 'Artículo' }, { key: 'precio', label: 'Precio' }, { key: 'stock', label: 'Stock' }],
-                compras: [{ key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' }, { key: 'total', label: 'Total' }, { key: 'estado', label: 'Estado' }]
+                articulos: [{ key: 'codigo', label: 'Código' }, { key: 'nombre', label: 'Artículo' }, { key: 'categoriaNombre', label: 'Categoría' }, { key: 'precio', label: 'Precio' }, { key: 'stockStr', label: 'Stock' }],
+                compras: [{ key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' }, { key: 'proveedorNombre', label: 'Proveedor' }, { key: 'total', label: 'Total' }, { key: 'estado', label: 'Estado' }]
             };
-            exportarExcel(filteredData[tab], tab, cols[tab]);
+            
+            let dataExport = filteredData[tab];
+            if (tab === 'articulos') {
+                const cats = obtenerCategorias();
+                dataExport = dataExport.map(a => {
+                    const c = cats.find(x => x.id === a.categoriaId);
+                    return { ...a, categoriaNombre: c ? c.nombre : '-', stockStr: `${a.stock} ${a.unidad || ''}` };
+                });
+            } else if (tab === 'compras') {
+                const provs = obtenerProveedores();
+                dataExport = dataExport.map(c => {
+                    const p = provs.find(x => x.id === c.proveedorId);
+                    return { ...c, proveedorNombre: p ? p.nombre : '-' };
+                });
+            }
+            
+            exportarExcel(dataExport, tab, cols[tab]);
         });
         if (btnImp) btnImp.addEventListener('click', () => imprimirTabla(titulo, `tabla-body-${tab}`));
         if (btnPdf) btnPdf.addEventListener('click', () => generarPDF(titulo));

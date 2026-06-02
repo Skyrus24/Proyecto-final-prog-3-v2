@@ -236,7 +236,7 @@ function configurarExportar() {
     const btn = document.getElementById('btn-exportar');
     if (btn) btn.addEventListener('click', () => exportarExcel(usuariosFiltered, 'usuarios', [
         { key: 'cedula', label: 'Cédula' }, { key: 'nombre', label: 'Nombre' },
-        { key: 'celular', label: 'Celular' }, { key: 'usuario', label: 'Usuario' }, { key: 'rol', label: 'Rol' }
+        { key: 'celular', label: 'Celular' }, { key: 'usuario', label: 'Usuario' }, { key: 'rol', label: 'Rol' }, { key: 'fechaCreacion', label: 'Fecha Creación' }
     ]));
 }
 
