@@ -2,6 +2,11 @@
  * compras.js - Módulo de Compras
  */
 
+/**
+ * Modulo de Compras
+ * Administra el registro de proveedores, categorias y nuevas compras.
+ * Al confirmar una compra, incrementa automaticamente el stock en el inventario.
+ */
 const CLAVE_PROVEEDORES = 'proveedores_tecnorivas';
 const CLAVE_CATEGORIAS = 'categorias_tecnorivas';
 const CLAVE_ARTICULOS = 'articulos_tecnorivas';

@@ -1,3 +1,8 @@
+/**
+ * Modulo de Caja
+ * Gestiona la apertura, cierre y movimientos del flujo de caja.
+ * Permite registrar ingresos y egresos de forma manual o automatica (cobros).
+ */
 const CLAVE_CAJA = 'cajas_tecnorivas';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -14,19 +19,31 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-movimiento')?.addEventListener('submit', registrarMovimientoManual);
 });
 
+// ==========================================
+// FUNCIONES DE ACCESO A DATOS (LOCALSTORAGE)
+// ==========================================
+
+// Retorna el historial completo de cajas registradas
 function obtenerCajas() {
     return obtenerDatos(CLAVE_CAJA);
 }
 
+// Guarda el arreglo actualizado de cajas en localStorage
 function guardarCajas(cajas) {
     guardarDatos(CLAVE_CAJA, cajas);
 }
 
+// Busca en el arreglo de cajas aquella que tenga el estado "abierta"
 function obtenerCajaActiva() {
     const cajas = obtenerCajas();
     return cajas.find(c => c.estado === 'abierta');
 }
 
+// ==========================================
+// RENDERIZADO Y CONTROL DE VISTAS (UI)
+// ==========================================
+
+// Actualiza el DOM (botones, textos, colores) dependiendo de si hay una caja abierta o no
 function actualizarVistaCaja() {
     const cajaActiva = obtenerCajaActiva();
     const btnAbrir = document.getElementById('btn-abrir-caja');
@@ -66,6 +83,7 @@ function actualizarVistaCaja() {
     renderHistorialCajas();
 }
 
+// Configura los event listeners para los botones principales (Abrir, Cerrar, Nuevo Movimiento)
 function configurarBotonesCaja() {
     document.getElementById('btn-abrir-caja')?.addEventListener('click', () => {
         Swal.fire({
@@ -99,6 +117,11 @@ function configurarBotonesCaja() {
     });
 }
 
+// ==========================================
+// OPERACIONES PRINCIPALES DE CAJA
+// ==========================================
+
+// Inicializa una nueva sesion de caja con el monto proveido por el cajero
 function abrirCaja(montoInicial) {
     if (obtenerCajaActiva()) {
         alertaError('Ya hay una caja abierta.'); return;
@@ -127,6 +150,7 @@ function abrirCaja(montoInicial) {
     actualizarVistaCaja();
 }
 
+// Finaliza la sesion actual de caja, marcandola como "cerrada" y calculando el estado final
 function cerrarCaja() {
     const cajas = obtenerCajas();
     const idx = cajas.findIndex(c => c.estado === 'abierta');
@@ -138,6 +162,7 @@ function cerrarCaja() {
     actualizarVistaCaja();
 }
 
+// Registra un movimiento ingresado manualmente desde el modal (ej. Gastos diarios)
 function registrarMovimientoManual(e) {
     e.preventDefault();
     const tipo = document.getElementById('mov-tipo').value;
@@ -153,6 +178,7 @@ function registrarMovimientoManual(e) {
     alertaExito('Movimiento registrado.');
 }
 
+// Funcion core para agregar cualquier tipo de movimiento al arreglo
 function agregarMovimientoCaja(tipo, concepto, monto) {
     const cajas = obtenerCajas();
     const idx = cajas.findIndex(c => c.estado === 'abierta');

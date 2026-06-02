@@ -1,3 +1,9 @@
+/**
+ * Modulo de Presupuestos
+ * Gestiona la creacion de proformas/presupuestos para los clientes.
+ * Valida stock disponible y permite al rol correspondiente "Cobrar" el presupuesto,
+ * afectando automaticamente el inventario y el flujo de caja.
+ */
 const CLAVE_CLIENTES_PRES = 'clientes_tecnorivas';
 const CLAVE_CATEGORIAS_PRES = 'categorias_tecnorivas';
 const CLAVE_PRESUPUESTOS = 'presupuestos_tecnorivas';
