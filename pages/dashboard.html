@@ -50,15 +50,7 @@
                 <a href="compras.html#compras" class="nav-sub-item"><i class="bi bi-receipt"></i> Compras</a>
             </div>
 
-            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-ventas">
-                <i class="bi bi-bag-check-fill"></i> Ventas
-                <i class="bi bi-chevron-down nav-arrow"></i>
-            </a>
-            <div class="nav-sub" id="sub-ventas">
-                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-person-lines-fill"></i> Clientes</a>
-                <a href="ventas.html#cajas" class="nav-sub-item"><i class="bi bi-cash-stack"></i> Caja</a>
-                <a href="ventas.html#ventas" class="nav-sub-item"><i class="bi bi-bag-fill"></i> Ventas</a>
-            </div>
+
 
             <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-inventario">
                 <i class="bi bi-boxes"></i> Inventario
@@ -78,17 +70,13 @@
                 <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
             </div>
 
-            <div class="sidebar-section">Reportes</div>
-            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-reportes">
-                <i class="bi bi-bar-chart-fill"></i> Reportes
-                <i class="bi bi-chevron-down nav-arrow"></i>
+            <a href="caja.html" class="nav-item-sidebar" id="nav-caja">
+                <i class="bi bi-cash-coin"></i> Caja
             </a>
-            <div class="nav-sub" id="sub-reportes">
-                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-boxes"></i> Inventario</a>
-                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-people-fill"></i> Clientes</a>
-                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
-                <a href="usuarios.html" class="nav-sub-item"><i class="bi bi-person-badge"></i> Usuarios</a>
-            </div>
+            <div class="sidebar-section">Reportes</div>
+            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes">
+                <i class="bi bi-bar-chart-fill"></i> Flujo de Caja & Reportes
+            </a>
         </nav>
 
         <div class="sidebar-footer">
@@ -170,9 +158,9 @@
                                     <i class="bi bi-cart-plus-fill"></i>
                                     <span>Nueva Compra</span>
                                 </a>
-                                <a href="ventas.html" class="acceso-card">
-                                    <i class="bi bi-bag-plus-fill"></i>
-                                    <span>Nueva Venta</span>
+                                <a href="presupuestos.html" class="acceso-card">
+                                    <i class="bi bi-file-earmark-plus-fill"></i>
+                                    <span>Nuevo Presup.</span>
                                 </a>
                                 <a href="inventario.html" class="acceso-card">
                                     <i class="bi bi-clipboard2-data-fill"></i>
@@ -191,8 +179,8 @@
                 <div class="col-lg-6">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <span><i class="bi bi-clock-history me-2"></i>Últimas Ventas</span>
-                            <a href="ventas.html" class="btn btn-sm btn-outline-primary">Ver todas</a>
+                            <span><i class="bi bi-clock-history me-2"></i>Últimos Presupuestos</span>
+                            <a href="presupuestos.html" class="btn btn-sm btn-outline-primary">Ver todos</a>
                         </div>
                         <div class="tabla-wrapper">
                             <table class="table">

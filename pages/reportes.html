@@ -39,15 +39,6 @@
                 <a href="compras.html#articulos" class="nav-sub-item"><i class="bi bi-box"></i> Artículos</a>
                 <a href="compras.html#compras" class="nav-sub-item"><i class="bi bi-receipt"></i> Compras</a>
             </div>
-            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-ventas">
-                <i class="bi bi-bag-check-fill"></i> Ventas
-                <i class="bi bi-chevron-down nav-arrow"></i>
-            </a>
-            <div class="nav-sub" id="sub-ventas">
-                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-person-lines-fill"></i> Clientes</a>
-                <a href="ventas.html#cajas" class="nav-sub-item"><i class="bi bi-cash-stack"></i> Caja</a>
-                <a href="ventas.html#ventas" class="nav-sub-item"><i class="bi bi-bag-fill"></i> Ventas</a>
-            </div>
             <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-inventario">
                 <i class="bi bi-boxes"></i> Inventario
                 <i class="bi bi-chevron-down nav-arrow"></i>
@@ -62,20 +53,17 @@
                 <i class="bi bi-chevron-down nav-arrow"></i>
             </a>
             <div class="nav-sub" id="sub-presupuestos">
+                <a href="presupuestos.html#clientes" class="nav-sub-item"><i class="bi bi-person-lines-fill"></i> Clientes</a>
                 <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
                 <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
             </div>
-            <div class="sidebar-section">Reportes</div>
-            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-reportes">
-                <i class="bi bi-bar-chart-fill"></i> Reportes
-                <i class="bi bi-chevron-down nav-arrow"></i>
+            <a href="caja.html" class="nav-item-sidebar" id="nav-caja">
+                <i class="bi bi-cash-coin"></i> Caja
             </a>
-            <div class="nav-sub" id="sub-reportes">
-                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-boxes"></i> Inventario</a>
-                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-people-fill"></i> Clientes</a>
-                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
-                <a href="usuarios.html" class="nav-sub-item"><i class="bi bi-person-badge"></i> Usuarios</a>
-            </div>
+            <div class="sidebar-section">Reportes</div>
+            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes">
+                <i class="bi bi-bar-chart-fill"></i> Flujo de Caja & Reportes
+            </a>
         </nav>
         <div class="sidebar-footer">
             <div class="usuario-sidebar">
@@ -108,92 +96,114 @@
             <!-- Resumen General -->
             <div class="dashboard-grid mb-4">
                 <div class="stat-card azul">
-                    <div class="stat-icon azul"><i class="bi bi-bag-check-fill"></i></div>
-                    <div class="stat-valor" id="r-total-ventas">RD$ 0</div>
-                    <div class="stat-label">Total en ventas</div>
+                    <div class="stat-icon azul"><i class="bi bi-wallet2"></i></div>
+                    <div class="stat-valor" id="r-ingresos">Gs. 0</div>
+                    <div class="stat-label">Ingresos Totales (Caja)</div>
                 </div>
-                <div class="stat-card dorado">
-                    <div class="stat-icon dorado"><i class="bi bi-cart-fill"></i></div>
-                    <div class="stat-valor" id="r-total-compras">RD$ 0</div>
-                    <div class="stat-label">Total en compras</div>
+                <div class="stat-card rojo">
+                    <div class="stat-icon rojo"><i class="bi bi-cart-dash"></i></div>
+                    <div class="stat-valor" id="r-egresos">Gs. 0</div>
+                    <div class="stat-label">Egresos Totales (Caja)</div>
                 </div>
                 <div class="stat-card verde">
                     <div class="stat-icon verde"><i class="bi bi-graph-up-arrow"></i></div>
-                    <div class="stat-valor" id="r-utilidad">RD$ 0</div>
-                    <div class="stat-label">Utilidad estimada</div>
+                    <div class="stat-valor" id="r-flujo-caja">Gs. 0</div>
+                    <div class="stat-label">Flujo de Caja Neto</div>
                 </div>
-                <div class="stat-card rojo">
-                    <div class="stat-icon rojo"><i class="bi bi-people-fill"></i></div>
-                    <div class="stat-valor" id="r-total-clientes">0</div>
-                    <div class="stat-label">Clientes registrados</div>
+                <div class="stat-card dorado">
+                    <div class="stat-icon dorado"><i class="bi bi-file-earmark-check"></i></div>
+                    <div class="stat-valor" id="r-presupuestos-cobrados">0</div>
+                    <div class="stat-label">Presupuestos Cobrados</div>
                 </div>
             </div>
 
             <div class="row g-4">
-                <!-- Reporte Ventas -->
+                <!-- Reporte Presupuestos -->
                 <div class="col-lg-6">
-                    <div class="card">
+                    <div class="card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <span><i class="bi bi-bag-fill me-2"></i>Ventas por Estado</span>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="exportarReporteVentas()"><i class="bi bi-download"></i> Exportar a Excel</button>
+                            <span><i class="bi bi-file-earmark-text-fill me-2"></i>Presupuestos por Estado</span>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-success" onclick="exportarReportePresupuestos()" title="Exportar a Excel"><i class="bi bi-file-earmark-spreadsheet"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="exportarReportePresupuestosPDF()" title="Exportar a PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirReportePresupuestos()" title="Imprimir"><i class="bi bi-printer"></i></button>
+                            </div>
                         </div>
                         <div class="card-body">
-                            <div id="reporte-ventas-estados"></div>
+                            <div id="reporte-presupuestos-estados" class="mb-3"></div>
+                            <div class="tabla-wrapper">
+                                <table class="table table-sm table-hover" id="tabla-presupuestos-reporte">
+                                    <thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th></tr></thead>
+                                    <tbody id="presupuestos-reporte-body"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Reporte Compras -->
                 <div class="col-lg-6">
-                    <div class="card">
+                    <div class="card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-cart-fill me-2"></i>Compras por Estado</span>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="exportarReporteCompras()"><i class="bi bi-download"></i> Exportar a Excel</button>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-success" onclick="exportarReporteCompras()" title="Exportar a Excel"><i class="bi bi-file-earmark-spreadsheet"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="exportarReporteComprasPDF()" title="Exportar a PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirReporteCompras()" title="Imprimir"><i class="bi bi-printer"></i></button>
+                            </div>
                         </div>
                         <div class="card-body">
-                            <div id="reporte-compras-estados"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Top artículos vendidos -->
-                <div class="col-lg-6">
-                    <div class="card">
-                        <div class="card-header"><i class="bi bi-trophy-fill me-2"></i>Top 5 Artículos Más Vendidos</div>
-                        <div class="tabla-wrapper">
-                            <table class="table">
-                                <thead><tr><th>#</th><th>Artículo</th><th>Unidades</th><th>Total</th></tr></thead>
-                                <tbody id="top-articulos-body"></tbody>
-                            </table>
+                            <div id="reporte-compras-estados" class="mb-3"></div>
+                            <div class="tabla-wrapper">
+                                <table class="table table-sm table-hover" id="tabla-compras-reporte">
+                                    <thead><tr><th>N°</th><th>Fecha</th><th>Proveedor</th><th>Total</th><th>Estado</th></tr></thead>
+                                    <tbody id="compras-reporte-body"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Inventario valorizado -->
                 <div class="col-lg-6">
-                    <div class="card">
+                    <div class="card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-clipboard2-data-fill me-2"></i>Inventario Valorizado</span>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="exportarInventarioValoriz()"><i class="bi bi-download"></i> Exportar a Excel</button>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-success" onclick="exportarInventarioValoriz()" title="Exportar a Excel"><i class="bi bi-file-earmark-spreadsheet"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="exportarInventarioValorizPDF()" title="Exportar a PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirInventario()" title="Imprimir"><i class="bi bi-printer"></i></button>
+                            </div>
                         </div>
-                        <div class="tabla-wrapper">
-                            <table class="table">
-                                <thead><tr><th>Artículo</th><th>Stock</th><th>Precio</th><th>Valor</th></tr></thead>
-                                <tbody id="inventario-valor-body"></tbody>
-                            </table>
+                        <div class="card-body p-0">
+                            <div class="tabla-wrapper" style="border:none;">
+                                <table class="table table-hover mb-0" id="tabla-inventario-reporte">
+                                    <thead><tr><th>Artículo</th><th>Stock</th><th>Precio</th><th>Valor</th></tr></thead>
+                                    <tbody id="inventario-valor-body"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Ventas por mes -->
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header"><i class="bi bi-calendar3 me-2"></i>Ventas Recientes (últimas 10)</div>
-                        <div class="tabla-wrapper">
-                            <table class="table">
-                                <thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Vendedor</th></tr></thead>
-                                <tbody id="ventas-recientes-body"></tbody>
-                            </table>
+                <!-- Transacciones Recientes -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-clock-history me-2"></i>Sesiones de Caja Recientes</span>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-success" onclick="exportarSesionesCaja()" title="Exportar a Excel"><i class="bi bi-file-earmark-spreadsheet"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="exportarSesionesCajaPDF()" title="Exportar a PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirSesionesCaja()" title="Imprimir"><i class="bi bi-printer"></i></button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="tabla-wrapper" style="border:none; overflow-x: auto;">
+                                <table class="table table-sm table-hover mb-0" id="tabla-caja-reporte">
+                                    <thead><tr><th>Apertura</th><th>Cajero</th><th>Inicial</th><th>Ingresos</th><th>Egresos</th><th>Saldo</th><th>Estado</th></tr></thead>
+                                    <tbody id="movimientos-recientes-body"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -203,6 +213,8 @@
 </div>
 
 <script src="../bt/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script src="../js/app.js"></script>
 <script src="../js/reportes.js"></script>
 </body>

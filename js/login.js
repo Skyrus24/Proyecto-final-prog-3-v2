@@ -34,10 +34,18 @@ document.getElementById('form-login').addEventListener('submit', async (e) => {
 
     if (user) {
         guardarSesion({ id: user.id, nombre: user.nombre, usuario: user.usuario, rol: user.rol });
+        const rolesMap = {
+            'superusuario': 'Superusuario',
+            'admin': 'Administrador',
+            'supervisor': 'Supervisor',
+            'asesor': 'Asesor',
+            'cajero': 'Cajero',
+            'tecnico': 'Técnico'
+        };
         await Swal.fire({
             icon: 'success',
             title: `¡Bienvenido, ${user.nombre}!`,
-            text: `Rol: ${user.rol === 'admin' ? 'Administrador' : 'Vendedor'}`,
+            text: `Rol: ${rolesMap[user.rol] || user.rol}`,
             timer: 1500,
             showConfirmButton: false
         });

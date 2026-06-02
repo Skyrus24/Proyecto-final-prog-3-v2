@@ -1,0 +1,249 @@
+const CLAVE_CAJA = 'cajas_tecnorivas';
+
+document.addEventListener('DOMContentLoaded', () => {
+    const sesion = protegerPagina();
+    if (!sesion) return;
+
+    if (!localStorage.getItem(CLAVE_CAJA)) {
+        localStorage.setItem(CLAVE_CAJA, JSON.stringify([]));
+    }
+
+    configurarBotonesCaja();
+    actualizarVistaCaja();
+
+    document.getElementById('form-movimiento')?.addEventListener('submit', registrarMovimientoManual);
+});
+
+function obtenerCajas() {
+    return obtenerDatos(CLAVE_CAJA);
+}
+
+function guardarCajas(cajas) {
+    guardarDatos(CLAVE_CAJA, cajas);
+}
+
+function obtenerCajaActiva() {
+    const cajas = obtenerCajas();
+    return cajas.find(c => c.estado === 'abierta');
+}
+
+function actualizarVistaCaja() {
+    const cajaActiva = obtenerCajaActiva();
+    const btnAbrir = document.getElementById('btn-abrir-caja');
+    const btnCerrar = document.getElementById('btn-cerrar-caja');
+    const btnMovimiento = document.getElementById('btn-movimiento-manual');
+    const badgeEstado = document.getElementById('caja-estado-badge');
+    const saldoContainer = document.getElementById('caja-saldo-container');
+    const saldoActualText = document.getElementById('caja-saldo-actual');
+    const contMov = document.getElementById('contenedor-movimientos');
+    const infoApertura = document.getElementById('caja-info-apertura');
+
+    if (cajaActiva) {
+        btnAbrir?.classList.add('d-none');
+        btnCerrar?.classList.remove('d-none');
+        btnMovimiento?.classList.remove('d-none');
+        saldoContainer?.classList.remove('d-none');
+        contMov?.classList.remove('d-none');
+
+        if (badgeEstado) badgeEstado.innerHTML = '<span class="badge bg-success">ABIERTA</span>';
+        if (infoApertura) infoApertura.textContent = `Abierta por ${cajaActiva.cajero} el ${formatearFechaHora(cajaActiva.fechaApertura)}`;
+        
+        const saldoFinal = cajaActiva.montoInicial + cajaActiva.ingresos - cajaActiva.egresos;
+        if (saldoActualText) saldoActualText.textContent = formatearMoneda(saldoFinal);
+
+        renderMovimientosActivos(cajaActiva.movimientos);
+    } else {
+        btnAbrir?.classList.remove('d-none');
+        btnCerrar?.classList.add('d-none');
+        btnMovimiento?.classList.add('d-none');
+        saldoContainer?.classList.add('d-none');
+        contMov?.classList.add('d-none');
+
+        if (badgeEstado) badgeEstado.innerHTML = '<span class="badge bg-secondary">CERRADA</span>';
+        if (infoApertura) infoApertura.textContent = 'Abre la caja para comenzar a operar.';
+    }
+
+    renderHistorialCajas();
+}
+
+function configurarBotonesCaja() {
+    document.getElementById('btn-abrir-caja')?.addEventListener('click', () => {
+        Swal.fire({
+            title: 'Abrir Caja',
+            input: 'number',
+            inputLabel: 'Monto Inicial (Gs.)',
+            inputValue: 0,
+            inputAttributes: { min: 0, step: 1 },
+            showCancelButton: true,
+            confirmButtonText: 'Abrir Caja',
+            cancelButtonText: 'Cancelar',
+            preConfirm: (val) => {
+                if (val === '' || isNaN(val) || val < 0) Swal.showValidationMessage('Ingrese un monto válido');
+                return parseFloat(val);
+            }
+        }).then(res => {
+            if (res.isConfirmed) {
+                abrirCaja(res.value);
+            }
+        });
+    });
+
+    document.getElementById('btn-cerrar-caja')?.addEventListener('click', async () => {
+        if (!(await confirmarAccion('¿Está seguro de cerrar la caja actual?', 'Cerrar Caja'))) return;
+        cerrarCaja();
+    });
+
+    document.getElementById('btn-movimiento-manual')?.addEventListener('click', () => {
+        document.getElementById('form-movimiento').reset();
+        new bootstrap.Modal(document.getElementById('modal-movimiento')).show();
+    });
+}
+
+function abrirCaja(montoInicial) {
+    if (obtenerCajaActiva()) {
+        alertaError('Ya hay una caja abierta.'); return;
+    }
+    const sesion = obtenerSesion();
+    const cajas = obtenerCajas();
+    const nuevaCaja = {
+        id: generarId(cajas),
+        cajero: sesion.nombre,
+        fechaApertura: fechaHoraAhora(),
+        fechaCierre: null,
+        montoInicial: montoInicial,
+        ingresos: 0,
+        egresos: 0,
+        estado: 'abierta',
+        movimientos: [{
+            hora: fechaHoraAhora(),
+            tipo: 'ingreso',
+            concepto: 'Apertura de Caja',
+            monto: montoInicial
+        }]
+    };
+    cajas.push(nuevaCaja);
+    guardarCajas(cajas);
+    alertaExito('Caja abierta exitosamente.');
+    actualizarVistaCaja();
+}
+
+function cerrarCaja() {
+    const cajas = obtenerCajas();
+    const idx = cajas.findIndex(c => c.estado === 'abierta');
+    if (idx === -1) return;
+    cajas[idx].estado = 'cerrada';
+    cajas[idx].fechaCierre = fechaHoraAhora();
+    guardarCajas(cajas);
+    alertaExito('Caja cerrada correctamente.');
+    actualizarVistaCaja();
+}
+
+function registrarMovimientoManual(e) {
+    e.preventDefault();
+    const tipo = document.getElementById('mov-tipo').value;
+    const concepto = document.getElementById('mov-concepto').value.trim();
+    const monto = parseFloat(document.getElementById('mov-monto').value);
+
+    if (!concepto || isNaN(monto) || monto <= 0) {
+        alertaError('Ingrese datos válidos.'); return;
+    }
+
+    agregarMovimientoCaja(tipo, concepto, monto);
+    bootstrap.Modal.getInstance(document.getElementById('modal-movimiento')).hide();
+    alertaExito('Movimiento registrado.');
+}
+
+function agregarMovimientoCaja(tipo, concepto, monto) {
+    const cajas = obtenerCajas();
+    const idx = cajas.findIndex(c => c.estado === 'abierta');
+    if (idx === -1) {
+        alertaError('No hay caja abierta para registrar el movimiento.'); return false;
+    }
+
+    const mov = {
+        hora: fechaHoraAhora(),
+        tipo: tipo,
+        concepto: concepto,
+        monto: monto
+    };
+
+    cajas[idx].movimientos.push(mov);
+    if (tipo === 'ingreso') cajas[idx].ingresos += monto;
+    else cajas[idx].egresos += monto;
+
+    guardarCajas(cajas);
+    actualizarVistaCaja();
+    return true;
+}
+
+window.cobrarPresupuestoEnCaja = function(numero, monto) {
+    return agregarMovimientoCaja('ingreso', `Cobro Presupuesto ${numero}`, monto);
+};
+
+function renderMovimientosActivos(movs) {
+    const tbody = document.getElementById('tabla-movimientos-actual');
+    if (!tbody) return;
+    
+    if (movs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Sin movimientos</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = movs.map(m => `
+        <tr>
+            <td>${new Date(m.hora).toLocaleTimeString('es-DO')}</td>
+            <td><span class="badge ${m.tipo === 'ingreso' ? 'bg-success' : 'bg-danger'}">${m.tipo.toUpperCase()}</span></td>
+            <td>${m.concepto}</td>
+            <td class="${m.tipo === 'ingreso' ? 'text-success' : 'text-danger'} fw-bold">${m.tipo === 'ingreso' ? '+' : '-'}${formatearMoneda(m.monto)}</td>
+        </tr>
+    `).reverse().join('');
+}
+
+function renderHistorialCajas() {
+    const tbody = document.getElementById('tabla-historial-cajas');
+    if (!tbody) return;
+    const cajas = obtenerCajas().filter(c => c.estado === 'cerrada').reverse();
+
+    if (cajas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay historial de cajas</td></tr>';
+        document.getElementById('contador-historial').textContent = '0 sesiones';
+        return;
+    }
+
+    document.getElementById('contador-historial').textContent = `${cajas.length} sesiones`;
+    
+    tbody.innerHTML = cajas.map(c => `
+        <tr>
+            <td>${formatearFechaHora(c.fechaApertura)}</td>
+            <td>${c.cajero}</td>
+            <td>${formatearMoneda(c.montoInicial)}</td>
+            <td class="text-success">+${formatearMoneda(c.ingresos)}</td>
+            <td class="text-danger">-${formatearMoneda(c.egresos)}</td>
+            <td class="fw-bold text-primary">${formatearMoneda(c.montoInicial + c.ingresos - c.egresos)}</td>
+            <td><span class="badge bg-secondary">CERRADA</span></td>
+        </tr>
+    `).join('');
+}
+
+function formatearFechaHora(iso) {
+    if (!iso) return '-';
+    return new Date(iso).toLocaleString('es-DO', { 
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute:'2-digit'
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const sesion = protegerPagina();
+    if (!sesion) return;
+    configurarBotonesCaja();
+    actualizarVistaCaja();
+    
+    document.getElementById('form-movimiento')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const tipo = document.getElementById('mov-tipo').value;
+        const concepto = document.getElementById('mov-concepto').value.trim();
+        const monto = parseFloat(document.getElementById('mov-monto').value);
+        registrarMovimientoManual(tipo, concepto, monto);
+    });
+});

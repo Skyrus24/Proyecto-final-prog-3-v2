@@ -32,134 +32,56 @@ function cerrarSesion() {
 function protegerPagina() {
     const sesion = obtenerSesion();
     if (!sesion) {
-        window.location.href = '../login.html';
+        const ruta = location.pathname.includes('/pages/') ? '../login.html' : 'login.html';
+        window.location.href = ruta;
         return null;
     }
+    
+    // Validar accesos según rol y página actual
+    const pagina = location.pathname.split('/').pop();
+    if (pagina && pagina !== 'dashboard.html' && pagina !== 'login.html' && pagina !== '') {
+        const accesos = {
+            'usuarios.html': ['superusuario', 'admin'],
+            'compras.html': ['superusuario', 'admin', 'supervisor'],
+            'reportes.html': ['superusuario', 'admin', 'supervisor'],
+            'inventario.html': ['superusuario', 'admin', 'supervisor', 'asesor'],
+            'presupuestos.html': ['superusuario', 'admin', 'asesor', 'cajero'],
+            'caja.html': ['superusuario', 'admin', 'cajero']
+        };
+        const rolesPermitidos = accesos[pagina];
+        if (rolesPermitidos && !rolesPermitidos.includes(sesion.rol)) {
+            const rutaDash = location.pathname.includes('/pages/') ? 'dashboard.html' : 'pages/dashboard.html';
+            window.location.href = rutaDash;
+            return null;
+        }
+    }
+    
     return sesion;
 }
 
 function soloAdmin() {
     const sesion = obtenerSesion();
-    if (!sesion || sesion.rol !== 'admin') {
-        Swal.fire({ icon: 'warning', title: 'Acceso restringido', text: 'Solo administradores pueden acceder a esta sección.' });
+    if (!sesion || (sesion.rol !== 'admin' && sesion.rol !== 'superusuario')) {
+        Swal.fire({ icon: 'warning', title: 'Acceso restringido', text: 'Solo superusuarios pueden acceder a esta sección o realizar esta acción.' });
         return false;
     }
     return true;
 }
 
-// ============================================================
-// DATOS INICIALES (SEED)
-// ============================================================
-function inicializarDatos() {
-    // Usuarios por defecto
-    if (!localStorage.getItem('usuarios_tecnorivas')) {
-        const usuarios = [
-            { id: 1, cedula: '001-0000001-1', nombre: 'Administrador Principal', celular: '809-000-0001', usuario: 'admin', contrasena: 'admin123', rol: 'admin', fechaCreacion: new Date().toISOString() },
-            { id: 2, cedula: '001-0000002-2', nombre: 'Vendedor Demo', celular: '809-000-0002', usuario: 'vendedor', contrasena: 'vendedor123', rol: 'vendedor', fechaCreacion: new Date().toISOString() },
-            { id: 3, cedula: '001-0000003-3', nombre: 'Carlos Ruiz', celular: '809-000-0003', usuario: 'cruiz', contrasena: 'Vendedor1@', rol: 'vendedor', fechaCreacion: new Date().toISOString() },
-            { id: 4, cedula: '001-0000004-4', nombre: 'Ana Gómez', celular: '809-000-0004', usuario: 'agomez', contrasena: 'Vendedor1@', rol: 'vendedor', fechaCreacion: new Date().toISOString() },
-            { id: 5, cedula: '001-0000005-5', nombre: 'Luis Felipe', celular: '809-000-0005', usuario: 'lfelipe', contrasena: 'Vendedor1@', rol: 'admin', fechaCreacion: new Date().toISOString() },
-            { id: 6, cedula: '001-0000006-6', nombre: 'María Pérez', celular: '809-000-0006', usuario: 'mperez', contrasena: 'Vendedor1@', rol: 'vendedor', fechaCreacion: new Date().toISOString() },
-            { id: 7, cedula: '001-0000007-7', nombre: 'Jorge Díaz', celular: '809-000-0007', usuario: 'jdiaz', contrasena: 'Vendedor1@', rol: 'vendedor', fechaCreacion: new Date().toISOString() },
-            { id: 8, cedula: '001-0000008-8', nombre: 'Laura Medina', celular: '809-000-0008', usuario: 'lmedina', contrasena: 'Vendedor1@', rol: 'vendedor', fechaCreacion: new Date().toISOString() },
-            { id: 9, cedula: '001-0000009-9', nombre: 'Pedro Sánchez', celular: '809-000-0009', usuario: 'psanchez', contrasena: 'Vendedor1@', rol: 'vendedor', fechaCreacion: new Date().toISOString() },
-            { id: 10, cedula: '001-0000010-0', nombre: 'Elena Castillo', celular: '809-000-0010', usuario: 'ecastillo', contrasena: 'Vendedor1@', rol: 'vendedor', fechaCreacion: new Date().toISOString() }
-        ];
-        guardarDatos('usuarios_tecnorivas', usuarios);
-    }
+window.confirmarAccion = async function(msj, titulo = 'Atención') {
+    return Swal.fire({
+        title: titulo,
+        text: msj,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => result.isConfirmed);
+};
 
-    // Categorías por defecto
-    if (!localStorage.getItem('categorias_tecnorivas')) {
-        const categorias = [
-            { id: 1, nombre: 'Refrigeración', descripcion: 'Equipos y repuestos de refrigeración' },
-            { id: 2, nombre: 'Electricidad', descripcion: 'Materiales eléctricos' },
-            { id: 3, nombre: 'Construcción', descripcion: 'Materiales de construcción' },
-            { id: 4, nombre: 'Herramientas', descripcion: 'Herramientas generales' },
-            { id: 5, nombre: 'Plomería', descripcion: 'Tuberías y accesorios de agua' },
-            { id: 6, nombre: 'Pintura', descripcion: 'Pinturas y solventes' },
-            { id: 7, nombre: 'Iluminación', descripcion: 'Lámparas y bombillas' },
-            { id: 8, nombre: 'Seguridad', descripcion: 'Equipos de protección y alarmas' },
-            { id: 9, nombre: 'Jardinería', descripcion: 'Equipos para mantenimiento exterior' },
-            { id: 10, nombre: 'Automotriz', descripcion: 'Accesorios y repuestos básicos' }
-        ];
-        guardarDatos('categorias_tecnorivas', categorias);
-    }
 
-    // Servicios por defecto
-    if (!localStorage.getItem('servicios_tecnorivas')) {
-        const servicios = [
-            { id: 1, nombre: 'Mantenimiento de Aire Acondicionado', categoriaId: 1, precio: 150000, iva: 10 },
-            { id: 2, nombre: 'Instalación de Compresor', categoriaId: 1, precio: 250000, iva: 10 },
-            { id: 3, nombre: 'Instalación Eléctrica Básica', categoriaId: 2, precio: 300000, iva: 10 },
-            { id: 4, nombre: 'Cambio de Panel Eléctrico', categoriaId: 2, precio: 450000, iva: 10 },
-            { id: 5, nombre: 'Mano de Obra Construcción (Día)', categoriaId: 3, precio: 180000, iva: 10 },
-            { id: 6, nombre: 'Reparación de Fugas de Agua', categoriaId: 5, precio: 120000, iva: 10 },
-            { id: 7, nombre: 'Pintura de Interiores (m2)', categoriaId: 6, precio: 25000, iva: 10 },
-            { id: 8, nombre: 'Instalación de Lámparas', categoriaId: 7, precio: 80000, iva: 10 },
-            { id: 9, nombre: 'Instalación de Cámaras', categoriaId: 8, precio: 350000, iva: 10 },
-            { id: 10, nombre: 'Mantenimiento de Jardín', categoriaId: 9, precio: 90000, iva: 10 }
-        ];
-        guardarDatos('servicios_tecnorivas', servicios);
-    }
-
-    // Proveedores por defecto
-    if (!localStorage.getItem('proveedores_tecnorivas')) {
-        const proveedores = [
-            { id: 1, nombre: 'Distribuidora Fría S.A.', rnc: '130-12345-6', telefono: '809-555-0101', email: 'ventas@fria.com', direccion: 'Av. Principal #10', contacto: 'Juan Pérez' },
-            { id: 2, nombre: 'ElectroSupplies RD', rnc: '130-67890-1', telefono: '809-555-0202', email: 'info@electro.com', direccion: 'Calle 5 #22', contacto: 'María López' },
-            { id: 3, nombre: 'Materiales Constanza', rnc: '130-22222-3', telefono: '809-555-0303', email: 'ventas@constanza.com', direccion: 'Av. Industrial #1', contacto: 'Pedro Gil' },
-            { id: 4, nombre: 'Herramientas Globales', rnc: '130-33333-4', telefono: '809-555-0404', email: 'contacto@hglobales.com', direccion: 'Calle Nueva #3', contacto: 'Luis Roa' },
-            { id: 5, nombre: 'Tuberías y Más', rnc: '130-44444-5', telefono: '809-555-0505', email: 'ventas@tuberiasymas.com', direccion: 'Plaza Central L2', contacto: 'Ana Rivas' },
-            { id: 6, nombre: 'Pinturas Caribe', rnc: '130-55555-6', telefono: '809-555-0606', email: 'info@pcaribe.com', direccion: 'Av. Duarte #45', contacto: 'Carlos Mora' },
-            { id: 7, nombre: 'Luz y Diseño', rnc: '130-66666-7', telefono: '809-555-0707', email: 'ventas@luzdiseno.com', direccion: 'Calle 8 #12', contacto: 'Elena Cruz' },
-            { id: 8, nombre: 'Seguridad Total', rnc: '130-77777-8', telefono: '809-555-0808', email: 'info@seguridadt.com', direccion: 'Plaza Las Américas', contacto: 'José Mateo' },
-            { id: 9, nombre: 'Jardines del Sur', rnc: '130-88888-9', telefono: '809-555-0909', email: 'ventas@jardines.com', direccion: 'Av. Sur #90', contacto: 'Lucía Peña' },
-            { id: 10, nombre: 'Autopartes Rápidas', rnc: '130-99999-0', telefono: '809-555-1010', email: 'ventas@autopartes.com', direccion: 'Av. Máximo Gómez', contacto: 'Roberto Gil' }
-        ];
-        guardarDatos('proveedores_tecnorivas', proveedores);
-    }
-
-    // Artículos por defecto
-    if (!localStorage.getItem('articulos_tecnorivas')) {
-        const articulos = [
-            { id: 1,  codigo: '7501000001001', nombre: 'Compresor 1/2 HP',               categoriaId: 1, precio: 8500,  stock: 10,  stockMinimo: 3,  unidad: 'und',   iva: 18 },
-            { id: 2,  codigo: '7501000001002', nombre: 'Gas Refrigerante R22',            categoriaId: 1, precio: 1200,  stock: 25,  stockMinimo: 5,  unidad: 'lb',    iva: 18 },
-            { id: 3,  codigo: '7501000002003', nombre: 'Cable #12 AWG',                  categoriaId: 2, precio: 85,    stock: 200, stockMinimo: 50, unidad: 'm',     iva: 18 },
-            { id: 4,  codigo: '7501000002004', nombre: 'Breaker 20A',                    categoriaId: 2, precio: 450,   stock: 30,  stockMinimo: 10, unidad: 'und',   iva: 18 },
-            { id: 5,  codigo: '7501000003005', nombre: 'Cemento Portland',               categoriaId: 3, precio: 650,   stock: 100, stockMinimo: 20, unidad: 'saco',  iva: 18 },
-            { id: 6,  codigo: '7501000004006', nombre: 'Taladro Percutor 800W',          categoriaId: 4, precio: 3500,  stock: 15,  stockMinimo: 4,  unidad: 'und',   iva: 18 },
-            { id: 7,  codigo: '7501000005007', nombre: 'Tubo PVC 1/2"',                 categoriaId: 5, precio: 250,   stock: 150, stockMinimo: 30, unidad: 'm',     iva: 18 },
-            { id: 8,  codigo: '7501000006008', nombre: 'Galón Pintura Blanca Acrílica', categoriaId: 6, precio: 1800,  stock: 40,  stockMinimo: 10, unidad: 'galon', iva: 18 },
-            { id: 9,  codigo: '7501000007009', nombre: 'Bombillo LED 12W',               categoriaId: 7, precio: 150,   stock: 300, stockMinimo: 50, unidad: 'und',   iva: 18 },
-            { id: 10, codigo: '7501000008010', nombre: 'Cámara IP 1080p',               categoriaId: 8, precio: 2200,  stock: 20,  stockMinimo: 5,  unidad: 'und',   iva: 18 }
-        ];
-        guardarDatos('articulos_tecnorivas', articulos);
-    }
-
-    // Clientes por defecto
-    if (!localStorage.getItem('clientes_tecnorivas')) {
-        const clientes = [
-            { id: 1, cedula: '001-1111111-1', nombre: 'Cliente General', telefono: '809-111-1111', email: 'cliente@email.com', direccion: 'Sin dirección' },
-            { id: 2, cedula: '001-2222222-2', nombre: 'Empresa ABC S.R.L.', telefono: '809-222-2222', email: 'abc@empresa.com', direccion: 'Zona Industrial #5' },
-            { id: 3, cedula: '001-3333333-3', nombre: 'Juan Francisco', telefono: '809-333-3333', email: 'juanf@email.com', direccion: 'Calle 10 #20' },
-            { id: 4, cedula: '001-4444444-4', nombre: 'Constructora del Sol', telefono: '809-444-4444', email: 'info@csol.com', direccion: 'Av. Kennedy' },
-            { id: 5, cedula: '001-5555555-5', nombre: 'María Almonte', telefono: '809-555-5555', email: 'malmonte@email.com', direccion: 'Residencial Las Praderas' },
-            { id: 6, cedula: '001-6666666-6', nombre: 'Ferretería Popular', telefono: '809-666-6666', email: 'ferrep@email.com', direccion: 'Av. Independencia #100' },
-            { id: 7, cedula: '001-7777777-7', nombre: 'José Liranzo', telefono: '809-777-7777', email: 'jliranzo@email.com', direccion: 'Sector Los Ríos' },
-            { id: 8, cedula: '001-8888888-8', nombre: 'Plaza del Pollo', telefono: '809-888-8888', email: 'plazap@email.com', direccion: 'Av. Luperón' },
-            { id: 9, cedula: '001-9999999-9', nombre: 'Rosa Tavares', telefono: '809-999-9999', email: 'rosat@email.com', direccion: 'Ensanche Naco' },
-            { id: 10, cedula: '001-0000000-0', nombre: 'Inversiones Múltiples', telefono: '809-000-1111', email: 'invm@email.com', direccion: 'Bella Vista' }
-        ];
-        guardarDatos('clientes_tecnorivas', clientes);
-    }
-
-    // Inicializar arrays vacíos si no existen
-    ['compras_tecnorivas', 'ventas_tecnorivas', 'movimientos_inventario', 'pagos_compras', 'cobros_ventas', 'cajas_tecnorivas'].forEach(clave => {
-        if (!localStorage.getItem(clave)) {
-            guardarDatos(clave, []);
-        }
-    });
-}
 
 // ============================================================
 // GENERADOR DE ID
@@ -344,19 +266,89 @@ function _crearPDF(titulo) {
     doc.save(`${titulo.replace(/ /g, '_')}_${fechaHoy()}.pdf`);
 }
 
-// ============================================================
-// RENDERIZAR INFO DE SESIÓN EN NAVBAR
-// ============================================================
 function renderizarSesionNavbar() {
     const sesion = obtenerSesion();
     const elNombre = document.getElementById('nav-usuario-nombre');
     const elRol = document.getElementById('nav-usuario-rol');
+    
+    const rolesMap = {
+        'superusuario': 'Superusuario',
+        'admin': 'Administrador',
+        'supervisor': 'Supervisor',
+        'asesor': 'Asesor',
+        'cajero': 'Cajero',
+        'tecnico': 'Técnico'
+    };
+    
     if (elNombre && sesion) elNombre.textContent = sesion.nombre;
-    if (elRol && sesion) elRol.textContent = sesion.rol === 'admin' ? 'Administrador' : 'Vendedor';
+    if (elRol && sesion) elRol.textContent = rolesMap[sesion.rol] || sesion.rol;
 
-    if (sesion && sesion.rol !== 'admin') {
-        const toHide = document.querySelectorAll('.admin-only, #nav-usuarios, #nav-reportes');
-        toHide.forEach(el => el.style.display = 'none');
+    if (sesion) {
+        // Permisos de módulos principales
+        const permisos = {
+            'superusuario': ['usuarios', 'compras', 'inventario', 'presupuestos', 'reportes', 'caja'],
+            'admin': ['usuarios', 'compras', 'inventario', 'presupuestos', 'reportes', 'caja'],
+            'supervisor': ['compras', 'inventario', 'reportes'],
+            'asesor': ['inventario', 'presupuestos'],
+            'cajero': ['presupuestos', 'caja']
+        };
+
+        const modulosPermitidos = permisos[sesion.rol] || [];
+
+        // Ocultar/mostrar elementos de nivel superior
+        const navUsuarios = document.getElementById('nav-usuarios');
+        if (navUsuarios) navUsuarios.style.setProperty('display', modulosPermitidos.includes('usuarios') ? '' : 'none', 'important');
+
+        const parentCompras = document.querySelector('[data-sub="sub-compras"]');
+        const subCompras = document.getElementById('sub-compras');
+        if (parentCompras) parentCompras.style.setProperty('display', modulosPermitidos.includes('compras') ? '' : 'none', 'important');
+        if (subCompras) subCompras.style.setProperty('display', modulosPermitidos.includes('compras') ? '' : 'none', 'important');
+
+        const parentInventario = document.querySelector('[data-sub="sub-inventario"]');
+        const subInventario = document.getElementById('sub-inventario');
+        if (parentInventario) parentInventario.style.setProperty('display', modulosPermitidos.includes('inventario') ? '' : 'none', 'important');
+        if (subInventario) subInventario.style.setProperty('display', modulosPermitidos.includes('inventario') ? '' : 'none', 'important');
+
+        const parentPresupuestos = document.querySelector('[data-sub="sub-presupuestos"]');
+        const subPresupuestos = document.getElementById('sub-presupuestos');
+        if (parentPresupuestos) parentPresupuestos.style.setProperty('display', modulosPermitidos.includes('presupuestos') ? '' : 'none', 'important');
+        if (subPresupuestos) subPresupuestos.style.setProperty('display', modulosPermitidos.includes('presupuestos') ? '' : 'none', 'important');
+
+        const navReportes = document.getElementById('nav-reportes');
+        if (navReportes) navReportes.style.setProperty('display', modulosPermitidos.includes('reportes') ? '' : 'none', 'important');
+        
+        const navCaja = document.getElementById('nav-caja');
+        if (navCaja) navCaja.style.setProperty('display', modulosPermitidos.includes('caja') ? '' : 'none', 'important');
+        
+        // Ocultar sección de Reportes y Módulos del texto de la cabecera si no está permitido
+        document.querySelectorAll('.sidebar-section').forEach(sect => {
+            if (sect.textContent.trim().toLowerCase() === 'reportes' && !modulosPermitidos.includes('reportes')) {
+                sect.style.setProperty('display', 'none', 'important');
+            }
+            if (sect.textContent.trim().toLowerCase() === 'módulos' && 
+                !modulosPermitidos.includes('compras') && 
+                !modulosPermitidos.includes('inventario') && 
+                !modulosPermitidos.includes('presupuestos')) {
+                sect.style.setProperty('display', 'none', 'important');
+            }
+        });
+
+        // Ocultar sub-items específicos según rol
+        if (sesion.rol === 'asesor') {
+            document.querySelectorAll('#sub-inventario a').forEach(link => {
+                if (link.getAttribute('href').includes('movimientos')) {
+                    link.style.setProperty('display', 'none', 'important');
+                }
+            });
+        }
+
+        if (sesion.rol === 'cajero') {
+            document.querySelectorAll('#sub-presupuestos a').forEach(link => {
+                if (link.getAttribute('href').includes('clientes') || link.getAttribute('href').includes('categorias')) {
+                    link.style.setProperty('display', 'none', 'important');
+                }
+            });
+        }
     }
 }
 
@@ -395,11 +387,11 @@ function alertaAdvertencia(msg) { Swal.fire({ icon: 'warning', title: 'Atención
 
 async function confirmarEliminar(nombre) {
     const sesion = obtenerSesion();
-    if (!sesion || sesion.rol !== 'admin') {
+    if (!sesion || (sesion.rol !== 'admin' && sesion.rol !== 'superusuario')) {
         Swal.fire({
             icon: 'warning',
             title: 'Acceso Denegado',
-            text: 'Tu rol de Vendedor no tiene permisos para eliminar registros.'
+            text: 'Tu rol no tiene permisos para eliminar registros.'
         });
         return false;
     }
@@ -645,6 +637,101 @@ document.addEventListener('DOMContentLoaded', () => {
     const avatar = document.getElementById('avatar-inicial');
     if (sesion && avatar) {
         avatar.textContent = sesion.nombre.charAt(0).toUpperCase();
+    }
+
+    // Configurar clic en perfil para cambiar usuario y contraseña
+    const usuarioInfo = document.querySelector('.usuario-info');
+    const abrirPerfil = () => {
+        const sesionActual = obtenerSesion();
+        if (!sesionActual) return;
+        
+        Swal.fire({
+            title: 'Mi Perfil',
+            html: `
+                <div class="text-start mb-3">
+                    <label class="form-label font-bold text-xs" style="color:#1e3a5f;">Nombre Completo</label>
+                    <input type="text" id="perfil-nombre" class="form-control" value="${sesionActual.nombre}" disabled>
+                </div>
+                <div class="text-start mb-3">
+                    <label class="form-label font-bold text-xs" style="color:#1e3a5f;">Nombre de Usuario *</label>
+                    <input type="text" id="perfil-usuario" class="form-control" value="${sesionActual.usuario}" placeholder="Mínimo 3 caracteres">
+                </div>
+                <div class="text-start mb-3">
+                    <label class="form-label font-bold text-xs" style="color:#1e3a5f;">Nueva Contraseña (Dejar vacío para mantener actual)</label>
+                    <input type="password" id="perfil-contrasena" class="form-control" placeholder="Min 8 carac, 2 mayús, 2 minús, 2 núm, 2 esp">
+                </div>
+                <div class="text-start mb-3">
+                    <label class="form-label font-bold text-xs" style="color:#1e3a5f;">Confirmar Nueva Contraseña</label>
+                    <input type="password" id="perfil-confirmar" class="form-control" placeholder="Confirmar contraseña">
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Guardar Cambios',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const nuevoUsuario = document.getElementById('perfil-usuario').value.trim();
+                const nuevaContrasena = document.getElementById('perfil-contrasena').value;
+                const confirmarContrasena = document.getElementById('perfil-confirmar').value;
+
+                if (nuevoUsuario.length < 3) {
+                    Swal.showValidationMessage('El nombre de usuario debe tener al menos 3 letras.');
+                    return false;
+                }
+
+                if (nuevaContrasena) {
+                    const passRegex = /^(?=(.*[A-Z]){2,})(?=(.*[a-z]){2,})(?=(.*\d){2,})(?=(.*[\W_]){2,}).{8,}$/;
+                    if (!passRegex.test(nuevaContrasena)) {
+                        Swal.showValidationMessage('La contraseña debe tener mínimo 8 caracteres, 2 mayúsculas, 2 minúsculas, 2 números y 2 caracteres especiales.');
+                        return false;
+                    }
+                    if (nuevaContrasena !== confirmarContrasena) {
+                        Swal.showValidationMessage('Las contraseñas no coinciden.');
+                        return false;
+                    }
+                }
+
+                // Validar duplicados de usuario
+                const todosUsuarios = obtenerDatos('usuarios_tecnorivas');
+                const existe = todosUsuarios.find(u => u.usuario.toLowerCase() === nuevoUsuario.toLowerCase() && u.id !== sesionActual.id);
+                if (existe) {
+                    Swal.showValidationMessage('El nombre de usuario ya está en uso.');
+                    return false;
+                }
+
+                return { nuevoUsuario, nuevaContrasena };
+            }
+        }).then(result => {
+            if (result.isConfirmed) {
+                const { nuevoUsuario, nuevaContrasena } = result.value;
+                const todosUsuarios = obtenerDatos('usuarios_tecnorivas');
+                const idx = todosUsuarios.findIndex(u => u.id === sesionActual.id);
+                if (idx !== -1) {
+                    todosUsuarios[idx].usuario = nuevoUsuario;
+                    if (nuevaContrasena) {
+                        todosUsuarios[idx].contrasena = nuevaContrasena;
+                    }
+                    guardarDatos('usuarios_tecnorivas', todosUsuarios);
+                    
+                    // Actualizar sesión en localStorage
+                    sesionActual.usuario = nuevoUsuario;
+                    guardarSesion(sesionActual);
+                    
+                    alertaExito('Perfil actualizado exitosamente.');
+                    renderizarSesionNavbar();
+                }
+            }
+        });
+    };
+
+    if (usuarioInfo) {
+        usuarioInfo.style.cursor = 'pointer';
+        usuarioInfo.title = 'Editar perfil';
+        usuarioInfo.addEventListener('click', abrirPerfil);
+    }
+    if (avatar) {
+        avatar.style.cursor = 'pointer';
+        avatar.title = 'Editar perfil';
+        avatar.addEventListener('click', abrirPerfil);
     }
 });
 

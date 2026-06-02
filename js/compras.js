@@ -94,26 +94,27 @@ function renderFila(tab, lista, cont) {
 
 function filaHTML(tab, item) {
     const sesion = obtenerSesion();
-    const esAdmin = sesion && sesion.rol === 'admin';
+    const esAdmin = sesion && (sesion.rol === 'admin' || sesion.rol === 'superusuario');
     const acciones = `
         <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirEditar_${tab}(${item.id})" title="Editar"><i class="bi bi-pencil-square"></i></button>
         ${esAdmin ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminar_${tab}(${item.id})" title="Eliminar"><i class="bi bi-trash3"></i></button>` : ''}
     `;
     switch (tab) {
         case 'proveedores':
-            return `<td>${item.nombre}</td><td>${item.rnc}</td><td>${item.telefono}</td><td>${item.email}</td><td>${item.contacto}</td><td>${acciones}</td>`;
+            return `<td>${item.nombre}</td><td>${item.ruc}</td><td>${item.telefono}</td><td>${item.email}</td><td>${item.contacto}</td><td>${acciones}</td>`;
         case 'categorias':
             return `<td>${item.nombre}</td><td>${item.descripcion}</td><td>${acciones}</td>`;
         case 'articulos':
             const cat = obtenerCategorias().find(c => c.id === item.categoriaId);
-            const stockCls = item.stock <= item.stockMinimo ? 'text-danger fw-bold' : '';
-            return `<td>${item.codigo || '-'}</td><td>${item.nombre}</td><td>${cat ? cat.nombre : '-'}</td><td>${formatearMoneda(item.precio)}</td><td class="${stockCls}">${item.stock} ${item.unidad}</td><td>${item.stockMinimo}</td><td>${acciones}</td>`;
+            return `<td>${item.codigo || '-'}</td><td>${item.nombre}</td><td>${cat ? cat.nombre : '-'}</td><td>${formatearMoneda(item.precio)}</td><td>${item.stock} ${item.unidad}</td><td>${acciones}</td>`;
         case 'compras':
             const prov = obtenerProveedores().find(p => p.id === item.proveedorId);
             const estadoBadge = { pendiente: 'bg-warning text-dark', pagado: 'bg-success', anulado: 'bg-danger' };
             return `<td>${item.numero}</td><td>${formatearFecha(item.fecha)}</td><td>${prov ? prov.nombre : '-'}</td><td>${formatearMoneda(item.total)}</td><td><span class="badge ${estadoBadge[item.estado] || 'bg-secondary'}">${item.estado}</span></td><td>
                 <button class="btn btn-sm btn-outline-info me-1" onclick="verCompra(${item.id})" title="Ver"><i class="bi bi-eye"></i></button>
-                ${esAdmin ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminar_compras(${item.id})" title="Anular"><i class="bi bi-x-circle"></i></button>` : ''}
+                ${esAdmin && item.estado !== 'anulado' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="cambiarEstadoCompra(${item.id}, 'anulado')" title="Anular Compra"><i class="bi bi-x-octagon"></i></button>` : ''}
+                ${esAdmin && item.estado === 'pendiente' ? `<button class="btn btn-sm btn-outline-success me-1" onclick="cambiarEstadoCompra(${item.id}, 'pagado')" title="Marcar Pagado"><i class="bi bi-check2-circle"></i></button>` : ''}
+                ${esAdmin ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminar_compras(${item.id})" title="Eliminar"><i class="bi bi-trash3"></i></button>` : ''}
             </td>`;
     }
     return '';
@@ -165,7 +166,7 @@ function abrirEditar_proveedores(id) {
     document.getElementById('modal-titulo-prov').textContent = 'Editar Proveedor';
     document.getElementById('prov-id').value = p.id;
     document.getElementById('prov-nombre').value = p.nombre;
-    document.getElementById('prov-rnc').value = p.rnc;
+    document.getElementById('prov-ruc').value = p.ruc;
     document.getElementById('prov-telefono').value = p.telefono;
     document.getElementById('prov-email').value = p.email;
     document.getElementById('prov-direccion').value = p.direccion;
@@ -176,15 +177,30 @@ function guardar_proveedores() {
     const id = document.getElementById('prov-id').value;
     const obj = {
         nombre: document.getElementById('prov-nombre').value.trim(),
-        rnc: document.getElementById('prov-rnc').value.trim(),
+        ruc: document.getElementById('prov-ruc').value.trim(),
         telefono: document.getElementById('prov-telefono').value.trim(),
         email: document.getElementById('prov-email').value.trim(),
         direccion: document.getElementById('prov-direccion').value.trim(),
         contacto: document.getElementById('prov-contacto').value.trim()
     };
     const lista = obtenerProveedores();
-    // Validar RNC duplicado
-    if (lista.find(x => x.rnc === obj.rnc && x.id !== parseInt(id))) { alertaError('Ya existe un proveedor con ese RNC.'); return; }
+    if (obj.nombre.length < 3) {
+        alertaError('El nombre del proveedor debe tener al menos 3 letras.'); return;
+    }
+    // Validar formato RUC paraguayo (6-8 dígitos base + guión + 1 dígito verificador)
+    const rucRegex = /^\d{6,8}-\d$/;
+    if (!rucRegex.test(obj.ruc)) {
+        alertaError('El RUC debe tener formato paraguayo: 6 a 8 dígitos, guión y dígito verificador (Ej: 1234567-8).'); return;
+    }
+    // Validar formato teléfono paraguayo (09xxxxxxxx)
+    if (obj.telefono) {
+        const telRegex = /^09\d{8}$/;
+        if (!telRegex.test(obj.telefono)) {
+            alertaError('El teléfono debe tener formato paraguayo: 09XXXXXXXX (10 dígitos, sin guiones).'); return;
+        }
+    }
+    // Validar RUC duplicado
+    if (lista.find(x => x.ruc === obj.ruc && x.id !== parseInt(id))) { alertaError('Ya existe un proveedor con ese RUC.'); return; }
     // Validar nombre duplicado
     if (lista.find(x => x.nombre.toLowerCase() === obj.nombre.toLowerCase() && x.id !== parseInt(id))) { alertaError('Ya existe un proveedor con ese nombre.'); return; }
     if (id) {
@@ -224,6 +240,9 @@ function guardar_categorias() {
     const id = document.getElementById('cat-id').value;
     const obj = { nombre: document.getElementById('cat-nombre').value.trim(), descripcion: document.getElementById('cat-descripcion').value.trim() };
     const lista = obtenerCategorias();
+    if (obj.nombre.length < 3) {
+        alertaError('El nombre de la categoría debe tener al menos 3 letras.'); return;
+    }
     // Validar nombre duplicado
     if (lista.find(x => x.nombre.toLowerCase() === obj.nombre.toLowerCase() && x.id !== parseInt(id))) { alertaError('Ya existe una categoría con ese nombre.'); return; }
     if (id) { const idx = lista.findIndex(x => x.id === parseInt(id)); lista[idx] = { ...lista[idx], ...obj }; }
@@ -261,7 +280,6 @@ function abrirEditar_articulos(id) {
     if (selectBuscadorCat) selectBuscadorCat.actualizar();
     document.getElementById('art-precio').value = a.precio;
     document.getElementById('art-stock').value = a.stock;
-    document.getElementById('art-stock-min').value = a.stockMinimo;
     document.getElementById('art-unidad').value = a.unidad;
     new bootstrap.Modal(document.getElementById('modal-articulo')).show();
 }
@@ -273,16 +291,17 @@ function guardar_articulos() {
         categoriaId: parseInt(document.getElementById('art-categoria').value),
         precio: parseFloat(document.getElementById('art-precio').value),
         stock: parseInt(document.getElementById('art-stock').value),
-        stockMinimo: parseInt(document.getElementById('art-stock-min').value),
         unidad: document.getElementById('art-unidad').value.trim()
     };
+    if (obj.nombre.length < 3) {
+        alertaError('El nombre del artículo debe tener al menos 3 letras.'); return;
+    }
     // Validar código de barras obligatorio
     if (!obj.codigo) { alertaError('El código de barras es obligatorio.'); return; }
     // Validar precio mínimo 1
     if (!obj.precio || obj.precio < 1) { alertaError('El precio debe ser mayor a 0.'); return; }
     // Validar negativos en stock
     if (obj.stock < 0) { alertaError('El stock no puede ser negativo.'); return; }
-    if (obj.stockMinimo < 0) { alertaError('El stock mínimo no puede ser negativo.'); return; }
     const lista = obtenerArticulos();
     // Validar código de barras duplicado
     if (lista.find(x => x.codigo && x.codigo === obj.codigo && x.id !== parseInt(id))) { alertaError('Ya existe un artículo con ese código de barras.'); return; }
@@ -325,7 +344,7 @@ function poblarSelectProveedores() {
     const sel = document.getElementById('compra-proveedor');
     if (!sel) return;
     sel.innerHTML = '<option value="">-- Seleccionar proveedor --</option>';
-    obtenerProveedores().forEach(p => sel.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.nombre} (RUC: ${p.rnc})</option>`));
+    obtenerProveedores().forEach(p => sel.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.nombre} (RUC: ${p.ruc})</option>`));
     if (selectBuscadorProv) selectBuscadorProv.actualizar();
 }
 
@@ -448,10 +467,60 @@ async function eliminar_compras(id) {
     const c = obtenerCompras().find(x => x.id === id);
     if (!c) return;
     if (!(await confirmarEliminar(`Compra ${c.numero}`))) return;
+
+    if (c.estado !== 'anulado') {
+        const articulos = obtenerArticulos();
+        const movimientos = obtenerDatos('movimientos_inventario');
+        c.detalle.forEach(d => {
+            const idx = articulos.findIndex(a => a.id === d.articuloId);
+            if (idx >= 0) articulos[idx].stock -= d.cantidad;
+            movimientos.push({ id: generarId(movimientos), tipo: 'salida', articuloId: d.articuloId, cantidad: d.cantidad, referencia: `Eliminación ${c.numero}`, fecha: fechaHoy() });
+        });
+        guardarArticulos(articulos);
+        guardarDatos('movimientos_inventario', movimientos);
+    }
+
     guardarCompras(obtenerCompras().filter(x => x.id !== id));
     cargarTab('compras');
-    alertaExito('Compra anulada.');
+    alertaExito('Compra eliminada definitivamente.');
 }
+
+window.cambiarEstadoCompra = async function(id, nuevoEstado) {
+    const compras = obtenerCompras();
+    const idx = compras.findIndex(x => x.id === id);
+    if (idx === -1) return;
+    const c = compras[idx];
+    
+    const result = await Swal.fire({
+        title: 'Confirmar Acción',
+        text: `¿Desea cambiar el estado de la Compra ${c.numero} a ${nuevoEstado.toUpperCase()}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cambiar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
+    
+    if (nuevoEstado === 'anulado' && c.estado !== 'anulado') {
+        const articulos = obtenerArticulos();
+        const movimientos = obtenerDatos('movimientos_inventario');
+        c.detalle.forEach(d => {
+            const idxArt = articulos.findIndex(a => a.id === d.articuloId);
+            if (idxArt >= 0) articulos[idxArt].stock -= d.cantidad;
+            movimientos.push({ id: generarId(movimientos), tipo: 'salida', articuloId: d.articuloId, cantidad: d.cantidad, referencia: `Anulación ${c.numero}`, fecha: fechaHoy() });
+        });
+        guardarArticulos(articulos);
+        guardarDatos('movimientos_inventario', movimientos);
+        alertaExito(`Compra ${c.numero} anulada. Stock revertido.`);
+    } else {
+        alertaExito(`Estado de compra ${c.numero} actualizado a ${nuevoEstado}.`);
+    }
+    
+    compras[idx].estado = nuevoEstado;
+    guardarCompras(compras);
+    cargarTab('compras');
+};
 
 function configurarExportarImprimir() {
     ['proveedores', 'categorias', 'articulos', 'compras'].forEach(tab => {
@@ -461,7 +530,7 @@ function configurarExportarImprimir() {
         const titulo = tab.charAt(0).toUpperCase() + tab.slice(1);
         if (btnExp) btnExp.addEventListener('click', () => {
             const cols = {
-                proveedores: [{ key: 'nombre', label: 'Nombre' }, { key: 'rnc', label: 'RNC' }, { key: 'telefono', label: 'Teléfono' }],
+                proveedores: [{ key: 'nombre', label: 'Nombre' }, { key: 'ruc', label: 'RUC' }, { key: 'telefono', label: 'Teléfono' }],
                 categorias: [{ key: 'nombre', label: 'Nombre' }, { key: 'descripcion', label: 'Descripción' }],
                 articulos: [{ key: 'nombre', label: 'Artículo' }, { key: 'precio', label: 'Precio' }, { key: 'stock', label: 'Stock' }],
                 compras: [{ key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' }, { key: 'total', label: 'Total' }, { key: 'estado', label: 'Estado' }]

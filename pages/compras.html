@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,28 +12,21 @@
     <link rel="stylesheet" href="../css/styles.css">
     <script src="../js/sweetalert2.all.min.js"></script>
 </head>
-
 <body>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <div class="app-wrapper">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
                 <div class="brand-icon"><i class="bi bi-snow3"></i></div>
-                <div class="brand-text"><span class="brand-name">TECNORIVAS</span><span class="brand-sub">Sistema
-                        Admin</span></div>
+                <div class="brand-text"><span class="brand-name">TECNORIVAS</span><span class="brand-sub">Sistema Admin</span></div>
             </div>
             <nav class="sidebar-nav">
                 <div class="sidebar-section">Principal</div>
-                <a href="dashboard.html" class="nav-item-sidebar" id="nav-dashboard">
-                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
-                </a>
+                <a href="dashboard.html" class="nav-item-sidebar" id="nav-dashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
                 <div class="sidebar-section">Módulos</div>
-                <a href="usuarios.html" class="nav-item-sidebar" id="nav-usuarios">
-                    <i class="bi bi-people-fill"></i> Usuarios
-                </a>
+                <a href="usuarios.html" class="nav-item-sidebar" id="nav-usuarios"><i class="bi bi-people-fill"></i> Usuarios</a>
                 <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-compras">
-                    <i class="bi bi-cart-fill"></i> Compras
-                    <i class="bi bi-chevron-down nav-arrow"></i>
+                    <i class="bi bi-cart-fill"></i> Compras <i class="bi bi-chevron-down nav-arrow"></i>
                 </a>
                 <div class="nav-sub" id="sub-compras">
                     <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
@@ -42,47 +34,24 @@
                     <a href="compras.html#articulos" class="nav-sub-item"><i class="bi bi-box"></i> Artículos</a>
                     <a href="compras.html#compras" class="nav-sub-item"><i class="bi bi-receipt"></i> Compras</a>
                 </div>
-                <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-ventas">
-                    <i class="bi bi-bag-check-fill"></i> Ventas
-                    <i class="bi bi-chevron-down nav-arrow"></i>
-                </a>
-                <div class="nav-sub" id="sub-ventas">
-                    <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-person-lines-fill"></i>
-                        Clientes</a>
-                    <a href="ventas.html#cajas" class="nav-sub-item"><i class="bi bi-cash-stack"></i> Caja</a>
-                    <a href="ventas.html#ventas" class="nav-sub-item"><i class="bi bi-bag-fill"></i> Ventas</a>
-                </div>
                 <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-inventario">
-                    <i class="bi bi-boxes"></i> Inventario
-                    <i class="bi bi-chevron-down nav-arrow"></i>
+                    <i class="bi bi-boxes"></i> Inventario <i class="bi bi-chevron-down nav-arrow"></i>
                 </a>
                 <div class="nav-sub" id="sub-inventario">
                     <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-clipboard2-data"></i> Stock</a>
-                    <a href="inventario.html#movimientos" class="nav-sub-item"><i class="bi bi-arrow-left-right"></i>
-                        Movimientos</a>
+                    <a href="inventario.html#movimientos" class="nav-sub-item"><i class="bi bi-arrow-left-right"></i> Movimientos</a>
                 </div>
-
                 <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-presupuestos">
-                    <i class="bi bi-file-earmark-text-fill"></i> Presupuestos
-                    <i class="bi bi-chevron-down nav-arrow"></i>
+                    <i class="bi bi-file-earmark-text-fill"></i> Presupuestos <i class="bi bi-chevron-down nav-arrow"></i>
                 </a>
                 <div class="nav-sub" id="sub-presupuestos">
-                    <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i>
-                        Categorías</a>
-                    <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i>
-                        Presupuestos</a>
+                    <a href="presupuestos.html#clientes" class="nav-sub-item"><i class="bi bi-person-lines-fill"></i> Clientes</a>
+                    <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
+                    <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
                 </div>
-                <div class="sidebar-section">Reportes</div>
-                <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-reportes">
-                    <i class="bi bi-bar-chart-fill"></i> Reportes
-                    <i class="bi bi-chevron-down nav-arrow"></i>
-                </a>
-                <div class="nav-sub" id="sub-reportes">
-                    <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-boxes"></i> Inventario</a>
-                    <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-people-fill"></i> Clientes</a>
-                    <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
-                    <a href="usuarios.html" class="nav-sub-item"><i class="bi bi-person-badge"></i> Usuarios</a>
-                </div>
+                <a href="caja.html" class="nav-item-sidebar" id="nav-caja"><i class="bi bi-cash-coin"></i> Caja</a>
+            <div class="sidebar-section">Reportes</div>
+                <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes"><i class="bi bi-bar-chart-fill"></i> Flujo de Caja &amp; Reportes</a>
             </nav>
             <div class="sidebar-footer">
                 <div class="usuario-sidebar">
@@ -91,8 +60,7 @@
                         <div class="usuario-nombre" id="nav-usuario-nombre">Cargando...</div>
                         <div class="usuario-rol" id="nav-usuario-rol">...</div>
                     </div>
-                    <button class="btn-logout" data-logout title="Cerrar sesión"><i
-                            class="bi bi-box-arrow-right"></i></button>
+                    <button class="btn-logout" data-logout title="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button>
                 </div>
             </div>
         </aside>
@@ -109,6 +77,7 @@
             </header>
 
             <main class="page-content">
+                <!-- TABS NAV rendered by compras.js via inicializarPaneles -->
 
                 <!-- PROVEEDORES -->
                 <div id="panel-proveedores" class="card" style="border-radius:0 0 10px 10px;border-top:none;">
@@ -116,20 +85,15 @@
                         <div class="modulo-header">
                             <h1 class="modulo-titulo">Proveedores</h1>
                             <div class="modulo-acciones">
-                                <button class="btn btn-info text-white" id="btn-imprimir-proveedores"><i
-                                        class="bi bi-printer me-1"></i>Imprimir</button>
-                                <button class="btn btn-success" id="btn-exportar-proveedores"><i
-                                        class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
-                                <button class="btn btn-danger" id="btn-pdf-proveedores"><i
-                                        class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
-                                <button class="btn btn-primario" id="btn-nuevo-proveedores"><i
-                                        class="bi bi-plus-circle me-1"></i>Nuevo proveedor</button>
+                                <button class="btn btn-info text-white" id="btn-imprimir-proveedores"><i class="bi bi-printer me-1"></i>Imprimir</button>
+                                <button class="btn btn-success" id="btn-exportar-proveedores"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
+                                <button class="btn btn-danger" id="btn-pdf-proveedores"><i class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
+                                <button class="btn btn-primario" id="btn-nuevo-proveedores"><i class="bi bi-plus-circle me-1"></i>Nuevo proveedor</button>
                                 <div class="d-flex align-items-center ms-2">
                                     <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
                                     <div class="buscador-wrapper">
                                         <i class="bi bi-search"></i>
-                                        <input type="text" class="buscador-input" id="buscador-proveedores"
-                                            placeholder="Buscar proveedor...">
+                                        <input type="text" class="buscador-input" id="buscador-proveedores" placeholder="Buscar proveedor...">
                                     </div>
                                 </div>
                             </div>
@@ -139,12 +103,7 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Nombre</th>
-                                    <th>RNC</th>
-                                    <th>Teléfono</th>
-                                    <th>Email</th>
-                                    <th>Contacto</th>
-                                    <th>Acciones</th>
+                                    <th>Nombre</th><th>RUC</th><th>Teléfono</th><th>Email</th><th>Contacto</th><th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tabla-body-proveedores"></tbody>
@@ -162,20 +121,15 @@
                         <div class="modulo-header">
                             <h1 class="modulo-titulo">Categorías</h1>
                             <div class="modulo-acciones">
-                                <button class="btn btn-info text-white" id="btn-imprimir-categorias"><i
-                                        class="bi bi-printer me-1"></i>Imprimir</button>
-                                <button class="btn btn-success" id="btn-exportar-categorias"><i
-                                        class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
-                                <button class="btn btn-danger" id="btn-pdf-categorias"><i
-                                        class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
-                                <button class="btn btn-primario" id="btn-nuevo-categorias"><i
-                                        class="bi bi-plus-circle me-1"></i>Nueva categoría</button>
+                                <button class="btn btn-info text-white" id="btn-imprimir-categorias"><i class="bi bi-printer me-1"></i>Imprimir</button>
+                                <button class="btn btn-success" id="btn-exportar-categorias"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
+                                <button class="btn btn-danger" id="btn-pdf-categorias"><i class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
+                                <button class="btn btn-primario" id="btn-nuevo-categorias"><i class="bi bi-plus-circle me-1"></i>Nueva categoría</button>
                                 <div class="d-flex align-items-center ms-2">
                                     <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
                                     <div class="buscador-wrapper">
                                         <i class="bi bi-search"></i>
-                                        <input type="text" class="buscador-input" id="buscador-categorias"
-                                            placeholder="Buscar categoría...">
+                                        <input type="text" class="buscador-input" id="buscador-categorias" placeholder="Buscar categoría...">
                                     </div>
                                 </div>
                             </div>
@@ -184,11 +138,7 @@
                     <div class="tabla-wrapper">
                         <table class="table table-hover">
                             <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Descripción</th>
-                                    <th>Acciones</th>
-                                </tr>
+                                <tr><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr>
                             </thead>
                             <tbody id="tabla-body-categorias"></tbody>
                         </table>
@@ -205,20 +155,15 @@
                         <div class="modulo-header">
                             <h1 class="modulo-titulo">Artículos</h1>
                             <div class="modulo-acciones">
-                                <button class="btn btn-info text-white" id="btn-imprimir-articulos"><i
-                                        class="bi bi-printer me-1"></i>Imprimir</button>
-                                <button class="btn btn-success" id="btn-exportar-articulos"><i
-                                        class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
-                                <button class="btn btn-danger" id="btn-pdf-articulos"><i
-                                        class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
-                                <button class="btn btn-primario" id="btn-nuevo-articulos"><i
-                                        class="bi bi-plus-circle me-1"></i>Nuevo artículo</button>
+                                <button class="btn btn-info text-white" id="btn-imprimir-articulos"><i class="bi bi-printer me-1"></i>Imprimir</button>
+                                <button class="btn btn-success" id="btn-exportar-articulos"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
+                                <button class="btn btn-danger" id="btn-pdf-articulos"><i class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
+                                <button class="btn btn-primario" id="btn-nuevo-articulos"><i class="bi bi-plus-circle me-1"></i>Nuevo artículo</button>
                                 <div class="d-flex align-items-center ms-2">
                                     <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
                                     <div class="buscador-wrapper">
                                         <i class="bi bi-search"></i>
-                                        <input type="text" class="buscador-input" id="buscador-articulos"
-                                            placeholder="Buscar artículo...">
+                                        <input type="text" class="buscador-input" id="buscador-articulos" placeholder="Buscar artículo...">
                                     </div>
                                 </div>
                             </div>
@@ -227,15 +172,7 @@
                     <div class="tabla-wrapper">
                         <table class="table table-hover">
                             <thead>
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Nombre</th>
-                                    <th>Categoría</th>
-                                    <th>Precio</th>
-                                    <th>Stock</th>
-                                    <th>Stock Min.</th>
-                                    <th>Acciones</th>
-                                </tr>
+                                <tr><th>Código</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr>
                             </thead>
                             <tbody id="tabla-body-articulos"></tbody>
                         </table>
@@ -246,26 +183,18 @@
                     </div>
                 </div>
 
-                <!-- COMPRAS -->
+                <!-- COMPRAS (sin botones de exportar/imprimir — disponibles en Reportes) -->
                 <div id="panel-compras" class="card d-none" style="border-radius:0 0 10px 10px;border-top:none;">
                     <div class="card-header">
                         <div class="modulo-header">
                             <h1 class="modulo-titulo">Registro de Compras</h1>
                             <div class="modulo-acciones">
-                                <button class="btn btn-info text-white" id="btn-imprimir-compras"><i
-                                        class="bi bi-printer me-1"></i>Imprimir</button>
-                                <button class="btn btn-success" id="btn-exportar-compras"><i
-                                        class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
-                                <button class="btn btn-danger" id="btn-pdf-compras"><i
-                                        class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
-                                <button class="btn btn-primario" id="btn-nueva-compra"><i
-                                        class="bi bi-cart-plus me-1"></i>Nueva Compra</button>
+                                <button class="btn btn-primario" id="btn-nueva-compra"><i class="bi bi-cart-plus me-1"></i>Nueva Compra</button>
                                 <div class="d-flex align-items-center ms-2">
                                     <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
                                     <div class="buscador-wrapper">
                                         <i class="bi bi-search"></i>
-                                        <input type="text" class="buscador-input" id="buscador-compras"
-                                            placeholder="Buscar compra...">
+                                        <input type="text" class="buscador-input" id="buscador-compras" placeholder="Buscar compra...">
                                     </div>
                                 </div>
                             </div>
@@ -274,14 +203,7 @@
                     <div class="tabla-wrapper">
                         <table class="table table-hover">
                             <thead>
-                                <tr>
-                                    <th>N°</th>
-                                    <th>Fecha</th>
-                                    <th>Proveedor</th>
-                                    <th>Total</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
+                                <tr><th>N°</th><th>Fecha</th><th>Proveedor</th><th>Total</th><th>Estado</th><th>Acciones</th></tr>
                             </thead>
                             <tbody id="tabla-body-compras"></tbody>
                         </table>
@@ -307,24 +229,17 @@
                     <div class="modal-body">
                         <input type="hidden" id="prov-id">
                         <div class="row g-3">
-                            <div class="col-12"><label class="form-label">Nombre *</label><input type="text"
-                                    class="form-control" id="prov-nombre" required></div>
-                            <div class="col-md-6"><label class="form-label">RNC *</label><input type="number"
-                                    class="form-control" id="prov-rnc" min="100000" max="10000000" required></div>
-                            <div class="col-md-6"><label class="form-label">Teléfono</label><input type="text"
-                                    class="form-control" id="prov-telefono"></div>
-                            <div class="col-md-6"><label class="form-label">Email</label><input type="email"
-                                    class="form-control" id="prov-email"></div>
-                            <div class="col-md-6"><label class="form-label">Contacto</label><input type="text"
-                                    class="form-control" id="prov-contacto"></div>
-                            <div class="col-12"><label class="form-label">Dirección</label><input type="text"
-                                    class="form-control" id="prov-direccion"></div>
+                            <div class="col-12"><label class="form-label">Nombre *</label><input type="text" class="form-control" id="prov-nombre" required></div>
+                            <div class="col-md-6"><label class="form-label">RUC *</label><input type="text" class="form-control" id="prov-ruc" placeholder="Ej: 1234567-8" required></div>
+                            <div class="col-md-6"><label class="form-label">Teléfono</label><input type="text" class="form-control" id="prov-telefono" placeholder="09XXXXXXXX"></div>
+                            <div class="col-12"><label class="form-label">Email</label><input type="email" class="form-control" id="prov-email"></div>
+                            <div class="col-12"><label class="form-label">Dirección</label><input type="text" class="form-control" id="prov-direccion"></div>
+                            <div class="col-12"><label class="form-label">Contacto (Persona)</label><input type="text" class="form-control" id="prov-contacto"></div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primario"><i
-                                class="bi bi-check-lg me-1"></i>Guardar</button>
+                        <button type="submit" class="btn btn-primario"><i class="bi bi-save me-1"></i>Guardar</button>
                     </div>
                 </form>
             </div>
@@ -333,7 +248,7 @@
 
     <!-- MODAL CATEGORIA -->
     <div class="modal fade" id="modal-categoria" tabindex="-1">
-        <div class="modal-dialog modal-sm">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modal-titulo-cat">Categoría</h5>
@@ -342,15 +257,12 @@
                 <form id="form-categoria">
                     <div class="modal-body">
                         <input type="hidden" id="cat-id">
-                        <div class="mb-3"><label class="form-label">Nombre *</label><input type="text"
-                                class="form-control" id="cat-nombre" required></div>
-                        <div class="mb-3"><label class="form-label">Descripción</label><textarea class="form-control"
-                                id="cat-descripcion" rows="2"></textarea></div>
+                        <div class="mb-3"><label class="form-label">Nombre *</label><input type="text" class="form-control" id="cat-nombre" required></div>
+                        <div class="mb-3"><label class="form-label">Descripción</label><textarea class="form-control" id="cat-descripcion" rows="2"></textarea></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primario"><i
-                                class="bi bi-check-lg me-1"></i>Guardar</button>
+                        <button type="submit" class="btn btn-primario"><i class="bi bi-check-lg me-1"></i>Guardar</button>
                     </div>
                 </form>
             </div>
@@ -369,28 +281,20 @@
                     <div class="modal-body">
                         <input type="hidden" id="art-id">
                         <div class="row g-3">
-                            <div class="col-md-5"><label class="form-label">Código de Barras *</label><input type="text"
-                                    class="form-control" id="art-codigo" required placeholder="Ej: 7501000000000"></div>
-                            <div class="col-md-7"><label class="form-label">Nombre *</label><input type="text"
-                                    class="form-control" id="art-nombre" required></div>
-                            <div class="col-md-6"><label class="form-label">Categoría *</label><select
-                                    class="form-select" id="art-categoria" required>
-                                    <option value="">-- Seleccionar --</option>
-                                </select></div>
-                            <div class="col-md-6"><label class="form-label">Unidad</label><input type="text"
-                                    class="form-control" id="art-unidad" value="und"></div>
-                            <div class="col-md-4"><label class="form-label">Precio *</label><input type="number"
-                                    class="form-control" id="art-precio" min="1" required></div>
-                            <div class="col-md-4"><label class="form-label">Stock inicial</label><input type="number"
-                                    class="form-control" id="art-stock" min="0" value="0"></div>
-                            <div class="col-md-4"><label class="form-label">Stock mínimo</label><input type="number"
-                                    class="form-control" id="art-stock-min" min="0" value="0"></div>
+                            <div class="col-md-5"><label class="form-label">Código de Barras *</label><input type="text" class="form-control" id="art-codigo" required placeholder="Ej: 7501000000000"></div>
+                            <div class="col-md-7"><label class="form-label">Nombre *</label><input type="text" class="form-control" id="art-nombre" required></div>
+                            <div class="col-md-6"><label class="form-label">Categoría *</label>
+                                <select class="form-select" id="art-categoria" required><option value="">-- Seleccionar --</option></select>
+                            </div>
+                            <div class="col-md-6"><label class="form-label">Unidad</label><input type="text" class="form-control" id="art-unidad" value="und"></div>
+                            <div class="col-md-4"><label class="form-label">Precio *</label><input type="number" class="form-control" id="art-precio" min="1" required></div>
+                            <div class="col-md-4"><label class="form-label">Stock inicial</label><input type="number" class="form-control" id="art-stock" min="0" value="0"></div>
+                            <div class="col-md-4"><label class="form-label">Stock mínimo</label><input type="number" class="form-control" id="art-stockmin" min="0" value="0"></div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primario"><i
-                                class="bi bi-check-lg me-1"></i>Guardar</button>
+                        <button type="submit" class="btn btn-primario"><i class="bi bi-check-lg me-1"></i>Guardar</button>
                     </div>
                 </form>
             </div>
@@ -408,12 +312,10 @@
                 <form id="form-compra">
                     <div class="modal-body">
                         <div class="row g-3 mb-3">
-                            <div class="col-md-5"><label class="form-label">Proveedor *</label><select
-                                    class="form-select" id="compra-proveedor" required>
-                                    <option value="">-- Seleccionar --</option>
-                                </select></div>
-                            <div class="col-md-3"><label class="form-label">Fecha *</label><input type="date"
-                                    class="form-control" id="compra-fecha" required></div>
+                            <div class="col-md-5"><label class="form-label">Proveedor *</label>
+                                <select class="form-select" id="compra-proveedor" required><option value="">-- Seleccionar --</option></select>
+                            </div>
+                            <div class="col-md-3"><label class="form-label">Fecha *</label><input type="date" class="form-control" id="compra-fecha" required></div>
                             <div class="col-md-4"><label class="form-label">Estado</label>
                                 <select class="form-select" id="compra-estado">
                                     <option value="pendiente">Pendiente</option>
@@ -424,39 +326,27 @@
                         <hr>
                         <h6 class="fw-bold mb-2">Agregar Artículos</h6>
                         <div class="row g-2 align-items-end mb-3">
-                            <div class="col-md-4"><label class="form-label">Artículo</label><select
-                                    class="form-select form-select-sm" id="det-articulo">
-                                    <option value="">-- Seleccionar --</option>
-                                </select></div>
-                            <div class="col-md-2"><label class="form-label">Stock</label><input type="text"
-                                    class="form-control form-control-sm bg-light" id="det-stock" readonly></div>
-                            <div class="col-md-2"><label class="form-label">Cantidad</label><input type="number"
-                                    class="form-control form-control-sm" id="det-cantidad" min="1" value="1"></div>
-                            <div class="col-md-3"><label class="form-label">Precio unit.</label><input type="number"
-                                    class="form-control form-control-sm" id="det-precio" min="1"></div>
-                            <div class="col-md-1"><button type="button" class="btn btn-dorado btn-sm w-100"
-                                    id="btn-add-detalle" title="Agregar"><i class="bi bi-plus-lg"></i></button></div>
+                            <div class="col-md-4"><label class="form-label">Artículo</label>
+                                <select class="form-select form-select-sm" id="det-articulo"><option value="">-- Seleccionar --</option></select>
+                            </div>
+                            <div class="col-md-2"><label class="form-label">Stock</label><input type="text" class="form-control form-control-sm bg-light" id="det-stock" readonly></div>
+                            <div class="col-md-2"><label class="form-label">Cantidad</label><input type="number" class="form-control form-control-sm" id="det-cantidad" min="1" value="1"></div>
+                            <div class="col-md-3"><label class="form-label">Precio unit.</label><input type="number" class="form-control form-control-sm" id="det-precio" min="1"></div>
+                            <div class="col-md-1"><button type="button" class="btn btn-dorado btn-sm w-100" id="btn-add-detalle" title="Agregar"><i class="bi bi-plus-lg"></i></button></div>
                         </div>
                         <div class="tabla-wrapper" style="max-height:200px;overflow-y:auto;">
                             <table class="table table-sm">
                                 <thead>
-                                    <tr>
-                                        <th>Artículo</th>
-                                        <th>Cant.</th>
-                                        <th>Precio</th>
-                                        <th>Subtotal</th>
-                                        <th></th>
-                                    </tr>
+                                    <tr><th>Artículo</th><th>Cant.</th><th>Precio</th><th>Subtotal</th><th></th></tr>
                                 </thead>
                                 <tbody id="detalle-body"></tbody>
                             </table>
                         </div>
-                        <div class="text-end mt-2 fw-bold fs-5">Total: <span id="compra-total">RD$ 0.00</span></div>
+                        <div class="text-end mt-2 fw-bold fs-5">Total: <span id="compra-total">Gs. 0</span></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primario"><i class="bi bi-save me-1"></i>Registrar
-                            Compra</button>
+                        <button type="submit" class="btn btn-primario"><i class="bi bi-save me-1"></i>Registrar Compra</button>
                     </div>
                 </form>
             </div>
@@ -467,5 +357,4 @@
     <script src="../js/app.js"></script>
     <script src="../js/compras.js"></script>
 </body>
-
 </html>

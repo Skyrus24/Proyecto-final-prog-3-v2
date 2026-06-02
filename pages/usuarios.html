@@ -43,15 +43,7 @@
                 <a href="compras.html#articulos" class="nav-sub-item"><i class="bi bi-box"></i> Artículos</a>
                 <a href="compras.html#compras" class="nav-sub-item"><i class="bi bi-receipt"></i> Compras</a>
             </div>
-            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-ventas">
-                <i class="bi bi-bag-check-fill"></i> Ventas
-                <i class="bi bi-chevron-down nav-arrow"></i>
-            </a>
-            <div class="nav-sub" id="sub-ventas">
-                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-person-lines-fill"></i> Clientes</a>
-                <a href="ventas.html#cajas" class="nav-sub-item"><i class="bi bi-cash-stack"></i> Caja</a>
-                <a href="ventas.html#ventas" class="nav-sub-item"><i class="bi bi-bag-fill"></i> Ventas</a>
-            </div>
+
             <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-inventario">
                 <i class="bi bi-boxes"></i> Inventario
                 <i class="bi bi-chevron-down nav-arrow"></i>
@@ -69,17 +61,13 @@
                 <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
                 <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
             </div>
-            <div class="sidebar-section">Reportes</div>
-            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-reportes">
-                <i class="bi bi-bar-chart-fill"></i> Reportes
-                <i class="bi bi-chevron-down nav-arrow"></i>
+            <a href="caja.html" class="nav-item-sidebar" id="nav-caja">
+                <i class="bi bi-cash-coin"></i> Caja
             </a>
-            <div class="nav-sub" id="sub-reportes">
-                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-boxes"></i> Inventario</a>
-                <a href="ventas.html#clientes" class="nav-sub-item"><i class="bi bi-people-fill"></i> Clientes</a>
-                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
-                <a href="usuarios.html" class="nav-sub-item"><i class="bi bi-person-badge"></i> Usuarios</a>
-            </div>
+            <div class="sidebar-section">Reportes</div>
+            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes">
+                <i class="bi bi-bar-chart-fill"></i> Flujo de Caja & Reportes
+            </a>
         </nav>
         <div class="sidebar-footer">
             <div class="usuario-sidebar">
@@ -180,8 +168,10 @@
                         <div class="col-md-6">
                             <label class="form-label">Rol *</label>
                             <select class="form-select" id="rol" required>
-                                <option value="vendedor">Vendedor</option>
-                                <option value="admin">Administrador</option>
+                                <option value="superusuario">Superusuario</option>
+                                <option value="supervisor">Supervisor</option>
+                                <option value="asesor">Asesor</option>
+                                <option value="cajero">Cajero</option>
                             </select>
                         </div>
                         <div class="col-md-6">

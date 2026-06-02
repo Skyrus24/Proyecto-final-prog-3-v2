@@ -55,23 +55,20 @@ function cargarInventario(tab) {
 
 function renderFilasStock(lista, cont) {
     if (lista.length === 0) {
-        cont.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Sin artículos</td></tr>`;
+        cont.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Sin artículos</td></tr>`;
         return;
     }
     const categorias = obtenerDatos('categorias_tecnorivas');
     lista.forEach(a => {
         const cat = categorias.find(c => c.id === a.categoriaId);
-        const bajo = a.stock <= a.stockMinimo;
         const tr = document.createElement('tr');
-        if (bajo) tr.classList.add('table-warning');
         tr.innerHTML = `
             <td><strong>${a.nombre}</strong></td>
             <td>${cat ? cat.nombre : '-'}</td>
             <td>${formatearMoneda(a.precio)}</td>
-            <td class="${bajo ? 'text-danger fw-bold' : 'text-success'}">${a.stock} ${a.unidad}</td>
-            <td>${a.stockMinimo} ${a.unidad}</td>
+            <td>${a.stock} ${a.unidad}</td>
             <td>${formatearMoneda(a.stock * a.precio)}</td>
-            <td>${bajo ? '<span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Stock bajo</span>' : '<span class="badge bg-success"><i class="bi bi-check-circle"></i> OK</span>'}</td>
+            <td><span class="badge bg-success"><i class="bi bi-check-circle"></i> OK</span></td>
         `;
         cont.appendChild(tr);
     });
@@ -128,29 +125,17 @@ function configurarBusquedorInventario() {
 // ALERTAS DE STOCK BAJO
 // ============================================================
 function verificarAlertas() {
-    const articulos = obtenerDatos('articulos_tecnorivas');
-    const bajos = articulos.filter(a => a.stock <= a.stockMinimo);
-    const alerta = document.getElementById('alerta-stock-bajo');
-    if (alerta) {
-        if (bajos.length > 0) {
-            alerta.classList.remove('d-none');
-            alerta.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <strong>${bajos.length} artículo(s) con stock bajo o agotado:</strong>
-                ${bajos.map(a => `<span class="badge bg-danger ms-1">${a.nombre}</span>`).join('')}`;
-        } else {
-            alerta.classList.add('d-none');
-        }
-    }
-
     // Estadísticas
+    const articulos = obtenerDatos('articulos_tecnorivas');
+    const alerta = document.getElementById('alerta-stock-bajo');
+    if (alerta) alerta.classList.add('d-none');
+
     const totalArt = document.getElementById('stat-total-articulos');
     const totalVal = document.getElementById('stat-valor-inventario');
-    const totalBajos = document.getElementById('stat-stock-bajo');
     const totalMovs = document.getElementById('stat-movimientos');
 
     if (totalArt) totalArt.textContent = articulos.length;
     if (totalVal) totalVal.textContent = formatearMoneda(articulos.reduce((s, a) => s + (a.stock * a.precio), 0));
-    if (totalBajos) totalBajos.textContent = bajos.length;
     if (totalMovs) totalMovs.textContent = obtenerMovimientos().length;
 }
 
@@ -167,7 +152,7 @@ function configurarExportarInventario() {
 
     if (btnExpStock) btnExpStock.addEventListener('click', () => exportarExcel(filteredInventario, 'inventario_stock', [
         { key: 'nombre', label: 'Artículo' }, { key: 'precio', label: 'Precio' },
-        { key: 'stock', label: 'Stock' }, { key: 'stockMinimo', label: 'Stock Mínimo' }, { key: 'unidad', label: 'Unidad' }
+        { key: 'stock', label: 'Stock' }, { key: 'unidad', label: 'Unidad' }
     ]));
 
     if (btnImpStock) btnImpStock.addEventListener('click', () => imprimirTabla('Stock Actual', 'tabla-body-stock'));

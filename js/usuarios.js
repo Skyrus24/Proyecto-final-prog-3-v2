@@ -40,7 +40,7 @@ function cargarTablaUsuarios(filtro = '') {
     const sesion = obtenerSesion();
     let usuarios = obtenerUsuarios();
     
-    if (sesion.rol !== 'admin') {
+    if (sesion.rol !== 'admin' && sesion.rol !== 'superusuario') {
         usuarios = usuarios.filter(u => u.id === sesion.id);
         const btnNuevo = document.getElementById('btn-nuevo');
         if (btnNuevo) btnNuevo.style.display = 'none';
@@ -65,14 +65,24 @@ function renderFilasUsuarios(lista, contenedor) {
         contenedor.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No hay usuarios registrados</td></tr>`;
         return;
     }
+    const rolesMap = {
+        'superusuario': { text: 'Superusuario', badge: 'bg-danger' },
+        'admin': { text: 'Administrador', badge: 'bg-danger' },
+        'supervisor': { text: 'Supervisor', badge: 'bg-warning text-dark' },
+        'asesor': { text: 'Asesor', badge: 'bg-success' },
+        'cajero': { text: 'Cajero', badge: 'bg-info text-dark' },
+        'tecnico': { text: 'Técnico', badge: 'bg-secondary' }
+    };
+
     lista.forEach(u => {
+        const rolInfo = rolesMap[u.rol] || { text: u.rol, badge: 'bg-primary' };
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${u.cedula}</td>
             <td><strong>${u.nombre}</strong></td>
             <td>${u.celular}</td>
             <td>${u.usuario}</td>
-            <td><span class="badge ${u.rol === 'admin' ? 'bg-danger' : 'bg-primary'}">${u.rol === 'admin' ? 'Administrador' : 'Vendedor'}</span></td>
+            <td><span class="badge ${rolInfo.badge}">${rolInfo.text}</span></td>
             <td>${formatearFecha(u.fechaCreacion)}</td>
             <td>
                 <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirEditar(${u.id})" title="Editar"><i class="bi bi-pencil-square"></i></button>
@@ -123,7 +133,7 @@ function abrirEditar(id) {
     document.getElementById('rol').value = u.rol;
 
     const sesion = obtenerSesion();
-    if (sesion.rol !== 'admin') {
+    if (sesion.rol !== 'admin' && sesion.rol !== 'superusuario') {
         document.getElementById('cedula').disabled = true;
         document.getElementById('nombre').disabled = true;
         document.getElementById('celular').disabled = true;
@@ -155,6 +165,26 @@ function guardarUsuario() {
     const rol = document.getElementById('rol').value;
     const usuarios = obtenerUsuarios();
 
+    // Validar longitud mínima de 3 letras para nombre y usuario
+    if (nombre.length < 3) {
+        alertaError('El nombre debe tener al menos 3 letras.'); return;
+    }
+    if (usuario.length < 3) {
+        alertaError('El nombre de usuario debe tener al menos 3 letras.'); return;
+    }
+
+    // Validar rango de cédula paraguaya
+    const numCedula = parseInt(cedula);
+    if (isNaN(numCedula) || numCedula < 100000 || numCedula > 20000000) {
+        alertaError('La cédula debe ser un número entre 100.000 y 20.000.000.'); return;
+    }
+
+    // Validar formato celular paraguayo (09xxxxxxxx)
+    const celularRegex = /^09\d{8}$/;
+    if (!celularRegex.test(celular)) {
+        alertaError('El celular debe tener formato paraguayo: 09XXXXXXXX (10 dígitos, sin guiones).'); return;
+    }
+
     if (usuarios.find(u => u.cedula === cedula && u.id !== parseInt(id))) { alertaError('Ya existe un usuario con esa cédula.'); return; }
     if (usuarios.find(u => u.usuario === usuario && u.id !== parseInt(id))) { alertaError('El nombre de usuario ya está en uso.'); return; }
 
@@ -174,7 +204,7 @@ function guardarUsuario() {
     if (id) {
         const idx = usuarios.findIndex(u => u.id === parseInt(id));
         const sesion = obtenerSesion();
-        if (sesion.rol === 'admin') {
+        if (sesion.rol === 'admin' || sesion.rol === 'superusuario') {
             usuarios[idx] = { ...usuarios[idx], cedula, nombre, celular, usuario, rol };
         } else {
             usuarios[idx].usuario = usuario;
@@ -192,7 +222,7 @@ function guardarUsuario() {
 
 async function eliminarUsuario(id) {
     const sesion = obtenerSesion();
-    if (!sesion || sesion.rol !== 'admin') { alertaAdvertencia('Solo administradores pueden eliminar usuarios.'); return; }
+    if (!sesion || (sesion.rol !== 'admin' && sesion.rol !== 'superusuario')) { alertaAdvertencia('Solo superusuarios pueden eliminar usuarios.'); return; }
     if (sesion.id === id) { alertaError('No puedes eliminar tu propio usuario.'); return; }
     const u = obtenerUsuarios().find(x => x.id === id);
     if (!u) return;

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caja - TECNORIVAS</title>
+    <script>
+        if (!localStorage.getItem('sesion_tecnorivas')) { window.location.href = '../login.html'; }
+    </script>
+    <meta name="description" content="Panel de control - Sistema Administrativo TECNORIVAS">
+    <link rel="stylesheet" href="../bt/bootstrap.min.css">
+    <link rel="stylesheet" href="../bt-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/sweetalert2.all.min.js"></script>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="app-wrapper">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="bi bi-snow3"></i></div>
+            <div class="brand-text">
+                <span class="brand-name">TECNORIVAS</span>
+                <span class="brand-sub">Sistema Admin</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">Principal</div>
+            <a href="dashboard.html" class="nav-item-sidebar" id="nav-dashboard">
+                <i class="bi bi-grid-1x2-fill"></i> Dashboard
+            </a>
+
+            <div class="sidebar-section">Módulos</div>
+            <a href="usuarios.html" class="nav-item-sidebar" id="nav-usuarios">
+                <i class="bi bi-people-fill"></i> Usuarios
+            </a>
+
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-compras">
+                <i class="bi bi-cart-fill"></i> Compras
+                <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-compras">
+                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
+                <a href="compras.html#categorias" class="nav-sub-item"><i class="bi bi-tag"></i> Categorías</a>
+                <a href="compras.html#articulos" class="nav-sub-item"><i class="bi bi-box"></i> Artículos</a>
+                <a href="compras.html#compras" class="nav-sub-item"><i class="bi bi-receipt"></i> Compras</a>
+            </div>
+
+
+
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-inventario">
+                <i class="bi bi-boxes"></i> Inventario
+                <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-inventario">
+                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-clipboard2-data"></i> Stock</a>
+                <a href="inventario.html#movimientos" class="nav-sub-item"><i class="bi bi-arrow-left-right"></i> Movimientos</a>
+            </div>
+
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-presupuestos">
+                <i class="bi bi-file-earmark-text-fill"></i> Presupuestos
+                <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-presupuestos">
+                <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
+                <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
+            </div>
+
+            <a href="caja.html" class="nav-item-sidebar" id="nav-caja">
+                <i class="bi bi-cash-coin"></i> Caja
+            </a>
+            <div class="sidebar-section">Reportes</div>
+            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes">
+                <i class="bi bi-bar-chart-fill"></i> Flujo de Caja & Reportes
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="usuario-sidebar">
+                <div class="usuario-avatar" id="avatar-inicial">A</div>
+                <div class="usuario-info">
+                    <div class="usuario-nombre" id="nav-usuario-nombre">Cargando...</div>
+                    <div class="usuario-rol" id="nav-usuario-rol">...</div>
+                </div>
+                <button class="btn-logout" data-logout title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTENIDO -->
+    <div class="main-content">
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="btn-menu-mobile" id="btn-menu"><i class="bi bi-list"></i></button>
+                <div>
+                    <div class="topbar-titulo">Caja</div>
+                    <div class="topbar-breadcrumb">Inicio / Panel de control</div>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <span id="reloj" style="font-size:13px;color:#718096;"></span>
+            </div>
+        </header>
+
+        <!-- PAGE CONTENT -->
+        <main class="page-content">
+            <h1 style="font-size:20px;font-weight:700;color:#1e3a5f;margin-bottom:20px;">
+                <i class="bi bi-cash-coin me-2"></i>Gestión de Caja
+            </h1>
+            
+            <ul class="nav nav-tabs custom-tabs" id="cajaTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-caja-actual" data-bs-toggle="tab" data-bs-target="#caja-actual" type="button" role="tab"><i class="bi bi-wallet2"></i> Caja Actual</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-caja-historial" data-bs-toggle="tab" data-bs-target="#caja-historial" type="button" role="tab"><i class="bi bi-clock-history"></i> Historial de Sesiones</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="cajaTabsContent">
+                <!-- PESTAÑA CAJA ACTUAL -->
+                <div class="tab-pane fade show active" id="caja-actual" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            <!-- ESTADO DE LA CAJA -->
+                            <div class="row align-items-center mb-4">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <div class="stat-icon bg-light me-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #1e3a5f;">
+                                            <i class="bi bi-safe2"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="mb-1" id="caja-estado-badge" style="font-weight: bold;"><span class="badge bg-secondary">CERRADA</span></h4>
+                                            <p class="text-muted mb-0" id="caja-info-apertura">Abre la caja para comenzar a operar.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <div id="caja-saldo-container" class="d-none">
+                                        <div class="text-muted text-uppercase" style="font-size: 12px; font-weight: bold;">Saldo Actual</div>
+                                        <h2 id="caja-saldo-actual" style="font-weight: bold; color: #1e3a5f; margin: 0;">Gs. 0</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- BOTONES DE ACCIÓN -->
+                            <div class="d-flex gap-2 mb-4">
+                                <button class="btn btn-success flex-fill fw-bold" id="btn-abrir-caja"><i class="bi bi-unlock-fill me-2"></i>ABRIR CAJA</button>
+                                <button class="btn btn-danger flex-fill fw-bold d-none" id="btn-cerrar-caja"><i class="bi bi-lock-fill me-2"></i>CERRAR CAJA</button>
+                                <button class="btn btn-primary flex-fill fw-bold d-none" id="btn-movimiento-manual"><i class="bi bi-plus-circle me-2"></i>NUEVO MOVIMIENTO</button>
+                            </div>
+                            
+                            <!-- MOVIMIENTOS -->
+                            <div id="contenedor-movimientos" class="d-none">
+                                <h5 class="fw-bold mb-3"><i class="bi bi-list-columns-reverse me-2"></i>Movimientos de la sesión</h5>
+                                <div class="tabla-wrapper">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Hora</th>
+                                                <th>Tipo</th>
+                                                <th>Concepto</th>
+                                                <th>Monto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-movimientos-actual">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA HISTORIAL -->
+                <div class="tab-pane fade" id="caja-historial" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-archive me-2"></i>Sesiones Anteriores</h5>
+                        </div>
+                        <div class="tabla-wrapper">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha Apertura</th>
+                                        <th>Cajero</th>
+                                        <th>Monto Inicial</th>
+                                        <th>Total Ingresos</th>
+                                        <th>Total Egresos</th>
+                                        <th>Saldo Final</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-historial-cajas">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tabla-footer">
+                            <span id="contador-historial">0 sesiones</span>
+                            <ul class="pagination pagination-sm mb-0" id="paginacion-historial"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- MODAL MOVIMIENTO MANUAL -->
+<div class="modal fade" id="modal-movimiento" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Registrar Movimiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-movimiento">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Movimiento *</label>
+                        <select class="form-select" id="mov-tipo" required>
+                            <option value="ingreso">Ingreso</option>
+                            <option value="egreso">Egreso (Gasto)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Concepto / Descripción *</label>
+                        <input type="text" class="form-control" id="mov-concepto" placeholder="Ej: Pago de luz, Anticipo, etc." required minlength="3">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Monto (Gs.) *</label>
+                        <input type="number" class="form-control" id="mov-monto" min="1" step="1" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar Movimiento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="../bt/bootstrap.min.js"></script>
+<script src="../js/app.js"></script>
+<script src="../js/caja.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
+
+
+
