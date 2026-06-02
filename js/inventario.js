@@ -201,7 +201,7 @@ function configurarAjusteStock() {
                 selectArt.insertAdjacentHTML('beforeend', `<option value="${a.id}">${a.nombre} (Stock: ${a.stock})</option>`);
             });
             document.getElementById('form-ajuste-stock').reset();
-            new bootstrap.Modal(document.getElementById('modal-ajuste-stock')).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-ajuste-stock')).show();
         });
     }
 

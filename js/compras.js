@@ -163,7 +163,7 @@ function abrirNuevo_proveedores() {
     document.getElementById('modal-titulo-prov').textContent = 'Nuevo Proveedor';
     document.getElementById('form-proveedor').reset();
     document.getElementById('prov-id').value = '';
-    new bootstrap.Modal(document.getElementById('modal-proveedor')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-proveedor')).show();
 }
 function abrirEditar_proveedores(id) {
     const p = obtenerProveedores().find(x => x.id === id);
@@ -176,7 +176,7 @@ function abrirEditar_proveedores(id) {
     document.getElementById('prov-email').value = p.email;
     document.getElementById('prov-direccion').value = p.direccion;
     document.getElementById('prov-contacto').value = p.contacto;
-    new bootstrap.Modal(document.getElementById('modal-proveedor')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-proveedor')).show();
 }
 function guardar_proveedores() {
     const id = document.getElementById('prov-id').value;
@@ -230,7 +230,7 @@ function abrirNuevo_categorias() {
     document.getElementById('modal-titulo-cat').textContent = 'Nueva Categoría';
     document.getElementById('form-categoria').reset();
     document.getElementById('cat-id').value = '';
-    new bootstrap.Modal(document.getElementById('modal-categoria')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-categoria')).show();
 }
 function abrirEditar_categorias(id) {
     const c = obtenerCategorias().find(x => x.id === id);
@@ -239,7 +239,7 @@ function abrirEditar_categorias(id) {
     document.getElementById('cat-id').value = c.id;
     document.getElementById('cat-nombre').value = c.nombre;
     document.getElementById('cat-descripcion').value = c.descripcion;
-    new bootstrap.Modal(document.getElementById('modal-categoria')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-categoria')).show();
 }
 function guardar_categorias() {
     const id = document.getElementById('cat-id').value;
@@ -271,7 +271,7 @@ function abrirNuevo_articulos() {
     document.getElementById('form-articulo').reset();
     document.getElementById('art-id').value = '';
     poblarSelectCategorias('art-categoria');
-    new bootstrap.Modal(document.getElementById('modal-articulo')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-articulo')).show();
 }
 function abrirEditar_articulos(id) {
     const a = obtenerArticulos().find(x => x.id === id);
@@ -286,7 +286,7 @@ function abrirEditar_articulos(id) {
     document.getElementById('art-precio').value = a.precio;
     document.getElementById('art-stock').value = a.stock;
     document.getElementById('art-unidad').value = a.unidad;
-    new bootstrap.Modal(document.getElementById('modal-articulo')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-articulo')).show();
 }
 function guardar_articulos() {
     const id = document.getElementById('art-id').value;
@@ -426,7 +426,7 @@ function abrirNuevaCompra() {
     document.getElementById('compra-fecha').value = fechaHoy();
     poblarSelectProveedores();
     poblarSelectArticulosCompra();
-    new bootstrap.Modal(document.getElementById('modal-compra')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-compra')).show();
 }
 
 function registrarCompra() {

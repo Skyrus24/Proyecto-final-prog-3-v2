@@ -105,7 +105,7 @@ function configurarBotonesNuevosPresupuestos() {
     if (btnCat) btnCat.addEventListener('click', () => {
         document.getElementById('form-categoria').reset();
         document.getElementById('cat-id').value = '';
-        new bootstrap.Modal(document.getElementById('modal-categoria')).show();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-categoria')).show();
     });
 
     const btnPres = document.getElementById('btn-nuevo-presupuesto');
@@ -126,24 +126,10 @@ function configurarFormulariosPresupuestos() {
     });
 
     const formPres = document.getElementById('form-presupuesto');
-    if (formPres) {
-        formPres.addEventListener('submit', (e) => { e.preventDefault(); registrarPresupuesto(); });
-    }
-
-    const condicionSelect = document.getElementById('pres-condicion');
-    if (condicionSelect) {
-        condicionSelect.addEventListener('change', (e) => {
-            const divCuotas = document.getElementById('div-pres-cuotas');
-            const inputCuotas = document.getElementById('pres-cuotas');
-            if (e.target.value === 'credito') {
-                divCuotas.classList.remove('d-none');
-                inputCuotas.required = true;
-            } else {
-                divCuotas.classList.add('d-none');
-                inputCuotas.required = false;
-            }
-        });
-    }
+    if (formPres) formPres.addEventListener('submit', e => {
+        e.preventDefault();
+        registrarPresupuesto();
+    });
 
     const formCobrarPres = document.getElementById('form-cobrar-presupuesto');
     if (formCobrarPres) formCobrarPres.addEventListener('submit', procesarCobroPresupuesto);
@@ -252,7 +238,7 @@ function abrirNuevoClientePres() {
     document.getElementById('modal-titulo-cli').textContent = 'Nuevo Cliente';
     document.getElementById('form-cliente').reset();
     document.getElementById('cli-id').value = '';
-    new bootstrap.Modal(document.getElementById('modal-cliente')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-cliente')).show();
 }
 
 window.abrirEditarClientePres = function(id) {
@@ -265,7 +251,7 @@ window.abrirEditarClientePres = function(id) {
     document.getElementById('cli-telefono').value = c.telefono || '';
     document.getElementById('cli-email').value = c.email || '';
     document.getElementById('cli-direccion').value = c.direccion || '';
-    new bootstrap.Modal(document.getElementById('modal-cliente')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-cliente')).show();
 };
 
 function guardarClientePres() {
@@ -372,7 +358,7 @@ window.editarCategoriaPres = function(id) {
         document.getElementById('cat-id').value = cat.id;
         document.getElementById('cat-nombre').value = cat.nombre;
         document.getElementById('cat-descripcion').value = cat.descripcion || '';
-        new bootstrap.Modal(document.getElementById('modal-categoria')).show();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-categoria')).show();
     }
 };
 
@@ -410,7 +396,7 @@ function abrirNuevoPresupuesto() {
         selectItem.disabled = true;
     }
     
-    new bootstrap.Modal(document.getElementById('modal-presupuesto')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-presupuesto')).show();
 }
 
 function agregarItemPresupuesto() {
@@ -522,9 +508,6 @@ function registrarPresupuesto() {
     const numero = `P-${String(maxNum + 1).padStart(4, '0')}`;
     const total = detallePresupuesto.reduce((s, i) => s + i.subtotal, 0);
 
-    const condicion = document.getElementById('pres-condicion').value;
-    const cuotas = condicion === 'credito' ? parseInt(document.getElementById('pres-cuotas').value) : 1;
-
     const nuevoPres = {
         numero,
         fecha: document.getElementById('pres-fecha').value,
@@ -532,9 +515,6 @@ function registrarPresupuesto() {
         clienteNombre: clienteObj ? clienteObj.nombre : 'Desconocido',
         categoriaId: parseInt(catId),
         categoriaNombre: catObj ? catObj.nombre : 'General',
-        condicion: condicion,
-        cantidadCuotas: cuotas,
-        planPagos: [],
         detalle: [...detallePresupuesto],
         total,
         estado: 'pendiente', // pendiente, aprobado, rechazado, cobrado
@@ -665,7 +645,7 @@ window.cobrarPresupuesto = function(id) {
     document.getElementById('form-cobrar-presupuesto').reset();
     document.getElementById('div-cobro-cuotas').classList.add('d-none');
     
-    new bootstrap.Modal(document.getElementById('modal-cobro-presupuesto')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-cobro-presupuesto')).show();
 };
 
 async function procesarCobroPresupuesto(e) {
@@ -735,20 +715,20 @@ async function procesarCobroPresupuesto(e) {
     const articulos = obtenerDatos('articulos_tecnorivas');
     const movimientosInv = obtenerDatos('movimientos_inventario');
     
-    p.detalles.forEach(det => {
-        const artIdx = articulos.findIndex(a => a.id === det.idArticulo);
+    p.detalle.forEach(det => {
+        const artIdx = articulos.findIndex(a => a.id === det.itemId);
         if (artIdx !== -1) {
             const saldoA = articulos[artIdx].stock;
             articulos[artIdx].stock -= det.cantidad;
             const saldoB = articulos[artIdx].stock;
             movimientosInv.push({
                 fecha: fechaHoraAhora(),
-                idArticulo: det.idArticulo,
+                articuloId: det.itemId,
                 tipo: 'salida',
                 cantidad: det.cantidad,
                 saldoA: saldoA,
                 saldoB: saldoB,
-                motivo: `Venta Presupuesto ${p.numero}`
+                referencia: `Venta Presupuesto ${p.numero}`
             });
         }
     });

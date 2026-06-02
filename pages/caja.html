@@ -214,7 +214,6 @@
                             <ul class="pagination pagination-sm mb-0" id="paginacion-historial"></ul>
                         </div>
                     </div>
-                    </div>
                 </div>
 
                 <!-- PESTAÑA CUENTAS POR COBRAR -->
@@ -325,8 +324,11 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Condición Pactada</label>
-                        <input type="text" class="form-control bg-light fw-bold text-primary" id="caja-presupuesto-info" readonly placeholder="--">
+                        <label class="form-label">Condición *</label>
+                        <select class="form-select" id="caja-presupuesto-condicion" required>
+                            <option value="contado">Contado</option>
+                            <option value="credito">Crédito</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Método de Pago *</label>
@@ -335,6 +337,10 @@
                             <option value="Tarjeta">Tarjeta</option>
                             <option value="Transferencia">Transferencia Bancaria</option>
                         </select>
+                    </div>
+                    <div class="mb-3 d-none" id="div-caja-presupuesto-cuotas">
+                        <label class="form-label">Cantidad de Cuotas</label>
+                        <input type="number" class="form-control" id="caja-presupuesto-cuotas" min="1" value="1">
                     </div>
                 </div>
                 <div class="modal-footer">

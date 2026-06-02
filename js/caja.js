@@ -124,7 +124,7 @@ function configurarBotonesCaja() {
 
     document.getElementById('btn-movimiento-manual')?.addEventListener('click', () => {
         document.getElementById('form-movimiento').reset();
-        new bootstrap.Modal(document.getElementById('modal-movimiento')).show();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-movimiento')).show();
     });
 
     document.getElementById('btn-cobrar-presupuesto-caja')?.addEventListener('click', () => {
@@ -135,21 +135,8 @@ function configurarBotonesCaja() {
             selectId.insertAdjacentHTML('beforeend', `<option value="${p.id}" data-total="${p.total}">${p.numero} - ${formatearMoneda(p.total)}</option>`);
         });
         document.getElementById('form-cobrar-presupuesto-caja').reset();
-        document.getElementById('caja-presupuesto-info').value = '';
-        new bootstrap.Modal(document.getElementById('modal-cobrar-presupuesto-caja')).show();
-    });
-
-    document.getElementById('caja-presupuesto-id')?.addEventListener('change', (e) => {
-        const id = parseInt(e.target.value);
-        if (!id) { document.getElementById('caja-presupuesto-info').value = ''; return; }
-        const p = obtenerDatos('presupuestos_tecnorivas').find(x => x.id === id);
-        if (p) {
-            if (p.condicion === 'credito') {
-                document.getElementById('caja-presupuesto-info').value = `Crédito - ${p.cantidadCuotas} cuotas`;
-            } else {
-                document.getElementById('caja-presupuesto-info').value = 'Contado';
-            }
-        }
+        document.getElementById('div-caja-presupuesto-cuotas').classList.add('d-none');
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-cobrar-presupuesto-caja')).show();
     });
 }
 
@@ -318,23 +305,35 @@ document.addEventListener('DOMContentLoaded', () => {
         registrarMovimientoManual(tipo, concepto, monto);
     });
 
+    document.getElementById('caja-presupuesto-condicion')?.addEventListener('change', (e) => {
+        const divCuotas = document.getElementById('div-caja-presupuesto-cuotas');
+        if (e.target.value === 'credito') {
+            divCuotas.classList.remove('d-none');
+            document.getElementById('caja-presupuesto-cuotas').required = true;
+        } else {
+            divCuotas.classList.add('d-none');
+            document.getElementById('caja-presupuesto-cuotas').required = false;
+        }
+    });
+
     document.getElementById('form-cobrar-presupuesto-caja')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const idStr = document.getElementById('caja-presupuesto-id').value;
         if (!idStr) { alertaError('Seleccione un presupuesto.'); return; }
         const id = parseInt(idStr);
+        const condicion = document.getElementById('caja-presupuesto-condicion').value;
         const metodo = document.getElementById('caja-presupuesto-metodo').value;
+        const cuotas = condicion === 'credito' ? parseInt(document.getElementById('caja-presupuesto-cuotas').value) : 1;
 
         const presupuestos = obtenerDatos('presupuestos_tecnorivas');
         const p = presupuestos.find(x => x.id === id);
         if (!p) return;
 
-        const condicion = p.condicion || 'contado';
-        const cuotas = p.cantidadCuotas || 1;
-
         if (!(await confirmarAccion(`¿Confirmar cobro por ${condicion}?`, `Presupuesto ${p.numero}`))) return;
         
+        p.condicion = condicion;
         p.metodoPago = metodo;
+        p.cantidadCuotas = cuotas;
         p.planPagos = [];
         
         if (condicion === 'contado') {
@@ -366,20 +365,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Modificar stock
         const articulos = obtenerDatos('articulos_tecnorivas');
         const movimientosInv = obtenerDatos('movimientos_inventario');
-        p.detalles.forEach(det => {
-            const artIdx = articulos.findIndex(a => a.id === det.idArticulo);
+        p.detalle.forEach(det => {
+            const artIdx = articulos.findIndex(a => a.id === det.itemId);
             if (artIdx !== -1) {
                 const saldoA = articulos[artIdx].stock;
                 articulos[artIdx].stock -= det.cantidad;
                 const saldoB = articulos[artIdx].stock;
                 movimientosInv.push({
                     fecha: fechaHoraAhora(),
-                    idArticulo: det.idArticulo,
+                    articuloId: det.itemId,
                     tipo: 'salida',
                     cantidad: det.cantidad,
                     saldoA: saldoA,
                     saldoB: saldoB,
-                    motivo: `Venta Presupuesto ${p.numero}`
+                    referencia: `Venta Presupuesto ${p.numero}`
                 });
             }
         });
@@ -411,7 +410,7 @@ function renderCuentasCobrar() {
     
     presupuestos.forEach(p => {
         if (p.planPagos && p.planPagos.length > 0) {
-            const cliente = clientes.find(c => c.id === p.idCliente);
+            const cliente = clientes.find(c => c.id === p.clienteId);
             const nombreCliente = cliente ? cliente.nombre : 'Desconocido';
             
             p.planPagos.forEach(cuota => {

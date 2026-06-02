@@ -112,7 +112,7 @@ function abrirModalNuevo() {
     document.getElementById('celular').disabled = false;
     document.getElementById('rol').disabled = false;
 
-    new bootstrap.Modal(document.getElementById('modal-usuario')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-usuario')).show();
 }
 
 function abrirEditar(id) {
@@ -145,7 +145,7 @@ function abrirEditar(id) {
         document.getElementById('rol').disabled = false;
     }
 
-    new bootstrap.Modal(document.getElementById('modal-usuario')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-usuario')).show();
 }
 
 function configurarFormulario() {
