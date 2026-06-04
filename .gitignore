@@ -1,0 +1,3 @@
+#ignorar configuracion devscode
+.vscode/
+*.rar
