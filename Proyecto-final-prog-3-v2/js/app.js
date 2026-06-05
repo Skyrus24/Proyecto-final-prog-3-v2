@@ -103,7 +103,9 @@ function formatearMoneda(valor) {
 
 function formatearFecha(fechaISO) {
     if (!fechaISO) return '-';
-    return new Date(fechaISO).toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const hasTime = fechaISO.includes('T') || fechaISO.includes(' ');
+    const normalized = hasTime ? fechaISO : `${fechaISO}T00:00:00`;
+    return new Date(normalized).toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
 function formatearFechaHora(fechaISO) {
@@ -565,6 +567,9 @@ class SelectBuscador {
         this.input = document.createElement('input');
         this.input.type = 'text';
         this.input.className = 'form-control select-search-input';
+        if (this.select.classList.contains('form-select-sm')) {
+            this.input.classList.add('form-control-sm');
+        }
         this.input.placeholder = this.select.options[0] ? this.select.options[0].text : 'Buscar...';
         this.input.autocomplete = 'off';
 

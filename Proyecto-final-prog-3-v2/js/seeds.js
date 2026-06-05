@@ -91,16 +91,16 @@ function inicializarDatos() {
     // Artículos por defecto
     if (!localStorage.getItem('articulos_tecnorivas')) {
         const articulos = [
-            { id: 1, codigo: '7501000001001', nombre: 'Compresor 1/2 HP', categoriaId: 1, precio: 8500, stock: 10, unidad: 'und', iva: 18 },
-            { id: 2, codigo: '7501000001002', nombre: 'Gas Refrigerante R22', categoriaId: 1, precio: 1200, stock: 25, unidad: 'kg', iva: 18 },
-            { id: 3, codigo: '7501000002003', nombre: 'Cable #12 AWG', categoriaId: 2, precio: 85, stock: 200, unidad: 'm', iva: 18 },
-            { id: 4, codigo: '7501000002004', nombre: 'Breaker 20A', categoriaId: 2, precio: 450, stock: 30, unidad: 'und', iva: 18 },
-            { id: 5, codigo: '7501000003005', nombre: 'Cemento Portland', categoriaId: 3, precio: 650, stock: 100, unidad: 'saco', iva: 18 },
-            { id: 6, codigo: '7501000004006', nombre: 'Taladro Percutor 800W', categoriaId: 4, precio: 3500, stock: 15, unidad: 'und', iva: 18 },
-            { id: 7, codigo: '7501000005007', nombre: 'Tubo PVC 1/2"', categoriaId: 5, precio: 250, stock: 150, unidad: 'm', iva: 18 },
-            { id: 8, codigo: '7501000006008', nombre: 'Galón Pintura Blanca Acrílica', categoriaId: 6, precio: 1800, stock: 40, unidad: 'galon', iva: 18 },
-            { id: 9, codigo: '7501000007009', nombre: 'Bombillo LED 12W', categoriaId: 7, precio: 150, stock: 300, unidad: 'und', iva: 18 },
-            { id: 10, codigo: '7501000008010', nombre: 'Cámara IP 1080p', categoriaId: 8, precio: 2200, stock: 20, unidad: 'und', iva: 18 }
+            { id: 1, codigo: '7501000001001', nombre: 'Compresor 1/2 HP', categoriaId: 1, precio: 8500, stock: 10, unidad: 'und', iva: 10 },
+            { id: 2, codigo: '7501000001002', nombre: 'Gas Refrigerante R22', categoriaId: 1, precio: 1200, stock: 25, unidad: 'kg', iva: 15 },
+            { id: 3, codigo: '7501000002003', nombre: 'Cable #12 AWG', categoriaId: 2, precio: 85, stock: 200, unidad: 'm', iva: 10 },
+            { id: 4, codigo: '7501000002004', nombre: 'Breaker 20A', categoriaId: 2, precio: 450, stock: 30, unidad: 'und', iva: 15 },
+            { id: 5, codigo: '7501000003005', nombre: 'Cemento Portland', categoriaId: 3, precio: 650, stock: 100, unidad: 'saco', iva: 10 },
+            { id: 6, codigo: '7501000004006', nombre: 'Taladro Percutor 800W', categoriaId: 4, precio: 3500, stock: 15, unidad: 'und', iva: 15 },
+            { id: 7, codigo: '7501000005007', nombre: 'Tubo PVC 1/2"', categoriaId: 5, precio: 250, stock: 150, unidad: 'm', iva: 10 },
+            { id: 8, codigo: '7501000006008', nombre: 'Galón Pintura Blanca Acrílica', categoriaId: 6, precio: 1800, stock: 40, unidad: 'galon', iva: 15 },
+            { id: 9, codigo: '7501000007009', nombre: 'Bombillo LED 12W', categoriaId: 7, precio: 150, stock: 300, unidad: 'und', iva: 10 },
+            { id: 10, codigo: '7501000008010', nombre: 'Cámara IP 1080p', categoriaId: 8, precio: 2200, stock: 20, unidad: 'und', iva: 15 }
         ];
         guardarDatos('articulos_tecnorivas', articulos);
     }

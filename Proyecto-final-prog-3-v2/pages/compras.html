@@ -299,9 +299,18 @@
                                 <select class="form-select" id="art-categoria" required><option value="">-- Seleccionar --</option></select>
                             </div>
                             <div class="col-md-6"><label class="form-label">Unidad</label><input type="text" class="form-control" id="art-unidad" value="und"></div>
-                            <div class="col-md-4"><label class="form-label">Precio *</label><input type="number" class="form-control" id="art-precio" min="1" required></div>
-                            <div class="col-md-4"><label class="form-label">Stock inicial</label><input type="number" class="form-control" id="art-stock" min="0" value="0"></div>
-                            <div class="col-md-4"><label class="form-label">Stock mínimo</label><input type="number" class="form-control" id="art-stockmin" min="0" value="0"></div>
+                            <div class="col-md-3"><label class="form-label">Precio *</label><input type="number" class="form-control" id="art-precio" min="1" required></div>
+                            <div class="col-md-3"><label class="form-label">Stock inicial</label><input type="number" class="form-control" id="art-stock" min="0" value="0"></div>
+                            <div class="col-md-3"><label class="form-label">Stock mínimo</label><input type="number" class="form-control" id="art-stockmin" min="0" value="0"></div>
+                            <div class="col-md-3">
+                                <label class="form-label">IVA *</label>
+                                <select class="form-select" id="art-iva" required>
+                                    <option value="15">15%</option>
+                                    <option value="10" selected>10%</option>
+                                    <option value="5">5%</option>
+                                    <option value="0">0% (Exento)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">

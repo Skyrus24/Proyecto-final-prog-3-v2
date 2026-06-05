@@ -224,7 +224,7 @@
                     <div class="tab-content" id="pres-items-tabContent">
                         <div class="tab-pane fade show active" id="tab-articulos" role="tabpanel">
                             <div class="row g-2 align-items-end mb-3">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label">Artículo</label>
                                     <select class="form-select form-select-sm" id="pres-articulo-select" disabled>
                                         <option value="">-- Seleccione Categoría Primero --</option>
@@ -232,19 +232,27 @@
                                 </div>
                                 <div class="col-md-2"><label class="form-label">Stock</label><input type="text" class="form-control form-control-sm bg-light" id="pres-articulo-stock" readonly></div>
                                 <div class="col-md-2"><label class="form-label">Cantidad</label><input type="number" class="form-control form-control-sm" id="pres-articulo-cant" min="1" value="1"></div>
-                                <div class="col-md-3"><label class="form-label">Precio unit.</label><input type="number" min="1" class="form-control form-control-sm" id="pres-articulo-precio"></div>
+                                <div class="col-md-2"><label class="form-label">IVA</label><input type="text" class="form-control form-control-sm bg-light" id="pres-articulo-iva" readonly></div>
+                                <div class="col-md-2"><label class="form-label">Precio unit.</label><input type="number" min="1" class="form-control form-control-sm bg-light" id="pres-articulo-precio" readonly></div>
                                 <div class="col-md-1"><button type="button" class="btn btn-dorado btn-sm w-100" id="btn-add-articulo-pres" title="Agregar Artículo"><i class="bi bi-plus-lg"></i></button></div>
                             </div>
                         </div>
                         <div class="tab-pane fade" id="tab-servicios" role="tabpanel">
                             <div class="row g-2 align-items-end mb-3">
-                                <div class="col-md-8">
+                                <div class="col-md-6">
                                     <label class="form-label">Servicio</label>
                                     <select class="form-select form-select-sm select-search" id="pres-servicio-select">
                                         <option value="">-- Buscar Servicio --</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3"><label class="form-label">Precio</label><input type="number" min="0" class="form-control form-control-sm" id="pres-servicio-precio"></div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Cantidad</label>
+                                    <input type="number" class="form-control form-control-sm" id="pres-servicio-cant" min="1" value="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Precio</label>
+                                    <input type="number" min="0" class="form-control form-control-sm" id="pres-servicio-precio">
+                                </div>
                                 <div class="col-md-1"><button type="button" class="btn btn-dorado btn-sm w-100" id="btn-add-servicio-pres" title="Agregar Servicio"><i class="bi bi-plus-lg"></i></button></div>
                             </div>
                         </div>
@@ -252,7 +260,7 @@
                     
                     <div class="tabla-wrapper" style="max-height:200px;overflow-y:auto;">
                         <table class="table table-sm">
-                            <thead><tr><th>N°</th><th>Tipo</th><th>Descripción</th><th>Cant.</th><th>Precio</th><th>Subtotal</th><th></th></tr></thead>
+                            <thead><tr><th>N°</th><th>Tipo</th><th>Descripción</th><th>Cant.</th><th>Precio</th><th>IVA</th><th>Subtotal</th><th></th></tr></thead>
                             <tbody id="presupuesto-detalle-body"></tbody>
                         </table>
                     </div>

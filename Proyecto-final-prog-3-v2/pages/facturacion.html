@@ -117,61 +117,101 @@
                             <div class="modulo-header">
                                 <h2 class="modulo-titulo fs-5">Facturas Emitidas</h2>
                                 <div class="modulo-acciones">
-                                    <button class="btn btn-primary fw-bold me-2" id="btn-nueva-factura"><i class="bi bi-plus-circle me-1"></i>Nueva Factura</button>
+                                    <button class="btn btn-success me-2" id="btn-exportar-excel-fac"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar a Excel</button>
+                                    <button class="btn btn-danger me-2" id="btn-pdf-fac"><i class="bi bi-file-earmark-pdf me-1"></i>Exportar a PDF</button>
 
-                            <div class="d-flex align-items-center ms-2">
-                                <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
-                                <div class="buscador-wrapper">
-                                    <i class="bi bi-search"></i>
-                                    <input type="text" class="buscador-input" id="buscador-facturas" placeholder="Buscar factura...">
+                                    <div class="d-flex align-items-center ms-2">
+                                        <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
+                                        <div class="buscador-wrapper">
+                                            <i class="bi bi-search"></i>
+                                            <input type="text" class="buscador-input" id="buscador-facturas" placeholder="Buscar factura...">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <!-- FILTROS -->
+                        <div class="card-body bg-light border-bottom p-3">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-2">
+                                    <label class="form-label text-xs fw-bold mb-1">Fecha Desde</label>
+                                    <input type="date" class="form-control form-control-sm" id="filtro-fecha-desde">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label text-xs fw-bold mb-1">Fecha Hasta</label>
+                                    <input type="date" class="form-control form-control-sm" id="filtro-fecha-hasta">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label text-xs fw-bold mb-1">Condición</label>
+                                    <select class="form-select form-select-sm" id="filtro-condicion">
+                                        <option value="">Todas</option>
+                                        <option value="contado">Contado</option>
+                                        <option value="credito">Crédito</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label text-xs fw-bold mb-1">Cliente</label>
+                                    <select class="form-select form-select-sm" id="filtro-cliente">
+                                        <option value="">Todos los Clientes</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label text-xs fw-bold mb-1">Estado Cobro</label>
+                                    <select class="form-select form-select-sm" id="filtro-estado-cobro">
+                                        <option value="">Todos</option>
+                                        <option value="saldo">Con Saldo Pendiente</option>
+                                        <option value="cobrado">Cobradas</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-secondary w-50" id="btn-limpiar-filtros" title="Limpiar Filtros"><i class="bi bi-eraser-fill"></i> Limpiar</button>
+                                    <button class="btn btn-sm btn-outline-primary w-50" id="btn-toggle-detalles" title="Mostrar/Ocultar detalles"><i class="bi bi-list-ul"></i> Detalles</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tabla-wrapper">
+                            <table class="table table-hover">
+                                <thead><tr><th style="width: 40px;"></th><th>N° Factura</th><th>N° Presupuesto</th><th>Fecha Emisión</th><th>Cliente</th><th>Total</th><th>Condición</th><th>Estado</th><th>Acciones</th></tr></thead>
+                                <tbody id="tabla-body-facturas"></tbody>
+                            </table>
+                        </div>
+                        <div class="tabla-footer">
+                            <span id="contador-facturas">0 factura(s)</span>
+                            <ul class="pagination pagination-sm mb-0" id="paginacion-facturas"></ul>
+                        </div>
                     </div>
                 </div>
-                <div class="tabla-wrapper">
-                    <table class="table table-hover">
-                        <thead><tr><th>N° Factura</th><th>N° Presupuesto</th><th>Fecha Emisión</th><th>Cliente</th><th>Total</th><th>Condición</th><th>Estado</th><th>Acciones</th></tr></thead>
-                        <tbody id="tabla-body-facturas"></tbody>
-                    </table>
-                </div>
-                <div class="tabla-footer">
-                    <span id="contador-facturas">0 factura(s)</span>
-                    <ul class="pagination pagination-sm mb-0" id="paginacion-facturas"></ul>
-                </div>
-            </div>
-            </div>
 
-            <!-- PESTAÑA BORRADORES -->
-            <div class="tab-pane fade" id="panel-borradores" role="tabpanel">
-                <div class="card" style="border-radius:10px; border-top:none;">
-                    <div class="card-header">
-                        <h2 class="modulo-titulo fs-5">Facturas en Borrador</h2>
-                    </div>
-                    <div class="tabla-wrapper">
-                        <table class="table table-hover">
-                            <thead><tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Acciones</th></tr></thead>
-                            <tbody id="tabla-body-borradores"></tbody>
-                        </table>
+                <!-- PESTAÑA BORRADORES -->
+                <div class="tab-pane fade" id="panel-borradores" role="tabpanel">
+                    <div class="card" style="border-radius:10px; border-top:none;">
+                        <div class="card-header">
+                            <h2 class="modulo-titulo fs-5">Facturas en Borrador</h2>
+                        </div>
+                        <div class="tabla-wrapper">
+                            <table class="table table-hover">
+                                <thead><tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Acciones</th></tr></thead>
+                                <tbody id="tabla-body-borradores"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- PESTAÑA HISTORIAL -->
-            <div class="tab-pane fade" id="panel-historial" role="tabpanel">
-                <div class="card" style="border-radius:10px; border-top:none;">
-                    <div class="card-header">
-                        <h2 class="modulo-titulo fs-5">Historial de Facturas (Cobradas/Anuladas)</h2>
-                    </div>
-                    <div class="tabla-wrapper">
-                        <table class="table table-hover">
-                            <thead><tr><th>N° Factura</th><th>N° Presupuesto</th><th>Fecha Emisión</th><th>Cliente</th><th>Total</th><th>Condición</th><th>Estado</th><th>Acciones</th></tr></thead>
-                            <tbody id="tabla-body-historial"></tbody>
-                        </table>
+                <!-- PESTAÑA HISTORIAL -->
+                <div class="tab-pane fade" id="panel-historial" role="tabpanel">
+                    <div class="card" style="border-radius:10px; border-top:none;">
+                        <div class="card-header">
+                            <h2 class="modulo-titulo fs-5">Historial de Facturas (Cobradas/Anuladas)</h2>
+                        </div>
+                        <div class="tabla-wrapper">
+                            <table class="table table-hover">
+                                <thead><tr><th style="width: 40px;"></th><th>N° Factura</th><th>N° Presupuesto</th><th>Fecha Emisión</th><th>Cliente</th><th>Total</th><th>Condición</th><th>Estado</th><th>Acciones</th></tr></thead>
+                                <tbody id="tabla-body-historial"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
         <!-- VISTA DE NUEVA FACTURA (Oculta por defecto) -->
         <div id="panel-nueva-factura" class="d-none">
@@ -200,6 +240,80 @@
                             </div>
                         </div>
 
+                        <!-- Formulario para agregar ítems a la factura -->
+                        <div class="bg-light p-3 rounded mb-4 border border-1">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle me-1"></i>Agregar Artículos o Servicios</h6>
+                            <div class="row g-3 align-items-end">
+                                <!-- Categoría -->
+                                <div class="col-md-3">
+                                    <label class="form-label mb-1 text-xs">Categoría del Trabajo *</label>
+                                    <select class="form-select form-select-sm" id="fac-item-categoria">
+                                        <option value="">-- Seleccionar Categoría --</option>
+                                    </select>
+                                </div>
+                                <!-- Tipo (Radio) -->
+                                <div class="col-md-3">
+                                    <label class="form-label mb-1 text-xs">Tipo de Ítem</label>
+                                    <div class="d-flex gap-3 mt-1">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="fac-item-tipo" id="fac-item-tipo-art" checked>
+                                            <label class="form-check-label text-xs" for="fac-item-tipo-art">Artículo</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="fac-item-tipo" id="fac-item-tipo-srv">
+                                            <label class="form-check-label text-xs" for="fac-item-tipo-srv">Servicio</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Controles Artículo -->
+                                <div class="col-md-6" id="div-fac-articulo-controles">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-4">
+                                            <label class="form-label text-xs mb-1">Artículo</label>
+                                            <select class="form-select form-select-sm" id="fac-articulo-select" disabled>
+                                                <option value="">-- Seleccione Categoría --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label text-xs mb-1">Stock</label>
+                                            <input type="text" class="form-control form-control-sm bg-light" id="fac-articulo-stock" readonly>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label text-xs mb-1">Cant.</label>
+                                            <input type="number" class="form-control form-control-sm" id="fac-articulo-cant" min="1" value="1">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label text-xs mb-1">Precio</label>
+                                            <input type="number" class="form-control form-control-sm bg-light" id="fac-articulo-precio" readonly>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary w-100" id="btn-add-articulo-fac" title="Agregar"><i class="bi bi-plus-lg"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Controles Servicio -->
+                                <div class="col-md-6 d-none" id="div-fac-servicio-controles">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-6">
+                                            <label class="form-label text-xs mb-1">Servicio</label>
+                                            <select class="form-select form-select-sm" id="fac-servicio-select" disabled>
+                                                <option value="">-- Seleccione Categoría --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label text-xs mb-1">Precio Unit.</label>
+                                            <input type="number" class="form-control form-control-sm" id="fac-servicio-precio" min="0">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary w-100" id="btn-add-servicio-fac" title="Agregar"><i class="bi bi-plus-lg"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Detalles -->
                         <h5 class="fw-bold mb-3 border-bottom pb-2">Detalles de Facturación</h5>
                         <div class="table-responsive mb-4">
@@ -211,13 +325,14 @@
                                         <th>Cant.</th>
                                         <th>Precio Unit.</th>
                                         <th>Subtotal</th>
+                                        <th style="width: 80px;">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="nueva-fac-items">
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <th colspan="4" class="text-end">TOTAL:</th>
+                                        <th colspan="5" class="text-end">TOTAL:</th>
                                         <th class="fs-5 text-success" id="nueva-fac-total">₲ 0</th>
                                     </tr>
                                 </tfoot>
@@ -267,16 +382,21 @@
                             <h6 class="fw-bold"><i class="bi bi-calendar-check me-2"></i>Plan de Financiación (Crédito)</h6>
                             <div class="row g-3 mb-3">
                                 <div class="col-md-4">
-                                    <label class="form-label">Plazo (Cuotas mensuales)</label>
-                                    <select class="form-select" id="nueva-fac-plazo">
-                                        <option value="1">1 cuota (30 días)</option>
-                                        <option value="3">3 cuotas</option>
-                                        <option value="6">6 cuotas</option>
-                                        <option value="12">12 cuotas</option>
+                                    <label class="form-label">Plazo (Cantidad de cuotas * 1-24)</label>
+                                    <input type="number" class="form-control" id="nueva-fac-plazo" min="1" max="24" value="1">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Frecuencia de Pago</label>
+                                    <select class="form-select" id="nueva-fac-frecuencia">
+                                        <option value="semanal">Semanal</option>
+                                        <option value="quincenal">Quincenal</option>
+                                        <option value="mensual" selected>Mensual</option>
+                                        <option value="bimestral">Bimestral</option>
+                                        <option value="semestral">Semestral</option>
                                     </select>
                                 </div>
                             </div>
-                            <p class="small text-muted mb-0">El sistema generará automáticamente los vencimientos cada 30 días.</p>
+                            <p class="small text-muted mb-0">El sistema generará automáticamente los vencimientos según el plazo y la frecuencia seleccionados.</p>
                         </div>
 
                         <!-- Observaciones -->

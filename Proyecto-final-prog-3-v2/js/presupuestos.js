@@ -185,9 +185,11 @@ function configurarFormulariosPresupuestos() {
             if (opt && opt.value) {
                 document.getElementById('pres-articulo-precio').value = opt.dataset.precio || '';
                 document.getElementById('pres-articulo-stock').value = opt.dataset.stock || '-';
+                document.getElementById('pres-articulo-iva').value = opt.dataset.iva ? `${opt.dataset.iva}%` : '10%';
             } else {
                 document.getElementById('pres-articulo-precio').value = '';
                 document.getElementById('pres-articulo-stock').value = '';
+                document.getElementById('pres-articulo-iva').value = '';
             }
         });
     }
@@ -355,6 +357,26 @@ function abrirNuevoPresupuesto() {
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-presupuesto')).show();
 }
 
+function calcularFechaVencimiento(fechaBaseStr, validezDias) {
+    const d = new Date(fechaBaseStr + 'T00:00:00');
+    if (validezDias === 30) {
+        const tempDay = d.getDate();
+        d.setMonth(d.getMonth() + 1);
+        if (d.getDate() !== tempDay) {
+            d.setDate(0);
+        }
+    } else if (validezDias === 60) {
+        const tempDay = d.getDate();
+        d.setMonth(d.getMonth() + 2);
+        if (d.getDate() !== tempDay) {
+            d.setDate(0);
+        }
+    } else {
+        d.setDate(d.getDate() + validezDias);
+    }
+    return d.toISOString().split('T')[0];
+}
+
 function actualizarPreviewCaducidad() {
     const fechaInput = document.getElementById('pres-fecha').value;
     const validezDias = parseInt(document.getElementById('pres-validez').value) || 0;
@@ -362,9 +384,8 @@ function actualizarPreviewCaducidad() {
     if (!previewSpan) return;
     
     if (fechaInput) {
-        const d = new Date(fechaInput + 'T00:00:00');
-        d.setDate(d.getDate() + validezDias);
-        previewSpan.textContent = formatearFecha(d.toISOString().split('T')[0]);
+        const vencFechaStr = calcularFechaVencimiento(fechaInput, validezDias);
+        previewSpan.textContent = formatearFecha(vencFechaStr);
     } else {
         previewSpan.textContent = '-';
     }
@@ -397,6 +418,7 @@ function agregarArticuloPresupuesto() {
     document.getElementById('pres-articulo-stock').value = '';
     document.getElementById('pres-articulo-precio').value = '';
     document.getElementById('pres-articulo-cant').value = '1';
+    document.getElementById('pres-articulo-iva').value = '';
 }
 
 function agregarServicioPresupuesto() {
@@ -406,10 +428,10 @@ function agregarServicioPresupuesto() {
     }
     const opt = sel.options[sel.selectedIndex];
     const precio = parseFloat(document.getElementById('pres-servicio-precio').value);
-    const cant = 1; // Los servicios no tienen cantidad
+    const cant = parseFloat(document.getElementById('pres-servicio-cant').value) || 1;
     
-    if (isNaN(precio) || precio < 0) {
-        alertaAdvertencia('Ingrese un precio válido.'); return;
+    if (isNaN(cant) || cant <= 0 || isNaN(precio) || precio < 0) {
+        alertaAdvertencia('Ingrese cantidad y precio válidos.'); return;
     }
     
     agregarAlDetalle('servicio', parseInt(sel.value), opt.text, cant, precio, 10);
@@ -417,6 +439,7 @@ function agregarServicioPresupuesto() {
     if (selectBuscadorPresSrv) selectBuscadorPresSrv.input.value = '';
     sel.value = '';
     document.getElementById('pres-servicio-precio').value = '';
+    document.getElementById('pres-servicio-cant').value = '1';
 }
 
 function agregarAlDetalle(tipoItem, itemId, descripcion, cant, precio, iva) {
@@ -447,6 +470,7 @@ function renderDetallePresupuesto() {
                 <td>${item.descripcion}</td>
                 <td>${item.cantidad}</td>
                 <td>${formatearMoneda(item.precio)}</td>
+                <td>${item.iva !== undefined ? item.iva : 10}%</td>
                 <td>${formatearMoneda(item.subtotal)}</td>
                 <td><button type="button" class="btn-icon btn-delete" onclick="eliminarItemPresupuesto(${index})"><i class="bi bi-trash"></i></button></td>
             </tr>
@@ -481,14 +505,13 @@ function registrarPresupuesto() {
     const numero = `PRE-${new Date().getFullYear()}-${String(maxNum + 1).padStart(4, '0')}`;
     const total = detallePresupuesto.reduce((s, i) => s + i.subtotal, 0);
 
-    const fechaCreacion = new Date();
-    const fechaVencimiento = new Date(fechaCreacion);
-    fechaVencimiento.setDate(fechaVencimiento.getDate() + validezDias);
+    const fechaInput = document.getElementById('pres-fecha').value || fechaHoy();
+    const fechaVencimientoStr = calcularFechaVencimiento(fechaInput, validezDias);
 
     const nuevoPres = {
         numero,
-        fecha: document.getElementById('pres-fecha').value,
-        fechaVencimiento: fechaVencimiento.toISOString().split('T')[0],
+        fecha: fechaInput,
+        fechaVencimiento: fechaVencimientoStr,
         validezDias,
         clienteId: parseInt(clienteId),
         clienteNombre: clienteObj ? clienteObj.nombre : 'Desconocido',
@@ -567,7 +590,7 @@ function renderFilaListaPresupuestos(lista, tbody) {
 window.verPresupuesto = function(id) {
     const pres = obtenerDatos(CLAVE_PRESUPUESTOS).find(p => p.id === id);
     if (!pres) return;
-    let tableItems = pres.detalle.map(i => `<tr><td>${i.tipoItem === 'articulo' ? 'Art' : 'Srv'}</td><td>${i.descripcion}</td><td>${i.cantidad}</td><td>${formatearMoneda(i.precio)}</td><td>${formatearMoneda(i.subtotal)}</td></tr>`).join('');
+    let tableItems = pres.detalle.map(i => `<tr><td>${i.tipoItem === 'articulo' ? 'Art' : 'Srv'}</td><td>${i.descripcion}</td><td>${i.cantidad}</td><td>${formatearMoneda(i.precio)}</td><td>${i.iva !== undefined ? i.iva : 10}%</td><td>${formatearMoneda(i.subtotal)}</td></tr>`).join('');
     
     Swal.fire({
         title: `Presupuesto ${pres.numero}`,
@@ -579,7 +602,7 @@ window.verPresupuesto = function(id) {
                 <p><strong>Estado:</strong> ${pres.estado.toUpperCase()}</p>
                 <hr>
                 <table class="table table-sm">
-                    <thead><tr><th>Tipo</th><th>Desc.</th><th>Cant.</th><th>Precio</th><th>Total</th></tr></thead>
+                    <thead><tr><th>Tipo</th><th>Desc.</th><th>Cant.</th><th>Precio</th><th>IVA</th><th>Total</th></tr></thead>
                     <tbody>${tableItems}</tbody>
                 </table>
                 <h5 class="text-end fw-bold mt-2">Total: ${formatearMoneda(pres.total)}</h5>
@@ -713,12 +736,13 @@ function _ejecutarPDFPresupuesto(pres) {
         i.descripcion,
         i.cantidad,
         formatearMoneda(i.precio),
+        `${i.iva !== undefined ? i.iva : 10}%`,
         formatearMoneda(i.subtotal)
     ]);
     
     doc.autoTable({
         startY: 150,
-        head: [['N°', 'Tipo', 'Descripción', 'Cant', 'Precio Unit', 'Subtotal']],
+        head: [['N°', 'Tipo', 'Descripción', 'Cant', 'Precio Unit', 'IVA', 'Subtotal']],
         body: tableBody,
         theme: 'grid',
         headStyles: { fillColor: [30, 58, 95] },

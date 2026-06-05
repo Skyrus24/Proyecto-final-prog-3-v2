@@ -270,6 +270,7 @@ function abrirNuevo_articulos() {
     document.getElementById('modal-titulo-art').textContent = 'Nuevo Artículo';
     document.getElementById('form-articulo').reset();
     document.getElementById('art-id').value = '';
+    document.getElementById('art-iva').value = 10;
     poblarSelectCategorias('art-categoria');
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-articulo')).show();
 }
@@ -286,6 +287,7 @@ function abrirEditar_articulos(id) {
     document.getElementById('art-precio').value = a.precio;
     document.getElementById('art-stock').value = a.stock;
     document.getElementById('art-unidad').value = a.unidad;
+    document.getElementById('art-iva').value = a.iva !== undefined ? a.iva : 10;
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-articulo')).show();
 }
 function guardar_articulos() {
@@ -296,7 +298,8 @@ function guardar_articulos() {
         categoriaId: parseInt(document.getElementById('art-categoria').value),
         precio: parseFloat(document.getElementById('art-precio').value),
         stock: parseInt(document.getElementById('art-stock').value),
-        unidad: document.getElementById('art-unidad').value.trim()
+        unidad: document.getElementById('art-unidad').value.trim(),
+        iva: parseInt(document.getElementById('art-iva').value) || 10
     };
     if (obj.nombre.length < 3) {
         alertaError('El nombre del artículo debe tener al menos 3 letras.'); return;
