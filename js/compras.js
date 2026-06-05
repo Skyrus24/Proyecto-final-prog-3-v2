@@ -113,9 +113,9 @@ function filaHTML(tab, item) {
             const cat = obtenerCategorias().find(c => c.id === item.categoriaId);
             return `<td>${item.codigo || '-'}</td><td>${item.nombre}</td><td>${cat ? cat.nombre : '-'}</td><td>${formatearMoneda(item.precio)}</td><td>${item.stock} ${item.unidad}</td><td>${acciones}</td>`;
         case 'compras':
-            const prov = obtenerProveedores().find(p => p.id === item.proveedorId);
+            const nombreProveedor = item.proveedorNombre || (obtenerProveedores().find(p => p.id === item.proveedorId)?.nombre || '-');
             const estadoBadge = { pendiente: 'bg-warning text-dark', pagado: 'bg-success', anulado: 'bg-danger' };
-            return `<td>${item.numero}</td><td>${formatearFecha(item.fecha)}</td><td>${prov ? prov.nombre : '-'}</td><td>${formatearMoneda(item.total)}</td><td><span class="badge ${estadoBadge[item.estado] || 'bg-secondary'}">${item.estado}</span></td><td>
+            return `<td>${item.numero}</td><td>${formatearFecha(item.fecha)}</td><td>${nombreProveedor}</td><td>${formatearMoneda(item.total)}</td><td><span class="badge ${estadoBadge[item.estado] || 'bg-secondary'}">${item.estado}</span></td><td>
                 <button class="btn btn-sm btn-outline-info me-1" onclick="verCompra(${item.id})" title="Ver"><i class="bi bi-eye"></i></button>
                 ${esAdmin && item.estado !== 'anulado' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="cambiarEstadoCompra(${item.id}, 'anulado')" title="Anular Compra"><i class="bi bi-x-octagon"></i></button>` : ''}
                 ${esAdmin && item.estado === 'pendiente' ? `<button class="btn btn-sm btn-outline-success me-1" onclick="cambiarEstadoCompra(${item.id}, 'pagado')" title="Marcar Pagado"><i class="bi bi-check2-circle"></i></button>` : ''}
@@ -439,11 +439,13 @@ function registrarCompra() {
 
     const compras = obtenerCompras();
     const total = detalleCompra.reduce((s, d) => s + d.subtotal, 0);
+    const provObj = obtenerProveedores().find(p => p.id === provId);
     
     const nuevaCompra = {
         id: generarId(compras),
         numero: `C-${String(generarId(compras)).padStart(4, '0')}`,
         proveedorId: provId,
+        proveedorNombre: provObj ? provObj.nombre : 'Desconocido',
         fecha: document.getElementById('compra-fecha').value,
         estado: condicion === 'contado' ? 'pagado' : 'credito',
         condicion: condicion,
@@ -521,11 +523,11 @@ function registrarCompra() {
 function verCompra(id) {
     const c = obtenerCompras().find(x => x.id === id);
     if (!c) return;
-    const prov = obtenerProveedores().find(p => p.id === c.proveedorId);
+    const nombreProveedor = c.proveedorNombre || (obtenerProveedores().find(p => p.id === c.proveedorId)?.nombre || '-');
     const filas = c.detalle.map(d => `<tr><td>${d.nombre}</td><td>${d.cantidad}</td><td>${formatearMoneda(d.precio)}</td><td>${formatearMoneda(d.subtotal)}</td></tr>`).join('');
     Swal.fire({
         title: `Compra ${c.numero}`,
-        html: `<p><strong>Proveedor:</strong> ${prov ? prov.nombre : '-'}</p><p><strong>Fecha:</strong> ${formatearFecha(c.fecha)}</p>
+        html: `<p><strong>Proveedor:</strong> ${nombreProveedor}</p><p><strong>Fecha:</strong> ${formatearFecha(c.fecha)}</p>
         <table class="table table-sm"><thead><tr><th>Artículo</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>${filas}</tbody></table>
         <p class="text-end fw-bold">Total: ${formatearMoneda(c.total)}</p>`,
         width: 700, confirmButtonText: 'Cerrar'
@@ -572,6 +574,15 @@ window.cambiarEstadoCompra = async function(id, nuevoEstado) {
     if (!result.isConfirmed) return;
     
     if (nuevoEstado === 'anulado' && c.estado !== 'anulado') {
+        const cajas = obtenerDatos('cajas_tecnorivas') || [];
+        const idxCaja = cajas.findIndex(caja => caja.estado === 'abierta');
+
+        if (idxCaja === -1) {
+            alertaError('Debe abrir la caja actual antes de poder anular una compra, ya que se requiere registrar el ingreso por devolución del proveedor.');
+            return;
+        }
+
+        // 1. Devolver Stock (Restar inventario)
         const articulos = obtenerArticulos();
         const movimientos = obtenerDatos('movimientos_inventario');
         c.detalle.forEach(d => {
@@ -581,7 +592,36 @@ window.cambiarEstadoCompra = async function(id, nuevoEstado) {
         });
         guardarArticulos(articulos);
         guardarDatos('movimientos_inventario', movimientos);
-        alertaExito(`Compra ${c.numero} anulada. Stock revertido.`);
+
+        // 2. Calcular monto total a devolver a la caja (Ingreso)
+        let totalDevolver = 0;
+        if (c.condicion === 'contado') {
+            totalDevolver = c.total;
+        } else {
+            // Es crédito, sumar cuotas pagadas
+            if (c.planPagos) {
+                c.planPagos.forEach(ct => {
+                    if (ct.estado === 'pagado') {
+                        totalDevolver += ct.monto;
+                    }
+                    ct.estado = 'anulado';
+                });
+            }
+        }
+
+        // 3. Registrar Devolución de Dinero en la Caja Abierta
+        if (totalDevolver > 0) {
+            cajas[idxCaja].movimientos.push({
+                hora: fechaHoraAhora(),
+                tipo: 'ingreso',
+                concepto: `Devolución por Anulación de Compra ${c.numero}`,
+                monto: totalDevolver
+            });
+            cajas[idxCaja].ingresos += totalDevolver;
+            guardarDatos('cajas_tecnorivas', cajas);
+        }
+
+        alertaExito(`Compra ${c.numero} anulada. Stock restado y dinero devuelto a caja.`);
     } else {
         alertaExito(`Estado de compra ${c.numero} actualizado a ${nuevoEstado}.`);
     }

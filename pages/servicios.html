@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios - TECNORIVAS</title>
+    <script>
+        if (!localStorage.getItem('sesion_tecnorivas')) { window.location.href = '../login.html'; }
+    </script>
+    <link rel="stylesheet" href="../bt/bootstrap.min.css">
+    <link rel="stylesheet" href="../bt-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/sweetalert2.all.min.js"></script>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="app-wrapper">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="bi bi-snow3"></i></div>
+            <div class="brand-text"><span class="brand-name">TECNORIVAS</span><span class="brand-sub">Sistema Admin</span></div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">Principal</div>
+            <a href="dashboard.html" class="nav-item-sidebar" id="nav-dashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+            <div class="sidebar-section">Módulos</div>
+            <a href="usuarios.html" class="nav-item-sidebar" id="nav-usuarios"><i class="bi bi-people-fill"></i> Usuarios</a>
+            <a href="clientes.html" class="nav-item-sidebar" id="nav-clientes"><i class="bi bi-person-lines-fill"></i> Clientes</a>
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-compras">
+                <i class="bi bi-cart-fill"></i> Compras <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-compras">
+                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
+                <a href="compras.html#categorias" class="nav-sub-item"><i class="bi bi-tag"></i> Categorías</a>
+                <a href="compras.html#articulos" class="nav-sub-item"><i class="bi bi-box"></i> Artículos</a>
+                <a href="compras.html#compras" class="nav-sub-item"><i class="bi bi-receipt"></i> Compras</a>
+            </div>
+
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-inventario">
+                <i class="bi bi-boxes"></i> Inventario <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-inventario">
+                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-clipboard2-data"></i> Stock</a>
+                <a href="inventario.html#movimientos" class="nav-sub-item"><i class="bi bi-arrow-left-right"></i> Movimientos</a>
+            </div>
+
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-presupuestos">
+                <i class="bi bi-file-earmark-text-fill"></i> Presupuestos <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-presupuestos">
+                <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
+                <a href="servicios.html" class="nav-sub-item" id="nav-servicios"><i class="bi bi-tools"></i> Servicios</a>
+                <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
+            </div>
+
+            <a href="facturacion.html" class="nav-item-sidebar" id="nav-facturacion">
+                <i class="bi bi-receipt-cutoff"></i> Facturación
+            </a>
+
+            <a href="cuotas.html" class="nav-item-sidebar" id="nav-cuotas">
+                <i class="bi bi-calendar-check"></i> Cuotas
+            </a>
+
+            <a href="caja.html" class="nav-item-sidebar" id="nav-caja">
+                <i class="bi bi-cash-coin"></i> Caja
+            </a>
+            <div class="sidebar-section">Reportes</div>
+            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes">
+                <i class="bi bi-bar-chart-fill"></i> Flujo de Caja & Reportes
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="usuario-sidebar">
+                <div class="usuario-avatar" id="avatar-inicial">A</div>
+                <div class="usuario-info">
+                    <div class="usuario-nombre" id="nav-usuario-nombre">Cargando...</div>
+                    <div class="usuario-rol" id="nav-usuario-rol">...</div>
+                </div>
+                <button class="btn-logout" data-logout title="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="btn-menu-mobile" id="btn-menu"><i class="bi bi-list"></i></button>
+                <div>
+                    <div class="topbar-titulo">Servicios</div>
+                    <div class="topbar-breadcrumb">Inicio / Servicios</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div id="panel-servicios" class="card" style="border-radius:10px; border-top:none;">
+                <div class="card-header">
+                    <div class="modulo-header">
+                        <h1 class="modulo-titulo">Catálogo de Servicios</h1>
+                        <div class="modulo-acciones">
+                            <button class="btn btn-info text-white" id="btn-imprimir-servicios"><i class="bi bi-printer me-1"></i>Imprimir</button>
+                            <button class="btn btn-success" id="btn-exportar-servicios"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel</button>
+                            <button class="btn btn-danger" id="btn-pdf-servicios"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button>
+                            <button class="btn btn-primario" id="btn-nuevo-servicio"><i class="bi bi-plus me-1"></i>Nuevo Servicio</button>
+                            <div class="d-flex align-items-center ms-2">
+                                <span class="me-2 text-muted fw-bold d-none d-sm-inline-block">Buscar:</span>
+                                <div class="buscador-wrapper">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" class="buscador-input" id="buscador-servicios" placeholder="Buscar servicio...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tabla-wrapper">
+                    <table class="table table-hover">
+                        <thead><tr><th>Nombre</th><th>Descripción</th><th>Categoría</th><th>Precio Base</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody id="tabla-body-servicios"></tbody>
+                    </table>
+                </div>
+                <div class="tabla-footer">
+                    <span id="contador-servicios">0 servicio(s)</span>
+                    <ul class="pagination pagination-sm mb-0" id="paginacion-servicios"></ul>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- MODAL SERVICIO -->
+<div class="modal fade" id="modal-servicio" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primario text-white">
+                <h5 class="modal-title" id="modal-titulo-servicio"><i class="bi bi-tools me-2"></i>Nuevo Servicio</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-servicio">
+                <div class="modal-body">
+                    <input type="hidden" id="serv-id">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del Servicio *</label>
+                        <input type="text" class="form-control" id="serv-nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" id="serv-descripcion" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Categoría</label>
+                        <select class="form-select" id="serv-categoria" required>
+                            <option value="">-- Seleccionar --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Precio Base *</label>
+                        <input type="number" class="form-control" id="serv-precio" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="serv-activo" checked>
+                            <label class="form-check-label">Servicio Activo</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-save me-1"></i>Guardar Servicio</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="../bt/bootstrap.min.js"></script>
+<script src="../js/app.js"></script>
+<script src="../js/servicios.js"></script>
+
+</body>
+</html>

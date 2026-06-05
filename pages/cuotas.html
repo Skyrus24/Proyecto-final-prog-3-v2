@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Cuotas - TECNORIVAS</title>
+    <script>
+        if (!localStorage.getItem('sesion_tecnorivas')) { window.location.href = '../login.html'; }
+    </script>
+    <link rel="stylesheet" href="../bt/bootstrap.min.css">
+    <link rel="stylesheet" href="../bt-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/sweetalert2.all.min.js"></script>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="app-wrapper">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="bi bi-snow3"></i></div>
+            <div class="brand-text"><span class="brand-name">TECNORIVAS</span><span class="brand-sub">Sistema Admin</span></div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">Principal</div>
+            <a href="dashboard.html" class="nav-item-sidebar" id="nav-dashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+            <div class="sidebar-section">Módulos</div>
+            <a href="usuarios.html" class="nav-item-sidebar" id="nav-usuarios"><i class="bi bi-people-fill"></i> Usuarios</a>
+            <a href="clientes.html" class="nav-item-sidebar" id="nav-clientes"><i class="bi bi-person-lines-fill"></i> Clientes</a>
+            
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-compras">
+                <i class="bi bi-cart-fill"></i> Compras <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-compras">
+                <a href="compras.html#proveedores" class="nav-sub-item"><i class="bi bi-truck"></i> Proveedores</a>
+                <a href="compras.html#categorias" class="nav-sub-item"><i class="bi bi-tag"></i> Categorías</a>
+                <a href="compras.html#articulos" class="nav-sub-item"><i class="bi bi-box"></i> Artículos</a>
+                <a href="compras.html#compras" class="nav-sub-item"><i class="bi bi-receipt"></i> Compras</a>
+            </div>
+
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-inventario">
+                <i class="bi bi-boxes"></i> Inventario <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-inventario">
+                <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-clipboard2-data"></i> Stock</a>
+                <a href="inventario.html#movimientos" class="nav-sub-item"><i class="bi bi-arrow-left-right"></i> Movimientos</a>
+            </div>
+
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-presupuestos">
+                <i class="bi bi-file-earmark-text-fill"></i> Presupuestos <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-presupuestos">
+                <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
+                <a href="servicios.html" class="nav-sub-item" id="nav-servicios"><i class="bi bi-tools"></i> Servicios</a>
+                <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
+            </div>
+
+            <a href="facturacion.html" class="nav-item-sidebar" id="nav-facturacion">
+                <i class="bi bi-receipt-cutoff"></i> Facturación
+            </a>
+
+            <a href="cuotas.html" class="nav-item-sidebar" id="nav-cuotas">
+                <i class="bi bi-calendar-check"></i> Cuotas
+            </a>
+
+            <a href="caja.html" class="nav-item-sidebar" id="nav-caja">
+                <i class="bi bi-cash-coin"></i> Caja
+            </a>
+            <div class="sidebar-section">Reportes</div>
+            <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes">
+                <i class="bi bi-bar-chart-fill"></i> Flujo de Caja & Reportes
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="usuario-sidebar">
+                <div class="usuario-avatar" id="avatar-inicial">A</div>
+                <div class="usuario-info">
+                    <div class="usuario-nombre" id="nav-usuario-nombre">Cargando...</div>
+                    <div class="usuario-rol" id="nav-usuario-rol">...</div>
+                </div>
+                <button class="btn-logout" data-logout title="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="btn-menu-mobile" id="btn-menu"><i class="bi bi-list"></i></button>
+                <div>
+                    <div class="topbar-titulo">Cuotas & Financiación</div>
+                    <div class="topbar-breadcrumb">Inicio / Cuotas</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card stat-card bg-white shadow-sm border-0 h-100 p-3" style="border-left: 5px solid var(--primario) !important;">
+                        <h6 class="text-muted text-uppercase mb-1" style="font-size:0.8rem; font-weight:700;">Total Pendiente (Global)</h6>
+                        <h3 class="fw-bold mb-0" style="color:var(--primario);" id="stat-total-pendiente">₲ 0</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card bg-white shadow-sm border-0 h-100 p-3" style="border-left: 5px solid #dc3545 !important;">
+                        <h6 class="text-muted text-uppercase mb-1" style="font-size:0.8rem; font-weight:700;">Total Vencido</h6>
+                        <h3 class="fw-bold text-danger mb-0" id="stat-total-vencido">₲ 0</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card bg-white shadow-sm border-0 h-100 p-3" style="border-left: 5px solid #198754 !important;">
+                        <h6 class="text-muted text-uppercase mb-1" style="font-size:0.8rem; font-weight:700;">Total Cobrado (Mes)</h6>
+                        <h3 class="fw-bold text-success mb-0" id="stat-total-cobrado">₲ 0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <ul class="nav nav-tabs custom-tabs" id="cuotasTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-pendientes" data-bs-toggle="tab" data-bs-target="#panel-pendientes" type="button" role="tab"><i class="bi bi-clock-history"></i> Pendientes / Vencidas</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-pagadas" data-bs-toggle="tab" data-bs-target="#panel-pagadas" type="button" role="tab"><i class="bi bi-check-circle"></i> Pagadas</button>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-3" id="cuotasTabsContent">
+                <div class="tab-pane fade show active" id="panel-pendientes" role="tabpanel">
+                    <div id="panel-cuotas" class="card" style="border-radius:10px; border-top:none;">
+                        <div class="card-header">
+                            <div class="modulo-header">
+                                <h1 class="modulo-titulo">Listado de Cuotas Pendientes</h1>
+                                <div class="modulo-acciones d-flex align-items-center gap-2">
+                                    <button class="btn btn-info text-white" id="btn-imprimir-cuotas"><i class="bi bi-printer"></i></button>
+                                    <button class="btn btn-success" id="btn-exportar-cuotas"><i class="bi bi-file-earmark-spreadsheet"></i></button>
+                                    <div class="buscador-wrapper ms-2">
+                                        <i class="bi bi-search"></i>
+                                        <input type="text" class="buscador-input" id="buscador-cuotas" placeholder="Buscar cliente o factura...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tabla-wrapper">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr style="text-transform:uppercase; font-size:12px; color:#6c757d; font-weight:700;">
+                                        <th>Cliente</th>
+                                        <th>Factura Origen<br><span style="font-size:10px;">Fecha</span></th>
+                                        <th>Resumen<br>Cuotas</th>
+                                        <th>Fecha Vencimiento</th>
+                                        <th>Monto Total<br>& Intereses</th>
+                                        <th>Días<br>Vencidos</th>
+                                        <th>Estado<br>Detallado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-body-cuotas-pendientes"></tbody>
+                            </table>
+                        </div>
+                        <div class="tabla-footer">
+                            <span id="contador-cuotas">0 cuota(s)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="panel-pagadas" role="tabpanel">
+                    <div class="card" style="border-radius:10px; border-top:none;">
+                        <div class="card-header">
+                            <div class="modulo-header">
+                                <h1 class="modulo-titulo">Historial de Cuotas Pagadas</h1>
+                            </div>
+                        </div>
+                        <div class="tabla-wrapper">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr style="text-transform:uppercase; font-size:12px; color:#6c757d; font-weight:700;">
+                                        <th>Cliente</th>
+                                        <th>Factura Origen<br><span style="font-size:10px;">Fecha</span></th>
+                                        <th>Resumen<br>Cuotas</th>
+                                        <th>Fecha Cobro</th>
+                                        <th>Monto Total<br>& Intereses</th>
+                                        <th>Estado<br>Detallado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-body-cuotas-pagadas"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </main>
+    </div>
+    </div>
+</div>
+
+<!-- MODAL HISTÓRICO -->
+<div class="modal fade" id="modal-historico" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="bi bi-clock-history me-2"></i>Historial de Cuenta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="card mb-4 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-1" style="font-size:0.85rem;text-transform:uppercase;">Cliente</h6>
+                                <h5 class="fw-bold text-primary mb-0" id="hist-cliente">-</h5>
+                            </div>
+                            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                                <h6 class="text-muted mb-1" style="font-size:0.85rem;text-transform:uppercase;">Factura Origen</h6>
+                                <h5 class="fw-bold mb-0" id="hist-factura">-</h5>
+                                <small class="text-muted" id="hist-fecha">-</small>
+                            </div>
+                        </div>
+                        <hr class="my-3">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h6 class="text-muted mb-1" style="font-size:0.75rem;text-transform:uppercase;">Total Financiado</h6>
+                                <strong class="fs-5 text-dark" id="hist-total">Gs. 0</strong>
+                            </div>
+                            <div class="col-4 border-start border-end">
+                                <h6 class="text-muted mb-1" style="font-size:0.75rem;text-transform:uppercase;">Total Cobrado</h6>
+                                <strong class="fs-5 text-success" id="hist-pagado">Gs. 0</strong>
+                            </div>
+                            <div class="col-4">
+                                <h6 class="text-muted mb-1" style="font-size:0.75rem;text-transform:uppercase;">Saldo Restante</h6>
+                                <strong class="fs-5 text-danger" id="hist-saldo">Gs. 0</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3 text-secondary text-uppercase" style="font-size:0.85rem;"><i class="bi bi-calendar3 me-2"></i>Línea de Tiempo de Cuotas</h6>
+                
+                <div class="ms-3 ps-4 position-relative pb-3" style="border-left: 2px solid #dee2e6;" id="hist-timeline">
+                    <!-- Timeline items generated by JS -->
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0 bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../bt/bootstrap.min.js"></script>
+<script src="../js/app.js"></script>
+<script src="../js/cuotas.js"></script>
+
+</body>
+</html>

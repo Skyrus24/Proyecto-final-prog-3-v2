@@ -12,32 +12,33 @@ function cargarDashboard() {
         if (welcomeEl) welcomeEl.textContent = sesion.nombre;
     }
 
-    const presupuestos = obtenerDatos('presupuestos_tecnorivas');
-    const compras = obtenerDatos('compras_tecnorivas');
-    const articulos = obtenerDatos('articulos_tecnorivas');
+    const facturas = obtenerDatos('facturas_tecnorivas') || [];
+    const compras = obtenerDatos('compras_tecnorivas') || [];
+    const articulos = obtenerDatos('articulos_tecnorivas') || [];
 
     const mesActual = new Date().getMonth();
-    const presupuestosMes = presupuestos.filter(p => new Date(p.fecha).getMonth() === mesActual);
-    const comprasMes = compras.filter(c => new Date(c.fecha).getMonth() === mesActual);
+    const añoActual = new Date().getFullYear();
+    const facturasMes = facturas.filter(f => new Date(f.fecha).getMonth() === mesActual && new Date(f.fecha).getFullYear() === añoActual);
+    const comprasMes = compras.filter(c => new Date(c.fecha).getMonth() === mesActual && new Date(c.fecha).getFullYear() === añoActual);
 
     const statPresupuestos = document.getElementById('stat-ventas-total');
     const statCompras = document.getElementById('stat-compras-total');
     const statArticulos = document.getElementById('stat-articulos');
 
-    if (statPresupuestos) statPresupuestos.textContent = presupuestosMes.length;
+    if (statPresupuestos) statPresupuestos.textContent = facturasMes.length;
     if (statCompras) statCompras.textContent = formatearMoneda(comprasMes.reduce((s, c) => s + c.total, 0));
     if (statArticulos) statArticulos.textContent = articulos.length;
 
-    // Últimos presupuestos
-    const ultimosPresupuestos = presupuestos.slice(-5).reverse();
+    // Últimas facturas
+    const ultimasFacturas = facturas.slice(-5).reverse();
     const tbodyVentas = document.getElementById('ultimas-ventas-body');
-    if (tbodyVentas && ultimosPresupuestos.length > 0) {
-        tbodyVentas.innerHTML = ultimosPresupuestos.map(p => `
+    if (tbodyVentas && ultimasFacturas.length > 0) {
+        tbodyVentas.innerHTML = ultimasFacturas.map(f => `
             <tr>
-                <td>${p.numero}</td>
-                <td>${formatearFecha(p.fecha)}</td>
-                <td>${formatearMoneda(p.total)}</td>
-                <td><span class="badge ${p.estado === 'aprobado' ? 'bg-success' : p.estado === 'pendiente' ? 'bg-warning text-dark' : 'bg-danger'}">${p.estado}</span></td>
+                <td>${f.numero}</td>
+                <td>${formatearFecha(f.fecha)}</td>
+                <td>${formatearMoneda(f.total)}</td>
+                <td><span class="badge ${f.estado === 'anulada' ? 'bg-danger' : f.estado === 'emitida' ? 'bg-success' : 'bg-secondary'}">${f.estado.toUpperCase()}</span></td>
             </tr>
         `).join('');
     }
@@ -77,11 +78,11 @@ function cargarDashboard() {
             cardStatArt.style.setProperty('display', 'none', 'important');
         }
 
-        // Filtrar panel de Últimos Presupuestos
+        // Filtrar panel de Últimas Facturas
         if (tbodyVentas) {
-            const cardPresupuestos = tbodyVentas.closest('.col-lg-6');
-            if (cardPresupuestos && !['superusuario', 'admin', 'asesor', 'tecnico', 'cajero'].includes(sesion.rol)) {
-                cardPresupuestos.style.setProperty('display', 'none', 'important');
+            const cardFacturas = tbodyVentas.closest('.col-lg-6');
+            if (cardFacturas && !['superusuario', 'admin', 'asesor', 'tecnico', 'cajero'].includes(sesion.rol)) {
+                cardFacturas.style.setProperty('display', 'none', 'important');
             }
         }
     }

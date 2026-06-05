@@ -38,6 +38,9 @@
             <a href="usuarios.html" class="nav-item-sidebar" id="nav-usuarios">
                 <i class="bi bi-people-fill"></i> Usuarios
             </a>
+            <a href="clientes.html" class="nav-item-sidebar" id="nav-clientes">
+                <i class="bi bi-person-lines-fill"></i> Clientes
+            </a>
 
             <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-compras">
                 <i class="bi bi-cart-fill"></i> Compras
@@ -62,13 +65,20 @@
             </div>
 
             <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-presupuestos">
-                <i class="bi bi-file-earmark-text-fill"></i> Presupuestos
-                <i class="bi bi-chevron-down nav-arrow"></i>
+                <i class="bi bi-file-earmark-text-fill"></i> Presupuestos <i class="bi bi-chevron-down nav-arrow"></i>
             </a>
             <div class="nav-sub" id="sub-presupuestos">
                 <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
+                <a href="servicios.html" class="nav-sub-item" id="nav-servicios"><i class="bi bi-tools"></i> Servicios</a>
                 <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
             </div>
+
+            <a href="facturacion.html" class="nav-item-sidebar" id="nav-facturacion">
+                <i class="bi bi-receipt"></i> Facturación
+            </a>
+            <a href="cuotas.html" class="nav-item-sidebar" id="nav-cuotas">
+                <i class="bi bi-calendar3"></i> Cuotas
+            </a>
 
             <a href="caja.html" class="nav-item-sidebar" id="nav-caja">
                 <i class="bi bi-cash-coin"></i> Caja
@@ -111,157 +121,152 @@
 
         <!-- PAGE CONTENT -->
         <main class="page-content">
-            <h1 style="font-size:20px;font-weight:700;color:#1e3a5f;margin-bottom:20px;">
-                <i class="bi bi-cash-coin me-2"></i>Gestión de Caja
-            </h1>
-            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 style="font-size:20px;font-weight:700;color:#1e3a5f;margin-bottom:0;">
+                    <i class="bi bi-cash-coin me-2"></i>Gestión de Caja
+                </h1>
+                <div id="caja-estado-container" class="d-flex align-items-center gap-3">
+                    <span id="badge-estado-caja" class="badge bg-secondary fs-6 px-3 py-2">Estado Desconocido</span>
+                    <button class="btn btn-success fw-bold d-none" id="btn-abrir-caja"><i class="bi bi-unlock-fill me-1"></i>Abrir Caja</button>
+                    <button class="btn btn-danger fw-bold d-none" id="btn-cerrar-caja"><i class="bi bi-lock-fill me-1"></i>Cerrar Caja</button>
+                </div>
+            </div>
             <ul class="nav nav-tabs custom-tabs" id="cajaTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="tab-caja-actual" data-bs-toggle="tab" data-bs-target="#caja-actual" type="button" role="tab"><i class="bi bi-wallet2"></i> Caja Actual</button>
+                    <button class="nav-link active" id="tab-resumen" data-bs-toggle="tab" data-bs-target="#panel-resumen" type="button" role="tab"><i class="bi bi-wallet2"></i> Resumen de Cajas</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="tab-caja-historial" data-bs-toggle="tab" data-bs-target="#caja-historial" type="button" role="tab"><i class="bi bi-clock-history"></i> Historial de Sesiones</button>
+                    <button class="nav-link" id="tab-ingresos" data-bs-toggle="tab" data-bs-target="#panel-ingresos" type="button" role="tab"><i class="bi bi-arrow-down-circle text-success"></i> Ingresos</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="tab-cuentas-cobrar" data-bs-toggle="tab" data-bs-target="#cuentas-cobrar" type="button" role="tab"><i class="bi bi-arrow-down-circle text-success"></i> Cuentas por Cobrar</button>
+                    <button class="nav-link" id="tab-egresos" data-bs-toggle="tab" data-bs-target="#panel-egresos" type="button" role="tab"><i class="bi bi-arrow-up-circle text-danger"></i> Egresos</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="tab-cuentas-pagar" data-bs-toggle="tab" data-bs-target="#cuentas-pagar" type="button" role="tab"><i class="bi bi-arrow-up-circle text-danger"></i> Cuentas por Pagar</button>
+                    <button class="nav-link" id="tab-pendientes" data-bs-toggle="tab" data-bs-target="#panel-pendientes" type="button" role="tab"><i class="bi bi-receipt"></i> Facturación Pendiente</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-cuotas" data-bs-toggle="tab" data-bs-target="#panel-cuotas" type="button" role="tab"><i class="bi bi-calendar-check"></i> Cuotas Pendientes</button>
                 </li>
             </ul>
             
-            <div class="tab-content" id="cajaTabsContent">
-                <!-- PESTAÑA CAJA ACTUAL -->
-                <div class="tab-pane fade show active" id="caja-actual" role="tabpanel">
-                    <div class="card mt-3">
-                        <div class="card-body">
-                            <!-- ESTADO DE LA CAJA -->
-                            <div class="row align-items-center mb-4">
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <div class="stat-icon bg-light me-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #1e3a5f;">
-                                            <i class="bi bi-safe2"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="mb-1" id="caja-estado-badge" style="font-weight: bold;"><span class="badge bg-secondary">CERRADA</span></h4>
-                                            <p class="text-muted mb-0" id="caja-info-apertura">Abre la caja para comenzar a operar.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 text-end">
-                                    <div id="caja-saldo-container" class="d-none">
-                                        <div class="text-muted text-uppercase" style="font-size: 12px; font-weight: bold;">Saldo Actual</div>
-                                        <h2 id="caja-saldo-actual" style="font-weight: bold; color: #1e3a5f; margin: 0;">Gs. 0</h2>
-                                    </div>
-                                </div>
+                  <div class="tab-content" id="cajaTabsContent">
+                
+                <!-- PESTAÑA RESUMEN DE CAJAS -->
+                <div class="tab-pane fade show active" id="panel-resumen" role="tabpanel">
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white text-center p-3 mb-3" style="border-radius:10px;">
+                                <h5>Caja General (Efectivo)</h5>
+                                <h3 id="saldo-caja-general">₲ 0</h3>
                             </div>
-                            
-                            <!-- BOTONES DE ACCIÓN -->
-                            <div class="d-flex gap-2 mb-4">
-                                <button class="btn btn-success flex-fill fw-bold" id="btn-abrir-caja"><i class="bi bi-unlock-fill me-2"></i>ABRIR CAJA</button>
-                                <button class="btn btn-danger flex-fill fw-bold d-none" id="btn-cerrar-caja"><i class="bi bi-lock-fill me-2"></i>CERRAR CAJA</button>
-                                <button class="btn btn-primary flex-fill fw-bold d-none" id="btn-movimiento-manual"><i class="bi bi-plus-circle me-2"></i>NUEVO MOVIMIENTO</button>
-                                <button class="btn btn-warning flex-fill fw-bold d-none text-dark" id="btn-cobrar-presupuesto-caja"><i class="bi bi-search me-2"></i>COBRAR PRESUPUESTO</button>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white text-center p-3 mb-3" style="border-radius:10px;">
+                                <h5>Banco / Transferencias</h5>
+                                <h3 id="saldo-caja-transferencias">₲ 0</h3>
                             </div>
-                            
-                            <!-- MOVIMIENTOS -->
-                            <div id="contenedor-movimientos" class="d-none">
-                                <h5 class="fw-bold mb-3"><i class="bi bi-list-columns-reverse me-2"></i>Movimientos de la sesión</h5>
-                                <div class="tabla-wrapper">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Hora</th>
-                                                <th>Tipo</th>
-                                                <th>Concepto</th>
-                                                <th>Monto</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tabla-movimientos-actual">
-                                        </tbody>
-                                    </table>
-                                </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-warning text-dark text-center p-3 mb-3" style="border-radius:10px;">
+                                <h5>Tarjetas por Acreditar</h5>
+                                <h3 id="saldo-caja-tarjetas">₲ 0</h3>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- PESTAÑA HISTORIAL -->
-                <div class="tab-pane fade" id="caja-historial" role="tabpanel">
+                <!-- PESTAÑA INGRESOS -->
+                <div class="tab-pane fade" id="panel-ingresos" role="tabpanel">
                     <div class="card mt-3">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 fw-bold"><i class="bi bi-archive me-2"></i>Sesiones Anteriores</h5>
+                            <h5 class="mb-0 fw-bold">Registro de Ingresos</h5>
                         </div>
                         <div class="tabla-wrapper">
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Fecha Apertura</th>
-                                        <th>Cajero</th>
-                                        <th>Monto Inicial</th>
-                                        <th>Total Ingresos</th>
-                                        <th>Total Egresos</th>
-                                        <th>Saldo Final</th>
-                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                        <th>Concepto</th>
+                                        <th>Relacionado Con</th>
+                                        <th>Monto</th>
+                                        <th>Caja Destino</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabla-historial-cajas">
+                                <tbody id="tabla-ingresos">
                                 </tbody>
                             </table>
-                        </div>
-                        <div class="tabla-footer">
-                            <span id="contador-historial">0 sesiones</span>
-                            <ul class="pagination pagination-sm mb-0" id="paginacion-historial"></ul>
                         </div>
                     </div>
                 </div>
 
-                <!-- PESTAÑA CUENTAS POR COBRAR -->
-                <div class="tab-pane fade" id="cuentas-cobrar" role="tabpanel">
+                <!-- PESTAÑA EGRESOS -->
+                <div class="tab-pane fade" id="panel-egresos" role="tabpanel">
                     <div class="card mt-3">
-                        <div class="card-header d-flex justify-content-between align-items-center bg-success text-white">
-                            <h5 class="mb-0 fw-bold"><i class="bi bi-arrow-down-circle me-2"></i>Cuentas por Cobrar (Clientes)</h5>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold">Registro de Egresos</h5>
+                            <button class="btn btn-sm btn-primary" id="btn-nuevo-egreso-manual"><i class="bi bi-plus-circle me-1"></i>Nuevo Egreso Manual</button>
                         </div>
                         <div class="tabla-wrapper">
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Ref.</th>
+                                        <th>Fecha</th>
+                                        <th>Concepto</th>
+                                        <th>Relacionado Con</th>
+                                        <th>Monto</th>
+                                        <th>Caja Origen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-egresos">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA FACTURACION PENDIENTE DE COBRO (CONTADO) -->
+                <div class="tab-pane fade" id="panel-pendientes" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Facturas Contado Pendientes de Cobro</h5>
+                        </div>
+                        <div class="tabla-wrapper">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
                                         <th>Cliente</th>
-                                        <th>Cuota</th>
-                                        <th>Vencimiento</th>
-                                        <th>Monto</th>
-                                        <th>Estado</th>
+                                        <th>N° Factura</th>
+                                        <th>Total</th>
+                                        <th>Medios de Pago</th>
                                         <th>Acción</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabla-cuentas-cobrar">
+                                <tbody id="tabla-pendientes-cobro">
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- PESTAÑA CUENTAS POR PAGAR -->
-                <div class="tab-pane fade" id="cuentas-pagar" role="tabpanel">
+                <!-- PESTAÑA CUOTAS PENDIENTES DE COBRO -->
+                <div class="tab-pane fade" id="panel-cuotas" role="tabpanel">
                     <div class="card mt-3">
-                        <div class="card-header d-flex justify-content-between align-items-center bg-danger text-white">
-                            <h5 class="mb-0 fw-bold"><i class="bi bi-arrow-up-circle me-2"></i>Cuentas por Pagar (Proveedores)</h5>
+                        <div class="card-header" style="background-color: var(--primario); color: white;">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-check me-2"></i>Cuotas Pendientes de Cobro</h5>
                         </div>
                         <div class="tabla-wrapper">
-                            <table class="table table-hover">
+                            <table class="table table-hover align-middle">
                                 <thead>
                                     <tr>
-                                        <th>Ref.</th>
-                                        <th>Proveedor</th>
-                                        <th>Cuota</th>
+                                        <th>Cliente</th>
+                                        <th>Factura Origen</th>
+                                        <th>Resumen</th>
                                         <th>Vencimiento</th>
                                         <th>Monto</th>
-                                        <th>Estado</th>
-                                        <th>Acción</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabla-cuentas-pagar">
+                                <tbody id="tabla-cuotas-pendientes-cobro">
                                 </tbody>
                             </table>
                         </div>
@@ -272,86 +277,154 @@
     </div>
 </div>
 
-<!-- MODAL MOVIMIENTO MANUAL -->
-<div class="modal fade" id="modal-movimiento" tabindex="-1">
+<!-- MODAL EGRESO MANUAL -->
+<div class="modal fade" id="modal-egreso-manual" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Registrar Movimiento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-dash-circle me-2"></i>Registrar Egreso Manual</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-movimiento">
+            <form id="form-egreso-manual">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Tipo de Movimiento *</label>
-                        <select class="form-select" id="mov-tipo" required>
-                            <option value="ingreso">Ingreso</option>
-                            <option value="egreso">Egreso (Gasto)</option>
+                        <label class="form-label">Caja Origen *</label>
+                        <select class="form-select" id="egreso-caja" required>
+                            <option value="Efectivo">Caja General (Efectivo)</option>
+                            <option value="Transferencia">Banco / Transferencias</option>
+                            <option value="Tarjeta">Tarjetas por Acreditar</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Concepto / Descripción *</label>
-                        <input type="text" class="form-control" id="mov-concepto" placeholder="Ej: Pago de luz, Anticipo, etc." required minlength="3">
+                        <input type="text" class="form-control" id="egreso-concepto" placeholder="Ej: Pago de luz, Compras varias..." required minlength="3">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Monto (Gs.) *</label>
-                        <input type="number" class="form-control" id="mov-monto" min="1" step="1" required>
+                        <input type="number" class="form-control" id="egreso-monto" min="1" step="1" required>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar Movimiento</button>
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-save me-1"></i>Registrar Egreso</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- MODAL COBRAR PRESUPUESTO EN CAJA -->
-<div class="modal fade" id="modal-cobrar-presupuesto-caja" tabindex="-1">
+<!-- MODAL PAGAR CUOTA -->
+<div class="modal fade" id="modal-pagar-cuota" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title"><i class="bi bi-search me-2"></i>Buscar Presupuesto a Cobrar</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-cash-coin me-2"></i>Cobrar Cuota</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-cobrar-presupuesto-caja">
+            <form id="form-pagar-cuota">
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Seleccione un Presupuesto (Solo Aprobados) *</label>
-                        <select class="form-select" id="caja-presupuesto-id" required>
-                            <option value="">-- Seleccionar --</option>
-                        </select>
+                    <input type="hidden" id="pago-cuota-id">
+                    <div class="mb-3 text-center">
+                        <p class="text-muted mb-1" id="pago-cuota-info">Factura FAC-XX - Cuota 1/3</p>
+                        <h2 class="text-success fw-bold" id="pago-cuota-monto">₲ 0</h2>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Condición *</label>
-                        <select class="form-select" id="caja-presupuesto-condicion" required>
-                            <option value="contado">Contado</option>
-                            <option value="credito">Crédito</option>
-                        </select>
+                    
+                    <div class="alert alert-warning d-none" id="alerta-vencimiento">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Esta cuota está vencida.
                     </div>
+
+                    <div class="mb-3 p-3 bg-light rounded border">
+                        <label class="form-label fw-bold mb-2">Opción de Cobro</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="pago-tipo" id="pago-tipo-actual" value="actual" checked>
+                            <label class="form-check-label" for="pago-tipo-actual">
+                                Cobrar solo esta cuota
+                            </label>
+                        </div>
+                        <div class="form-check" id="container-pago-tipo-todo">
+                            <input class="form-check-input" type="radio" name="pago-tipo" id="pago-tipo-todo" value="todo">
+                            <label class="form-check-label text-primary fw-bold" for="pago-tipo-todo">
+                                Cobrar TODAS las cuotas restantes (<span id="pago-todo-monto">₲ 0</span>)
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Método de Pago *</label>
-                        <select class="form-select" id="caja-presupuesto-metodo" required>
-                            <option value="Efectivo">Efectivo</option>
-                            <option value="Tarjeta">Tarjeta</option>
+                        <select class="form-select" id="pago-cuota-metodo" required>
+                            <option value="Efectivo">Caja General (Efectivo)</option>
+                            <option value="Tarjeta">Tarjeta de Crédito/Débito</option>
                             <option value="Transferencia">Transferencia Bancaria</option>
                         </select>
                     </div>
-                    <div class="mb-3 d-none" id="div-caja-presupuesto-cuotas">
-                        <label class="form-label">Cantidad de Cuotas</label>
-                        <input type="number" class="form-control" id="caja-presupuesto-cuotas" min="1" value="1">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-circle me-1"></i>Ingresar a Caja y Generar Recibo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- MODAL ABRIR CAJA -->
+<div class="modal fade" id="modal-abrir-caja" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-unlock-fill me-2"></i>Apertura de Caja</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-abrir-caja">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        Ingrese el monto inicial (sencillo) con el que se abre la caja en efectivo.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Saldo Inicial en Efectivo (Gs.) *</label>
+                        <input type="number" class="form-control" id="caja-monto-apertura" min="0" step="1" required value="0">
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success"><i class="bi bi-cash-coin me-1"></i>Registrar Cobro</button>
+                    <button type="submit" class="btn btn-success fw-bold"><i class="bi bi-check-circle me-1"></i>Abrir Caja</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- MODAL CERRAR CAJA -->
+<div class="modal fade" id="modal-cerrar-caja" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-lock-fill me-2"></i>Cierre de Caja</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-cerrar-caja">
+                <div class="modal-body">
+                    <p>Monto esperado en sistema:</p>
+                    <h3 class="text-center text-primary mb-3" id="caja-monto-esperado">₲ 0</h3>
+                    
+                    <div class="mb-3 border-top pt-3">
+                        <label class="form-label">Monto Real Contado en Efectivo (Gs.) *</label>
+                        <input type="number" class="form-control form-control-lg text-center" id="caja-monto-cierre" min="0" step="1" required>
+                    </div>
+                    
+                    <div class="mt-2 text-center" id="caja-diferencia-container">
+                        <!-- Se muestra sobrante/faltante al escribir -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger fw-bold"><i class="bi bi-door-closed me-1"></i>Cerrar Caja Oficialmente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <script src="../bt/bootstrap.min.js"></script>
 <script src="../js/app.js"></script>
 <script src="../js/caja.js"></script>

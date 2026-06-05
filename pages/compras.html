@@ -25,6 +25,7 @@
                 <a href="dashboard.html" class="nav-item-sidebar" id="nav-dashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
                 <div class="sidebar-section">Módulos</div>
                 <a href="usuarios.html" class="nav-item-sidebar" id="nav-usuarios"><i class="bi bi-people-fill"></i> Usuarios</a>
+                <a href="clientes.html" class="nav-item-sidebar" id="nav-clientes"><i class="bi bi-person-lines-fill"></i> Clientes</a>
                 <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-compras">
                     <i class="bi bi-cart-fill"></i> Compras <i class="bi bi-chevron-down nav-arrow"></i>
                 </a>
@@ -41,15 +42,26 @@
                     <a href="inventario.html#stock" class="nav-sub-item"><i class="bi bi-clipboard2-data"></i> Stock</a>
                     <a href="inventario.html#movimientos" class="nav-sub-item"><i class="bi bi-arrow-left-right"></i> Movimientos</a>
                 </div>
-                <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-presupuestos">
-                    <i class="bi bi-file-earmark-text-fill"></i> Presupuestos <i class="bi bi-chevron-down nav-arrow"></i>
-                </a>
-                <div class="nav-sub" id="sub-presupuestos">
-                    <a href="presupuestos.html#clientes" class="nav-sub-item"><i class="bi bi-person-lines-fill"></i> Clientes</a>
-                    <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
-                    <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
-                </div>
-                <a href="caja.html" class="nav-item-sidebar" id="nav-caja"><i class="bi bi-cash-coin"></i> Caja</a>
+
+            <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-presupuestos">
+                <i class="bi bi-file-earmark-text-fill"></i> Presupuestos <i class="bi bi-chevron-down nav-arrow"></i>
+            </a>
+            <div class="nav-sub" id="sub-presupuestos">
+                <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
+                <a href="servicios.html" class="nav-sub-item" id="nav-servicios"><i class="bi bi-tools"></i> Servicios</a>
+                <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
+            </div>
+
+            <a href="facturacion.html" class="nav-item-sidebar" id="nav-facturacion">
+                <i class="bi bi-receipt"></i> Facturación
+            </a>
+            <a href="cuotas.html" class="nav-item-sidebar" id="nav-cuotas">
+                <i class="bi bi-calendar3"></i> Cuotas
+            </a>
+
+            <a href="caja.html" class="nav-item-sidebar" id="nav-caja">
+                <i class="bi bi-cash-coin"></i> Caja
+            </a>
             <div class="sidebar-section">Reportes</div>
                 <a href="reportes.html" class="nav-item-sidebar" id="nav-reportes"><i class="bi bi-bar-chart-fill"></i> Flujo de Caja &amp; Reportes</a>
             </nav>
@@ -315,7 +327,7 @@
                             <div class="col-md-5"><label class="form-label">Proveedor *</label>
                                 <select class="form-select" id="compra-proveedor" required><option value="">-- Seleccionar --</option></select>
                             </div>
-                            <div class="col-md-3"><label class="form-label">Fecha *</label><input type="date" class="form-control" id="compra-fecha" required></div>
+                            <div class="col-md-3"><label class="form-label">Fecha *</label><input type="date" class="form-control bg-light" id="compra-fecha" readonly required></div>
                             <div class="col-md-4"><label class="form-label">Condición</label>
                                 <select class="form-select" id="compra-condicion" required>
                                     <option value="contado">Contado</option>

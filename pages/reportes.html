@@ -29,6 +29,9 @@
             <a href="usuarios.html" class="nav-item-sidebar" id="nav-usuarios">
                 <i class="bi bi-people-fill"></i> Usuarios
             </a>
+            <a href="clientes.html" class="nav-item-sidebar" id="nav-clientes">
+                <i class="bi bi-person-lines-fill"></i> Clientes
+            </a>
             <a href="#" class="nav-item-sidebar nav-parent" data-sub="sub-compras">
                 <i class="bi bi-cart-fill"></i> Compras
                 <i class="bi bi-chevron-down nav-arrow"></i>
@@ -53,10 +56,18 @@
                 <i class="bi bi-chevron-down nav-arrow"></i>
             </a>
             <div class="nav-sub" id="sub-presupuestos">
-                <a href="presupuestos.html#clientes" class="nav-sub-item"><i class="bi bi-person-lines-fill"></i> Clientes</a>
                 <a href="presupuestos.html#categorias" class="nav-sub-item"><i class="bi bi-tags"></i> Categorías</a>
+                <a href="servicios.html" class="nav-sub-item" id="nav-servicios"><i class="bi bi-tools"></i> Servicios</a>
                 <a href="presupuestos.html#lista" class="nav-sub-item"><i class="bi bi-card-list"></i> Presupuestos</a>
             </div>
+
+            <a href="facturacion.html" class="nav-item-sidebar" id="nav-facturacion">
+                <i class="bi bi-receipt"></i> Facturación
+            </a>
+            <a href="cuotas.html" class="nav-item-sidebar" id="nav-cuotas">
+                <i class="bi bi-calendar3"></i> Cuotas
+            </a>
+
             <a href="caja.html" class="nav-item-sidebar" id="nav-caja">
                 <i class="bi bi-cash-coin"></i> Caja
             </a>
@@ -112,8 +123,8 @@
                 </div>
                 <div class="stat-card dorado">
                     <div class="stat-icon dorado"><i class="bi bi-file-earmark-check"></i></div>
-                    <div class="stat-valor" id="r-presupuestos-cobrados">0</div>
-                    <div class="stat-label">Presupuestos Cobrados</div>
+                    <div class="stat-valor" id="r-facturas-emitidas">0</div>
+                    <div class="stat-label">Facturas Emitidas</div>
                 </div>
             </div>
 
@@ -122,19 +133,19 @@
                 <div class="col-lg-6">
                     <div class="card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <span><i class="bi bi-file-earmark-text-fill me-2"></i>Presupuestos por Estado</span>
+                            <span><i class="bi bi-file-earmark-text-fill me-2"></i>Facturas por Estado</span>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-outline-success" onclick="exportarReportePresupuestos()" title="Exportar a Excel"><i class="bi bi-file-earmark-spreadsheet"></i></button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="exportarReportePresupuestosPDF()" title="Exportar a PDF"><i class="bi bi-file-earmark-pdf"></i></button>
-                                <button class="btn btn-sm btn-outline-info" onclick="imprimirReportePresupuestos()" title="Imprimir"><i class="bi bi-printer"></i></button>
+                                <button class="btn btn-sm btn-outline-success" onclick="exportarReporteFacturas()" title="Exportar a Excel"><i class="bi bi-file-earmark-spreadsheet"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="exportarReporteFacturasPDF()" title="Exportar a PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirReporteFacturas()" title="Imprimir"><i class="bi bi-printer"></i></button>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div id="reporte-presupuestos-estados" class="mb-3"></div>
+                            <div id="reporte-facturas-estados" class="mb-3"></div>
                             <div class="tabla-wrapper">
-                                <table class="table table-sm table-hover" id="tabla-presupuestos-reporte">
+                                <table class="table table-sm table-hover" id="tabla-facturas-reporte">
                                     <thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th></tr></thead>
-                                    <tbody id="presupuestos-reporte-body"></tbody>
+                                    <tbody id="facturas-reporte-body"></tbody>
                                 </table>
                             </div>
                         </div>

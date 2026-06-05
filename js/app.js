@@ -45,7 +45,10 @@ function protegerPagina() {
             'compras.html': ['superusuario', 'admin', 'supervisor'],
             'reportes.html': ['superusuario', 'admin', 'supervisor'],
             'inventario.html': ['superusuario', 'admin', 'supervisor', 'asesor'],
+            'servicios.html': ['superusuario', 'admin', 'supervisor', 'asesor'],
             'presupuestos.html': ['superusuario', 'admin', 'asesor'],
+            'facturacion.html': ['superusuario', 'admin', 'asesor', 'cajero'],
+            'cuotas.html': ['superusuario', 'admin', 'asesor', 'cajero'],
             'caja.html': ['superusuario', 'admin', 'cajero']
         };
         const rolesPermitidos = accesos[pagina];
@@ -101,6 +104,13 @@ function formatearMoneda(valor) {
 function formatearFecha(fechaISO) {
     if (!fechaISO) return '-';
     return new Date(fechaISO).toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
+function formatearFechaHora(fechaISO) {
+    if (!fechaISO) return '-';
+    const date = new Date(fechaISO);
+    return date.toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' + 
+           date.toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' });
 }
 
 function fechaHoy() {
@@ -209,7 +219,7 @@ function _generarExcel(datos, nombre, columnas) {
 // ============================================================
 // GENERAR PDF TABLA
 // ============================================================
-function generarPDF(titulo) {
+function generarPDF(titulo, datos = null, columnas = null) {
     if (!window.jspdf) {
         Swal.fire({ title: 'Generando PDF...', text: 'Cargando librerías necesarias...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
         const script1 = document.createElement('script');
@@ -217,62 +227,16 @@ function generarPDF(titulo) {
         script1.onload = () => {
             const script2 = document.createElement('script');
             script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js';
-            script2.onload = () => { Swal.close(); _crearPDF(titulo); };
+            script2.onload = () => { Swal.close(); _crearPDF(titulo, datos, columnas); };
             document.head.appendChild(script2);
         };
         document.head.appendChild(script1);
     } else {
-        _crearPDF(titulo);
+        _crearPDF(titulo, datos, columnas);
     }
 }
 
-function _crearPDF(titulo) {
-    let tablaOriginal = null;
-    
-    // Primero, buscar tabla en una pestaña activa si existen pestañas
-    const activeTab = document.querySelector('.tab-pane.active.show');
-    if (activeTab) {
-        tablaOriginal = activeTab.querySelector('table');
-    }
-    
-    // Si no hay pestaña activa, buscar la primera tabla que no esté oculta
-    if (!tablaOriginal) {
-        const tablas = document.querySelectorAll('table:not(.d-none)');
-        for (let t of tablas) {
-            if (t.offsetParent !== null) { // visible
-                tablaOriginal = t;
-                break;
-            }
-        }
-    }
-    
-    if (!tablaOriginal) { 
-        alertaError('No hay tabla visible para exportar'); 
-        return; 
-    }
-
-    // Clonar la tabla para no afectar la vista
-    const tablaClon = tablaOriginal.cloneNode(true);
-    
-    // Eliminar columnas de 'Acción'
-    const ths = tablaClon.querySelectorAll('th');
-    let indexAccion = -1;
-    ths.forEach((th, idx) => {
-        if (th.textContent.trim().toLowerCase().includes('acción') || 
-            th.textContent.trim().toLowerCase().includes('acciones')) {
-            indexAccion = idx;
-            th.remove();
-        }
-    });
-    
-    if (indexAccion !== -1) {
-        const trs = tablaClon.querySelectorAll('tbody tr');
-        trs.forEach(tr => {
-            const tds = tr.querySelectorAll('td');
-            if (tds[indexAccion]) tds[indexAccion].remove();
-        });
-    }
-
+function _crearPDF(titulo, datos, columnas) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'pt', 'a4');
 
@@ -292,8 +256,7 @@ function _crearPDF(titulo) {
     doc.setTextColor(100, 100, 100);
     doc.text(`Fecha y hora: ${new Date().toLocaleString('es-DO')}`, doc.internal.pageSize.width - 40, 80, { align: 'right' });
 
-    doc.autoTable({
-        html: tablaClon,
+    let autoTableOpts = {
         startY: 100,
         theme: 'striped',
         headStyles: { fillColor: [30, 58, 95] },
@@ -303,7 +266,62 @@ function _crearPDF(titulo) {
             doc.setFontSize(8);
             doc.text(str, data.settings.margin.left, doc.internal.pageSize.height - 20);
         }
-    });
+    };
+
+    if (datos && columnas) {
+        autoTableOpts.head = [columnas.map(c => c.label)];
+        autoTableOpts.body = datos.map(fila => columnas.map(c => fila[c.key] !== undefined && fila[c.key] !== null ? fila[c.key] : ''));
+        doc.autoTable(autoTableOpts);
+    } else {
+        let tablaOriginal = null;
+        
+        // Primero, buscar tabla en una pestaña activa si existen pestañas
+        const activeTab = document.querySelector('.tab-pane.active.show');
+        if (activeTab) {
+            tablaOriginal = activeTab.querySelector('table');
+        }
+        
+        // Si no hay pestaña activa, buscar la primera tabla que no esté oculta
+        if (!tablaOriginal) {
+            const tablas = document.querySelectorAll('table:not(.d-none)');
+            for (let t of tablas) {
+                if (t.offsetParent !== null) { // visible
+                    tablaOriginal = t;
+                    break;
+                }
+            }
+        }
+        
+        if (!tablaOriginal) { 
+            alertaError('No hay tabla visible para exportar'); 
+            return; 
+        }
+
+        // Clonar la tabla para no afectar la vista
+        const tablaClon = tablaOriginal.cloneNode(true);
+        
+        // Eliminar columnas de 'Acción'
+        const ths = tablaClon.querySelectorAll('th');
+        let indexAccion = -1;
+        ths.forEach((th, idx) => {
+            if (th.textContent.trim().toLowerCase().includes('acción') || 
+                th.textContent.trim().toLowerCase().includes('acciones')) {
+                indexAccion = idx;
+                th.remove();
+            }
+        });
+        
+        if (indexAccion !== -1) {
+            const trs = tablaClon.querySelectorAll('tbody tr');
+            trs.forEach(tr => {
+                const tds = tr.querySelectorAll('td');
+                if (tds[indexAccion]) tds[indexAccion].remove();
+            });
+        }
+        
+        autoTableOpts.html = tablaClon;
+        doc.autoTable(autoTableOpts);
+    }
 
     doc.save(`${titulo.replace(/ /g, '_')}_${fechaHoy()}.pdf`);
 }
@@ -328,11 +346,11 @@ function renderizarSesionNavbar() {
     if (sesion) {
         // Permisos de módulos principales
         const permisos = {
-            'superusuario': ['usuarios', 'compras', 'inventario', 'presupuestos', 'reportes', 'caja'],
-            'admin': ['usuarios', 'compras', 'inventario', 'presupuestos', 'reportes', 'caja'],
-            'supervisor': ['compras', 'inventario', 'reportes'],
-            'asesor': ['inventario', 'presupuestos'],
-            'cajero': ['caja']
+            'superusuario': ['usuarios', 'compras', 'inventario', 'servicios', 'presupuestos', 'facturacion', 'cuotas', 'reportes', 'caja'],
+            'admin': ['usuarios', 'compras', 'inventario', 'servicios', 'presupuestos', 'facturacion', 'cuotas', 'reportes', 'caja'],
+            'supervisor': ['compras', 'inventario', 'servicios', 'reportes'],
+            'asesor': ['inventario', 'servicios', 'presupuestos', 'facturacion', 'cuotas'],
+            'cajero': ['facturacion', 'cuotas', 'caja']
         };
 
         const modulosPermitidos = permisos[sesion.rol] || [];
@@ -356,6 +374,15 @@ function renderizarSesionNavbar() {
         if (parentPresupuestos) parentPresupuestos.style.setProperty('display', modulosPermitidos.includes('presupuestos') ? '' : 'none', 'important');
         if (subPresupuestos) subPresupuestos.style.setProperty('display', modulosPermitidos.includes('presupuestos') ? '' : 'none', 'important');
 
+        const navServicios = document.getElementById('nav-servicios');
+        if (navServicios) navServicios.style.setProperty('display', modulosPermitidos.includes('servicios') ? '' : 'none', 'important');
+
+        const navFacturacion = document.getElementById('nav-facturacion');
+        if (navFacturacion) navFacturacion.style.setProperty('display', modulosPermitidos.includes('facturacion') ? '' : 'none', 'important');
+
+        const navCuotas = document.getElementById('nav-cuotas');
+        if (navCuotas) navCuotas.style.setProperty('display', modulosPermitidos.includes('cuotas') ? '' : 'none', 'important');
+
         const navReportes = document.getElementById('nav-reportes');
         if (navReportes) navReportes.style.setProperty('display', modulosPermitidos.includes('reportes') ? '' : 'none', 'important');
         
@@ -370,7 +397,10 @@ function renderizarSesionNavbar() {
             if (sect.textContent.trim().toLowerCase() === 'módulos' && 
                 !modulosPermitidos.includes('compras') && 
                 !modulosPermitidos.includes('inventario') && 
-                !modulosPermitidos.includes('presupuestos')) {
+                !modulosPermitidos.includes('servicios') && 
+                !modulosPermitidos.includes('presupuestos') &&
+                !modulosPermitidos.includes('facturacion') &&
+                !modulosPermitidos.includes('cuotas')) {
                 sect.style.setProperty('display', 'none', 'important');
             }
         });
@@ -572,6 +602,8 @@ class SelectBuscador {
     }
 
     actualizar() {
+        this.input.disabled = this.select.disabled;
+        this.input.placeholder = this.select.options[0] ? this.select.options[0].text : 'Buscar...';
         this.opciones = Array.from(this.select.options).filter(o => o.value !== '');
         this.renderMenu(this.opciones);
         
@@ -601,7 +633,7 @@ class SelectBuscador {
                 this.select.value = opt.value;
                 this.input.value = opt.text;
                 this.dropdown.classList.add('d-none');
-                this.select.dispatchEvent(new Event('change'));
+                this.select.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
             });
             this.dropdown.appendChild(li);
         });
@@ -639,6 +671,17 @@ class SelectBuscador {
         document.addEventListener('click', (e) => {
             if (!this.container.contains(e.target)) {
                 this.dropdown.classList.add('d-none');
+                
+                // Si escribió exactamente el texto de una opción, autoseleccionar
+                const exactMatch = this.opciones.find(o => o.text.toLowerCase().trim() === this.input.value.toLowerCase().trim());
+                if (exactMatch && this.select.value !== exactMatch.value) {
+                    this.select.value = exactMatch.value;
+                    this.input.value = exactMatch.text;
+                    this.select.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+                    if (this.input.required) this.input.setCustomValidity('');
+                    return;
+                }
+                
                 // Restaurar texto si no seleccionó nada nuevo
                 const optSeleccionada = this.opciones.find(o => o.value === this.select.value);
                 if (optSeleccionada) {
@@ -655,6 +698,35 @@ class SelectBuscador {
 
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
+    // APLICAR PARCHE A BD (Temporal para arreglar datos locales solicitados)
+    const categoriasDB = obtenerDatos('categorias_tecnorivas');
+    const defaultCat = categoriasDB.length > 0 ? categoriasDB[0] : { id: 1, nombre: 'Electricidad' };
+    
+    let servsDB = obtenerDatos('servicios_tecnorivas');
+    let dbModificada = false;
+    servsDB.forEach(s => {
+        if (!s.categoriaId || !s.precio_base) {
+            s.categoriaId = s.categoriaId || defaultCat.id;
+            s.categoria = s.categoria || defaultCat.nombre;
+            s.precio_base = s.precio_base || 50000;
+            s.activo = typeof s.activo !== 'undefined' ? s.activo : true;
+            dbModificada = true;
+        }
+    });
+    if (dbModificada) guardarDatos('servicios_tecnorivas', servsDB);
+
+    let artsDB = obtenerDatos('articulos_tecnorivas');
+    let artsModificados = false;
+    artsDB.forEach(a => {
+        if (!a.categoriaId || typeof a.stock === 'undefined') {
+            a.categoriaId = a.categoriaId || defaultCat.id;
+            a.stock = typeof a.stock === 'number' ? a.stock : 10;
+            artsModificados = true;
+        }
+    });
+    if (artsModificados) guardarDatos('articulos_tecnorivas', artsDB);
+    // FIN PARCHE
+
     renderizarSesionNavbar();
     configurarLogout();
     inicializarSidebarSubmenus();
@@ -780,14 +852,42 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================
 // IMPRIMIR TABLA
 // ============================================================
-function imprimirTabla(titulo, customTbodyId = null) {
-    const selector = customTbodyId ? `#${customTbodyId}` : 'tbody';
-    const contenido = document.querySelector(selector);
-    const tabla = contenido ? contenido.closest('table') : null;
-    if (!tabla) { alertaError('No hay tabla para imprimir'); return; }
-
+function imprimirTabla(titulo, idTablaOrDatos = null, columnas = null) {
     const win = window.open('', '_blank');
-    const tableHTML = tabla.outerHTML;
+    let tableHTML = '';
+
+    if (Array.isArray(idTablaOrDatos) && columnas) {
+        const datos = idTablaOrDatos;
+        const thead = `<thead><tr>${columnas.map(c => `<th>${c.label}</th>`).join('')}</tr></thead>`;
+        const tbody = `<tbody>${datos.map(fila => `<tr>${columnas.map(c => `<td>${fila[c.key] !== undefined && fila[c.key] !== null ? fila[c.key] : ''}</td>`).join('')}</tr>`).join('')}</tbody>`;
+        tableHTML = `<table>${thead}${tbody}</table>`;
+    } else {
+        const selector = typeof idTablaOrDatos === 'string' ? `#${idTablaOrDatos}` : 'tbody';
+        const contenido = document.querySelector(selector);
+        const tabla = contenido ? contenido.closest('table') : null;
+        if (!tabla) { alertaError('No hay tabla para imprimir'); return; }
+        
+        // Clonar tabla y quitar acciones
+        const tablaClon = tabla.cloneNode(true);
+        const ths = tablaClon.querySelectorAll('th');
+        const trs = tablaClon.querySelectorAll('tr');
+        let accionesColIdx = -1;
+        ths.forEach((th, idx) => {
+            if (th.textContent.trim().toLowerCase().includes('acciones') || th.textContent.trim().toLowerCase().includes('acción')) {
+                accionesColIdx = idx;
+                th.remove();
+            }
+        });
+        if (accionesColIdx !== -1) {
+            trs.forEach(tr => {
+                const tds = tr.querySelectorAll('td');
+                if (tds.length > accionesColIdx) {
+                    tds[accionesColIdx].remove();
+                }
+            });
+        }
+        tableHTML = tablaClon.outerHTML;
+    }
 
     win.document.write(`<html><head><title>Imprimir - ${titulo}</title><style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #333; }
@@ -808,25 +908,6 @@ function imprimirTabla(titulo, customTbodyId = null) {
         ${tableHTML}
     </body></html>`);
     win.document.close();
-
-    // Eliminar columna de acciones en la impresión
-    const ths = win.document.querySelectorAll('th');
-    const trs = win.document.querySelectorAll('tr');
-    let accionesColIdx = -1;
-    ths.forEach((th, idx) => {
-        if (th.textContent.toLowerCase().includes('acciones')) {
-            accionesColIdx = idx;
-            th.remove();
-        }
-    });
-    if (accionesColIdx !== -1) {
-        trs.forEach(tr => {
-            const tds = tr.querySelectorAll('td');
-            if (tds.length > accionesColIdx) {
-                tds[accionesColIdx].remove();
-            }
-        });
-    }
 
     setTimeout(() => {
         win.print();

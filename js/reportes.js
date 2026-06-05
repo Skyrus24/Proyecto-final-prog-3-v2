@@ -1,5 +1,5 @@
 function cargarReportes() {
-    const presupuestos = obtenerDatos('presupuestos_tecnorivas');
+    const facturas = obtenerDatos('facturas_tecnorivas') || [];
     const compras = obtenerDatos('compras_tecnorivas');
     const articulos = obtenerDatos('articulos_tecnorivas');
     const cajas = obtenerDatos('cajas_tecnorivas');
@@ -9,12 +9,12 @@ function cargarReportes() {
     const totalIngresos = cajas.reduce((s, c) => s + (c.ingresos || 0), 0);
     const totalEgresos  = cajas.reduce((s, c) => s + (c.egresos  || 0), 0)
                         + compras.filter(c => c.estado === 'pagado').reduce((s, c) => s + (c.total || 0), 0);
-    const presupuestosCobradosCount = presupuestos.filter(p => p.estado === 'cobrado').length;
+    const facturasEmitidasCount = facturas.filter(f => f.estado === 'emitida').length;
 
     const rIngresos    = document.getElementById('r-ingresos');
     const rEgresos     = document.getElementById('r-egresos');
     const rFlujoCaja   = document.getElementById('r-flujo-caja');
-    const rPresCobrados = document.getElementById('r-presupuestos-cobrados');
+    const rFacturasEmitidas = document.getElementById('r-facturas-emitidas');
 
     if (rIngresos)    rIngresos.textContent = formatearMoneda(totalIngresos);
     if (rEgresos)     rEgresos.textContent  = formatearMoneda(totalEgresos);
@@ -23,16 +23,16 @@ function cargarReportes() {
         rFlujoCaja.textContent = formatearMoneda(flujo);
         rFlujoCaja.className = `stat-valor ${flujo < 0 ? 'text-danger' : 'text-success'}`;
     }
-    if (rPresCobrados) rPresCobrados.textContent = presupuestosCobradosCount;
+    if (rFacturasEmitidas) rFacturasEmitidas.textContent = facturasEmitidasCount;
 
-    // --- Presupuestos por Estado (barras) ---
-    const estadosP = { pendiente: 0, emitido: 0, aprobado: 0, cobrado: 0, rechazado: 0 };
-    presupuestos.forEach(p => { if (estadosP[p.estado] !== undefined) estadosP[p.estado]++; });
-    const ePresupuestos = document.getElementById('reporte-presupuestos-estados');
-    if (ePresupuestos) {
-        ePresupuestos.innerHTML = Object.entries(estadosP).map(([k, v]) => {
-            const badgeClass = k === 'cobrado' ? 'bg-success' : k === 'aprobado' ? 'bg-info' : k === 'pendiente' || k === 'emitido' ? 'bg-warning text-dark' : 'bg-danger';
-            const pct = presupuestos.length ? (v / presupuestos.length * 100).toFixed(0) : 0;
+    // --- Facturas por Estado (barras) ---
+    const estadosF = { emitida: 0, anulada: 0 };
+    facturas.forEach(f => { if (estadosF[f.estado] !== undefined) estadosF[f.estado]++; });
+    const eFacturas = document.getElementById('reporte-facturas-estados');
+    if (eFacturas) {
+        eFacturas.innerHTML = Object.entries(estadosF).map(([k, v]) => {
+            const badgeClass = k === 'emitida' ? 'bg-success' : 'bg-danger';
+            const pct = facturas.length ? (v / facturas.length * 100).toFixed(0) : 0;
             return `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge ${badgeClass}" style="min-width:80px">${k}</span>
@@ -44,22 +44,20 @@ function cargarReportes() {
         }).join('');
     }
 
-    // --- Tabla presupuestos ---
-    const tbodyPres = document.getElementById('presupuestos-reporte-body');
-    if (tbodyPres) {
-        const clientes = obtenerDatos('clientes_tecnorivas');
-        const presRec = [...presupuestos].sort((a, b) => b.id - a.id).slice(0, 20);
-        tbodyPres.innerHTML = presRec.length ? presRec.map(p => {
-            const cli = clientes.find(c => c.id === p.clienteId);
-            const badge = p.estado === 'cobrado' ? 'bg-success' : p.estado === 'aprobado' ? 'bg-info' : p.estado === 'rechazado' ? 'bg-danger' : 'bg-warning text-dark';
+    // --- Tabla facturas ---
+    const tbodyFac = document.getElementById('facturas-reporte-body');
+    if (tbodyFac) {
+        const facRec = [...facturas].sort((a, b) => b.id - a.id).slice(0, 20);
+        tbodyFac.innerHTML = facRec.length ? facRec.map(f => {
+            const badge = f.estado === 'emitida' ? 'bg-success' : 'bg-danger';
             return `<tr>
-                <td>${p.numero}</td>
-                <td>${formatearFecha(p.fecha)}</td>
-                <td>${p.clienteNombre || (cli ? cli.nombre : '-')}</td>
-                <td class="fw-bold">${formatearMoneda(p.total)}</td>
-                <td><span class="badge ${badge}">${p.estado}</span></td>
+                <td>${f.numero}</td>
+                <td>${formatearFecha(f.fecha)}</td>
+                <td>${f.cliente_nombre || '-'}</td>
+                <td class="fw-bold">${formatearMoneda(f.total)}</td>
+                <td><span class="badge ${badge}">${f.estado.toUpperCase()}</span></td>
             </tr>`;
-        }).join('') : '<tr><td colspan="5" class="text-center text-muted">Sin presupuestos</td></tr>';
+        }).join('') : '<tr><td colspan="5" class="text-center text-muted">Sin facturas</td></tr>';
     }
 
     // --- Compras por Estado (barras) ---
@@ -127,76 +125,66 @@ function cargarReportes() {
 }
 
 // ============================================================
-// HELPERS DE EXPORTACIÓN GENÉRICOS
+// FACTURAS
 // ============================================================
-function _exportarPDF(titulo, cabeceras, filas, nombreArchivo) {
-    const { jsPDF } = window.jspdf || {};
-    if (!jsPDF) { alertaError('jsPDF no disponible.'); return; }
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text(`${titulo} - TECNORIVAS`, 14, 18);
-    doc.setFontSize(10);
-    doc.text(`Generado: ${new Date().toLocaleString('es-DO')}`, 14, 25);
-    doc.autoTable({ head: [cabeceras], body: filas, startY: 30, styles: { fontSize: 9 } });
-    doc.save(`${nombreArchivo}.pdf`);
+function _obtenerDatosFacturasFormateados() {
+    const facturas = obtenerDatos('facturas_tecnorivas') || [];
+    return facturas.map(f => ({
+        ...f,
+        fecha: formatearFecha(f.fecha),
+        cliente_nombre: f.cliente_nombre || '-',
+        totalFmt: formatearMoneda(f.total)
+    }));
 }
 
-function _imprimirTabla(idTabla, titulo) {
-    const tabla = document.getElementById(idTabla);
-    if (!tabla) return;
-    const win = window.open('', '_blank');
-    win.document.write(`
-        <html><head><title>${titulo}</title>
-        <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h2 { color: #1e3a5f; }
-            table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background: #1e3a5f; color: white; }
-            tr:nth-child(even) { background: #f5f5f5; }
-            .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; }
-        </style>
-        </head><body>
-        <h2>${titulo} - TECNORIVAS</h2>
-        <p>Generado: ${new Date().toLocaleString('es-DO')}</p>
-        ${tabla.outerHTML}
-        <script>window.onload = () => window.print()<\/script>
-        </body></html>
-    `);
-    win.document.close();
-}
+const columnasFacturasPDF = [
+    { key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' },
+    { key: 'cliente_nombre', label: 'Cliente' }, { key: 'totalFmt', label: 'Total' }, { key: 'estado', label: 'Estado' }
+];
 
-// ============================================================
-// PRESUPUESTOS
-// ============================================================
-function exportarReportePresupuestos() {
-    exportarExcel(obtenerDatos('presupuestos_tecnorivas'), 'reporte_presupuestos', [
+function exportarReporteFacturas() {
+    exportarExcel(obtenerDatos('facturas_tecnorivas') || [], 'reporte_facturas', [
         { key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' },
-        { key: 'clienteNombre', label: 'Cliente' }, { key: 'total', label: 'Total (Gs.)' }, { key: 'estado', label: 'Estado' }
+        { key: 'cliente_nombre', label: 'Cliente' }, { key: 'total', label: 'Total (Gs.)' }, { key: 'estado', label: 'Estado' }
     ]);
 }
 
-function exportarReportePresupuestosPDF() {
-    const pres = obtenerDatos('presupuestos_tecnorivas');
-    const filas = pres.map(p => [p.numero, formatearFecha(p.fecha), p.clienteNombre || '-', formatearMoneda(p.total), p.estado]);
-    _exportarPDF('Reporte de Presupuestos', ['N°', 'Fecha', 'Cliente', 'Total', 'Estado'], filas, 'reporte_presupuestos');
+function exportarReporteFacturasPDF() {
+    generarPDF('Reporte de Facturas', _obtenerDatosFacturasFormateados(), columnasFacturasPDF);
 }
 
-function imprimirReportePresupuestos() {
-    _imprimirTabla('tabla-presupuestos-reporte', 'Reporte de Presupuestos');
+function imprimirReporteFacturas() {
+    imprimirTabla('Reporte de Facturas', _obtenerDatosFacturasFormateados(), columnasFacturasPDF);
 }
 
 // ============================================================
 // COMPRAS
 // ============================================================
-function exportarReporteCompras() {
+function _obtenerDatosComprasFormateados() {
     const compras = obtenerDatos('compras_tecnorivas');
     const proveedores = obtenerDatos('proveedores_tecnorivas');
-    const dataExport = compras.map(c => {
-        const p = proveedores.find(x => x.id === c.proveedorId);
-        return { ...c, proveedorNombre: p ? p.nombre : '-' };
+    return compras.map(c => {
+        const prov = proveedores.find(p => p.id === c.proveedorId);
+        return {
+            ...c,
+            fecha: formatearFecha(c.fecha),
+            proveedorNombre: prov ? prov.nombre : '-',
+            totalFmt: formatearMoneda(c.total)
+        };
     });
-    exportarExcel(dataExport, 'reporte_compras', [
+}
+
+const columnasComprasPDF = [
+    { key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' },
+    { key: 'proveedorNombre', label: 'Proveedor' }, { key: 'totalFmt', label: 'Total' }, { key: 'estado', label: 'Estado' }
+];
+
+function exportarReporteCompras() {
+    const dataExport = _obtenerDatosComprasFormateados();
+    exportarExcel(obtenerDatos('compras_tecnorivas').map(c => {
+        const prov = obtenerDatos('proveedores_tecnorivas').find(x => x.id === c.proveedorId);
+        return { ...c, proveedorNombre: prov ? prov.nombre : '-' };
+    }), 'reporte_compras', [
         { key: 'numero', label: 'N°' }, { key: 'fecha', label: 'Fecha' },
         { key: 'proveedorNombre', label: 'Proveedor' },
         { key: 'total', label: 'Total (Gs.)' }, { key: 'estado', label: 'Estado' }
@@ -204,22 +192,33 @@ function exportarReporteCompras() {
 }
 
 function exportarReporteComprasPDF() {
-    const compras = obtenerDatos('compras_tecnorivas');
-    const proveedores = obtenerDatos('proveedores_tecnorivas');
-    const filas = compras.map(c => {
-        const prov = proveedores.find(p => p.id === c.proveedorId);
-        return [c.numero, formatearFecha(c.fecha), prov ? prov.nombre : '-', formatearMoneda(c.total), c.estado];
-    });
-    _exportarPDF('Reporte de Compras', ['N°', 'Fecha', 'Proveedor', 'Total', 'Estado'], filas, 'reporte_compras');
+    generarPDF('Reporte de Compras', _obtenerDatosComprasFormateados(), columnasComprasPDF);
 }
 
 function imprimirReporteCompras() {
-    _imprimirTabla('tabla-compras-reporte', 'Reporte de Compras');
+    imprimirTabla('Reporte de Compras', _obtenerDatosComprasFormateados(), columnasComprasPDF);
 }
 
 // ============================================================
 // INVENTARIO
 // ============================================================
+function _obtenerDatosInventarioFormateados() {
+    const articulos = obtenerDatos('articulos_tecnorivas');
+    return [...articulos]
+        .sort((a, b) => (b.stock * b.precio) - (a.stock * a.precio))
+        .map(a => ({
+            ...a,
+            stockUnidad: `${a.stock} ${a.unidad || ''}`,
+            precioFmt: formatearMoneda(a.precio),
+            valorFmt: formatearMoneda(a.stock * a.precio)
+        }));
+}
+
+const columnasInventarioPDF = [
+    { key: 'nombre', label: 'Artículo' }, { key: 'stockUnidad', label: 'Stock' },
+    { key: 'precioFmt', label: 'Precio' }, { key: 'valorFmt', label: 'Valor Total' }
+];
+
 function exportarInventarioValoriz() {
     const articulos = obtenerDatos('articulos_tecnorivas').map(a => ({ ...a, valor: a.stock * a.precio }));
     exportarExcel(articulos, 'inventario_valorizado', [
@@ -229,20 +228,34 @@ function exportarInventarioValoriz() {
 }
 
 function exportarInventarioValorizPDF() {
-    const articulos = obtenerDatos('articulos_tecnorivas');
-    const filas = [...articulos]
-        .sort((a, b) => (b.stock * b.precio) - (a.stock * a.precio))
-        .map(a => [a.nombre, `${a.stock} ${a.unidad || ''}`, formatearMoneda(a.precio), formatearMoneda(a.stock * a.precio)]);
-    _exportarPDF('Inventario Valorizado', ['Artículo', 'Stock', 'Precio', 'Valor Total'], filas, 'inventario_valorizado');
+    generarPDF('Inventario Valorizado', _obtenerDatosInventarioFormateados(), columnasInventarioPDF);
 }
 
 function imprimirInventario() {
-    _imprimirTabla('tabla-inventario-reporte', 'Inventario Valorizado');
+    imprimirTabla('Inventario Valorizado', _obtenerDatosInventarioFormateados(), columnasInventarioPDF);
 }
 
 // ============================================================
 // CAJA
 // ============================================================
+function _obtenerDatosCajaFormateados() {
+    const cajas = obtenerDatos('cajas_tecnorivas');
+    return cajas.map(c => ({
+        ...c,
+        fechaAperturaFmt: new Date(c.fechaApertura).toLocaleString('es-DO'),
+        montoInicialFmt: formatearMoneda(c.montoInicial),
+        ingresosFmt: formatearMoneda(c.ingresos),
+        egresosFmt: formatearMoneda(c.egresos),
+        saldoFmt: formatearMoneda((c.montoInicial || 0) + (c.ingresos || 0) - (c.egresos || 0))
+    }));
+}
+
+const columnasCajaPDF = [
+    { key: 'cajero', label: 'Cajero' }, { key: 'fechaAperturaFmt', label: 'Apertura' },
+    { key: 'montoInicialFmt', label: 'Inicial' }, { key: 'ingresosFmt', label: 'Ingresos' },
+    { key: 'egresosFmt', label: 'Egresos' }, { key: 'saldoFmt', label: 'Saldo' }, { key: 'estado', label: 'Estado' }
+];
+
 function exportarSesionesCaja() {
     const cajas = obtenerDatos('cajas_tecnorivas').map(c => ({
         ...c,
@@ -256,21 +269,11 @@ function exportarSesionesCaja() {
 }
 
 function exportarSesionesCajaPDF() {
-    const cajas = obtenerDatos('cajas_tecnorivas');
-    const filas = cajas.map(c => [
-        c.cajero,
-        new Date(c.fechaApertura).toLocaleString('es-DO'),
-        formatearMoneda(c.montoInicial),
-        formatearMoneda(c.ingresos),
-        formatearMoneda(c.egresos),
-        formatearMoneda((c.montoInicial || 0) + (c.ingresos || 0) - (c.egresos || 0)),
-        c.estado
-    ]);
-    _exportarPDF('Sesiones de Caja', ['Cajero', 'Apertura', 'Inicial', 'Ingresos', 'Egresos', 'Saldo', 'Estado'], filas, 'sesiones_caja');
+    generarPDF('Sesiones de Caja', _obtenerDatosCajaFormateados(), columnasCajaPDF);
 }
 
 function imprimirSesionesCaja() {
-    _imprimirTabla('tabla-caja-reporte', 'Sesiones de Caja');
+    imprimirTabla('Sesiones de Caja', _obtenerDatosCajaFormateados(), columnasCajaPDF);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

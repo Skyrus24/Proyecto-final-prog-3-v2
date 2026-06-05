@@ -1,9 +1,7 @@
 /**
- * Modulo de Caja
- * Gestiona la apertura, cierre y movimientos del flujo de caja.
- * Permite registrar ingresos y egresos de forma manual o automatica (cobros).
+ * Modulo de Caja - Modelo A (Flujo Realista)
  */
-const CLAVE_CAJA = 'cajas_tecnorivas';
+const CLAVE_CAJA = 'caja_tecnorivas'; // Array de asientos
 
 document.addEventListener('DOMContentLoaded', () => {
     const sesion = protegerPagina();
@@ -13,534 +11,529 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem(CLAVE_CAJA, JSON.stringify([]));
     }
 
-    configurarBotonesCaja();
-    actualizarVistaCaja();
+    cargarCaja();
+    
+    document.getElementById('btn-nuevo-egreso-manual')?.addEventListener('click', () => {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-egreso-manual')).show();
+    });
+    document.getElementById('form-egreso-manual')?.addEventListener('submit', registrarEgresoManual);
+    
+    // Listeners para Apertura / Cierre
+    document.getElementById('btn-abrir-caja')?.addEventListener('click', () => {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-abrir-caja')).show();
+    });
+    
+    document.getElementById('btn-cerrar-caja')?.addEventListener('click', () => {
+        const saldoEfectivoStr = document.getElementById('saldo-caja-general').textContent.replace(/[^\d.-]/g, '');
+        document.getElementById('caja-monto-esperado').textContent = formatearMoneda(parseFloat(saldoEfectivoStr) || 0);
+        document.getElementById('caja-diferencia-container').innerHTML = '';
+        document.getElementById('caja-monto-cierre').value = '';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-cerrar-caja')).show();
+    });
+    
+    document.getElementById('caja-monto-cierre')?.addEventListener('input', (e) => {
+        const saldoEfectivoStr = document.getElementById('saldo-caja-general').textContent.replace(/[^\d.-]/g, '');
+        const esperado = parseFloat(saldoEfectivoStr) || 0;
+        const real = parseFloat(e.target.value) || 0;
+        const diff = real - esperado;
+        
+        const cont = document.getElementById('caja-diferencia-container');
+        if (diff > 0) {
+            cont.innerHTML = `<span class="text-success fw-bold">Sobrante: +${formatearMoneda(diff)}</span>`;
+        } else if (diff < 0) {
+            cont.innerHTML = `<span class="text-danger fw-bold">Faltante: ${formatearMoneda(diff)}</span>`;
+        } else {
+            cont.innerHTML = `<span class="text-secondary fw-bold">Caja Cuadrada (Diferencia 0)</span>`;
+        }
+    });
 
-    document.getElementById('form-movimiento')?.addEventListener('submit', registrarMovimientoManual);
+    document.getElementById('form-abrir-caja')?.addEventListener('submit', abrirCajaFisica);
+    document.getElementById('form-cerrar-caja')?.addEventListener('submit', cerrarCajaFisica);
+    
+    document.getElementById('form-pagar-cuota')?.addEventListener('submit', procesarPagoCuota);
+
+    // Revisar URL para ver si venimos de Cuotas con intención de cobrar
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('accion') === 'cobrar_cuota' || urlParams.get('accion') === 'cobrar_todas') {
+        const idCuota = parseInt(urlParams.get('id'));
+        const facturaNum = urlParams.get('factura');
+        
+        // Activar pestaña de cuotas
+        const tabCuotas = document.getElementById('tab-cuotas');
+        if (tabCuotas) {
+            const tabInstance = new bootstrap.Tab(tabCuotas);
+            tabInstance.show();
+        }
+        
+        // Retrasar apertura modal para asegurar que el DOM esté listo
+        setTimeout(() => {
+            if (urlParams.get('accion') === 'cobrar_cuota' && idCuota) {
+                abrirModalPagarCuota(idCuota, false);
+            } else if (urlParams.get('accion') === 'cobrar_todas' && facturaNum) {
+                const cuotas = obtenerDatos('cuotas_tecnorivas') || [];
+                const pendientes = cuotas.filter(x => x.factura_numero === facturaNum && (x.estado === 'pendiente' || x.estado === 'vencida'));
+                if (pendientes.length > 0) {
+                    pendientes.sort((a, b) => a.numero_cuota - b.numero_cuota);
+                    abrirModalPagarCuota(pendientes[0].id, true);
+                }
+            }
+        }, 300);
+    }
 });
 
-// ==========================================
-// FUNCIONES DE ACCESO A DATOS (LOCALSTORAGE)
-// ==========================================
-
-// Retorna el historial completo de cajas registradas
-function obtenerCajas() {
-    return obtenerDatos(CLAVE_CAJA);
+function obtenerCaja() {
+    return obtenerDatos(CLAVE_CAJA) || [];
 }
 
-// Guarda el arreglo actualizado de cajas en localStorage
-function guardarCajas(cajas) {
-    guardarDatos(CLAVE_CAJA, cajas);
+function guardarCaja(asientos) {
+    guardarDatos(CLAVE_CAJA, asientos);
 }
 
-// Busca en el arreglo de cajas aquella que tenga el estado "abierta"
-function obtenerCajaActiva() {
-    const cajas = obtenerCajas();
-    return cajas.find(c => c.estado === 'abierta');
+function cargarCaja() {
+    const asientos = obtenerCaja();
+    
+    let ingresos = asientos.filter(a => a.tipo === 'ingreso');
+    let egresos = asientos.filter(a => a.tipo === 'egreso');
+    
+    renderResumen(asientos);
+    renderIngresos(ingresos);
+    renderEgresos(egresos);
+    renderFacturasPendientes();
+    renderCuotasPendientesCobro();
+    
+    actualizarEstadoCajaUI();
 }
 
-// ==========================================
-// RENDERIZADO Y CONTROL DE VISTAS (UI)
-// ==========================================
-
-// Actualiza el DOM (botones, textos, colores) dependiendo de si hay una caja abierta o no
-function actualizarVistaCaja() {
-    const cajaActiva = obtenerCajaActiva();
+function actualizarEstadoCajaUI() {
+    const cajas = obtenerDatos('cajas_tecnorivas') || [];
+    const cajaAbierta = cajas.find(c => c.estado === 'abierta');
+    const badge = document.getElementById('badge-estado-caja');
     const btnAbrir = document.getElementById('btn-abrir-caja');
     const btnCerrar = document.getElementById('btn-cerrar-caja');
-    const btnMovimiento = document.getElementById('btn-movimiento-manual');
-    const badgeEstado = document.getElementById('caja-estado-badge');
-    const saldoContainer = document.getElementById('caja-saldo-container');
-    const saldoActualText = document.getElementById('caja-saldo-actual');
-    const contMov = document.getElementById('contenedor-movimientos');
-    const infoApertura = document.getElementById('caja-info-apertura');
-
-    if (cajaActiva) {
-        btnAbrir?.classList.add('d-none');
-        btnCerrar?.classList.remove('d-none');
-        btnMovimiento?.classList.remove('d-none');
-        document.getElementById('btn-cobrar-presupuesto-caja')?.classList.remove('d-none');
-        saldoContainer?.classList.remove('d-none');
-        contMov?.classList.remove('d-none');
-
-        if (badgeEstado) badgeEstado.innerHTML = '<span class="badge bg-success">ABIERTA</span>';
-        if (infoApertura) infoApertura.textContent = `Abierta por ${cajaActiva.cajero} el ${formatearFechaHora(cajaActiva.fechaApertura)}`;
-        
-        const saldoFinal = cajaActiva.montoInicial + cajaActiva.ingresos - cajaActiva.egresos;
-        if (saldoActualText) saldoActualText.textContent = formatearMoneda(saldoFinal);
-
-        renderMovimientosActivos(cajaActiva.movimientos);
+    
+    if (cajaAbierta) {
+        badge.className = 'badge bg-success fs-6 px-3 py-2';
+        badge.innerHTML = '<i class="bi bi-unlock-fill me-1"></i> CAJA ABIERTA';
+        btnAbrir.classList.add('d-none');
+        btnCerrar.classList.remove('d-none');
     } else {
-        btnAbrir?.classList.remove('d-none');
-        btnCerrar?.classList.add('d-none');
-        btnMovimiento?.classList.add('d-none');
-        document.getElementById('btn-cobrar-presupuesto-caja')?.classList.add('d-none');
-        saldoContainer?.classList.add('d-none');
-        contMov?.classList.add('d-none');
-
-        if (badgeEstado) badgeEstado.innerHTML = '<span class="badge bg-secondary">CERRADA</span>';
-        if (infoApertura) infoApertura.textContent = 'Abre la caja para comenzar a operar.';
+        badge.className = 'badge bg-danger fs-6 px-3 py-2';
+        badge.innerHTML = '<i class="bi bi-lock-fill me-1"></i> CAJA CERRADA';
+        btnAbrir.classList.remove('d-none');
+        btnCerrar.classList.add('d-none');
     }
-
-    renderHistorialCajas();
-    renderCuentasCobrar();
-    renderCuentasPagar();
 }
 
-// Configura los event listeners para los botones principales (Abrir, Cerrar, Nuevo Movimiento)
-function configurarBotonesCaja() {
-    document.getElementById('btn-abrir-caja')?.addEventListener('click', () => {
-        let saldoAnterior = 0;
-        const cajas = obtenerCajas().filter(c => c.estado === 'cerrada');
-        if (cajas.length > 0) {
-            const ultimaCaja = cajas[cajas.length - 1];
-            saldoAnterior = ultimaCaja.montoInicial + ultimaCaja.ingresos - ultimaCaja.egresos;
-        }
-
-        Swal.fire({
-            title: 'Abrir Caja',
-            input: 'number',
-            inputLabel: 'Monto Inicial (Gs.)',
-            inputValue: saldoAnterior,
-            inputAttributes: { min: 0, step: 1 },
-            showCancelButton: true,
-            confirmButtonText: 'Abrir Caja',
-            cancelButtonText: 'Cancelar',
-            preConfirm: (val) => {
-                if (val === '' || isNaN(val) || val < 0) Swal.showValidationMessage('Ingrese un monto válido');
-                return parseFloat(val);
-            }
-        }).then(res => {
-            if (res.isConfirmed) {
-                abrirCaja(res.value);
-            }
-        });
-    });
-
-    document.getElementById('btn-cerrar-caja')?.addEventListener('click', async () => {
-        if (!(await confirmarAccion('¿Está seguro de cerrar la caja actual?', 'Cerrar Caja'))) return;
-        cerrarCaja();
-    });
-
-    document.getElementById('btn-movimiento-manual')?.addEventListener('click', () => {
-        document.getElementById('form-movimiento').reset();
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-movimiento')).show();
-    });
-
-    document.getElementById('btn-cobrar-presupuesto-caja')?.addEventListener('click', () => {
-        const selectId = document.getElementById('caja-presupuesto-id');
-        selectId.innerHTML = '<option value="">-- Seleccionar --</option>';
-        const presupuestos = obtenerDatos('presupuestos_tecnorivas').filter(p => p.estado === 'aprobado');
-        presupuestos.forEach(p => {
-            selectId.insertAdjacentHTML('beforeend', `<option value="${p.id}" data-total="${p.total}">${p.numero} - ${formatearMoneda(p.total)}</option>`);
-        });
-        document.getElementById('form-cobrar-presupuesto-caja').reset();
-        document.getElementById('div-caja-presupuesto-cuotas').classList.add('d-none');
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-cobrar-presupuesto-caja')).show();
-    });
-}
-
-// ==========================================
-// OPERACIONES PRINCIPALES DE CAJA
-// ==========================================
-
-// Inicializa una nueva sesion de caja con el monto proveido por el cajero
-function abrirCaja(montoInicial) {
-    if (obtenerCajaActiva()) {
-        alertaError('Ya hay una caja abierta.'); return;
-    }
-    const sesion = obtenerSesion();
-    const cajas = obtenerCajas();
-    const nuevaCaja = {
-        id: generarId(cajas),
-        cajero: sesion.nombre,
-        fechaApertura: fechaHoraAhora(),
-        fechaCierre: null,
-        montoInicial: montoInicial,
-        ingresos: 0,
-        egresos: 0,
-        estado: 'abierta',
-        movimientos: [{
-            hora: fechaHoraAhora(),
-            tipo: 'ingreso',
-            concepto: 'Apertura de Caja',
-            monto: montoInicial
-        }]
-    };
-    cajas.push(nuevaCaja);
-    guardarCajas(cajas);
-    alertaExito('Caja abierta exitosamente.');
-    actualizarVistaCaja();
-}
-
-// Finaliza la sesion actual de caja, marcandola como "cerrada" y calculando el estado final
-function cerrarCaja() {
-    const cajas = obtenerCajas();
-    const idx = cajas.findIndex(c => c.estado === 'abierta');
-    if (idx === -1) return;
-    cajas[idx].estado = 'cerrada';
-    cajas[idx].fechaCierre = fechaHoraAhora();
-    guardarCajas(cajas);
-    alertaExito('Caja cerrada correctamente.');
-    actualizarVistaCaja();
-}
-
-// Registra un movimiento ingresado manualmente desde el modal (ej. Gastos diarios)
-function registrarMovimientoManual(e) {
+function abrirCajaFisica(e) {
     e.preventDefault();
-    const tipo = document.getElementById('mov-tipo').value;
-    const concepto = document.getElementById('mov-concepto').value.trim();
-    const monto = parseFloat(document.getElementById('mov-monto').value);
-
-    if (!concepto || isNaN(monto) || monto <= 0) {
-        alertaError('Ingrese datos válidos.'); return;
+    const cajas = obtenerDatos('cajas_tecnorivas') || [];
+    if (cajas.find(c => c.estado === 'abierta')) {
+        alertaError('Ya existe una caja abierta.');
+        return;
     }
-
-    agregarMovimientoCaja(tipo, concepto, monto);
-    bootstrap.Modal.getInstance(document.getElementById('modal-movimiento')).hide();
-    setTimeout(() => {
-        alertaExito('Movimiento registrado.');
-    }, 300);
+    
+    const monto = parseFloat(document.getElementById('caja-monto-apertura').value) || 0;
+    const sesion = JSON.parse(localStorage.getItem('sesion_tecnorivas'));
+    
+    cajas.push({
+        id: generarId(cajas),
+        fechaApertura: fechaHoraAhora(),
+        saldoInicial: monto,
+        estado: 'abierta',
+        usuario: sesion ? sesion.nombre : 'Sistema'
+    });
+    
+    guardarDatos('cajas_tecnorivas', cajas);
+    bootstrap.Modal.getInstance(document.getElementById('modal-abrir-caja')).hide();
+    alertaExito('La caja ha sido abierta exitosamente.');
+    actualizarEstadoCajaUI();
 }
 
-// Funcion core para agregar cualquier tipo de movimiento al arreglo
-function agregarMovimientoCaja(tipo, concepto, monto) {
-    const cajas = obtenerCajas();
-    const idx = cajas.findIndex(c => c.estado === 'abierta');
-    if (idx === -1) {
-        alertaError('No hay caja abierta para registrar el movimiento.'); return false;
+function cerrarCajaFisica(e) {
+    e.preventDefault();
+    const cajas = obtenerDatos('cajas_tecnorivas') || [];
+    const cajaAbierta = cajas.find(c => c.estado === 'abierta');
+    
+    if (!cajaAbierta) {
+        alertaError('No hay caja abierta para cerrar.');
+        return;
+    }
+    
+    const saldoEfectivoStr = document.getElementById('saldo-caja-general').textContent.replace(/[^\d.-]/g, '');
+    const esperado = parseFloat(saldoEfectivoStr) || 0;
+    const real = parseFloat(document.getElementById('caja-monto-cierre').value) || 0;
+    
+    cajaAbierta.estado = 'cerrada';
+    cajaAbierta.fechaCierre = fechaHoraAhora();
+    cajaAbierta.saldoEsperado = esperado;
+    cajaAbierta.saldoReal = real;
+    cajaAbierta.diferencia = real - esperado;
+    
+    guardarDatos('cajas_tecnorivas', cajas);
+    bootstrap.Modal.getInstance(document.getElementById('modal-cerrar-caja')).hide();
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Caja Cerrada',
+        html: `El turno de caja fue cerrado correctamente.<br>Diferencia registrada: <b>${formatearMoneda(cajaAbierta.diferencia)}</b>`
+    });
+    
+    actualizarEstadoCajaUI();
+}
+
+function renderResumen(asientos) {
+    let saldoEfectivo = 0;
+    let saldoTransferencias = 0;
+    let saldoTarjetas = 0;
+
+    asientos.forEach(a => {
+        const factor = a.tipo === 'ingreso' ? 1 : -1;
+        if (a.caja === 'Caja General' || a.caja === 'Efectivo') {
+            saldoEfectivo += a.monto * factor;
+        } else if (a.caja === 'Banco' || a.caja === 'Transferencia') {
+            saldoTransferencias += a.monto * factor;
+        } else if (a.caja === 'Tarjetas por Acreditar' || a.caja === 'Tarjeta') {
+            saldoTarjetas += a.monto * factor;
+        }
+    });
+
+    document.getElementById('saldo-caja-general').textContent = formatearMoneda(saldoEfectivo);
+    document.getElementById('saldo-caja-transferencias').textContent = formatearMoneda(saldoTransferencias);
+    document.getElementById('saldo-caja-tarjetas').textContent = formatearMoneda(saldoTarjetas);
+}
+
+function renderIngresos(lista) {
+    const cont = document.getElementById('tabla-ingresos');
+    if (!cont) return;
+    cont.innerHTML = '';
+    
+    lista.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).forEach(i => {
+        cont.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td>${formatearFechaHora(i.fecha)}</td>
+                <td>${i.concepto}</td>
+                <td>${i.relacionadoCon ? `${i.relacionadoCon.tipo.toUpperCase()} ${i.relacionadoCon.numero}` : '-'}</td>
+                <td class="text-success fw-bold">+${formatearMoneda(i.monto)}</td>
+                <td><span class="badge bg-secondary">${i.caja}</span></td>
+            </tr>
+        `);
+    });
+}
+
+function renderEgresos(lista) {
+    const cont = document.getElementById('tabla-egresos');
+    if (!cont) return;
+    cont.innerHTML = '';
+    
+    lista.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).forEach(e => {
+        cont.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td>${formatearFechaHora(e.fecha)}</td>
+                <td>${e.concepto}</td>
+                <td>${e.relacionadoCon ? `${e.relacionadoCon.tipo.toUpperCase()} ${e.relacionadoCon.numero}` : '-'}</td>
+                <td class="text-danger fw-bold">-${formatearMoneda(e.monto)}</td>
+                <td><span class="badge bg-secondary">${e.caja}</span></td>
+            </tr>
+        `);
+    });
+}
+
+function renderFacturasPendientes() {
+    const cont = document.getElementById('tabla-pendientes-cobro');
+    if (!cont) return;
+    cont.innerHTML = '';
+    
+    const facturas = obtenerDatos('facturas_tecnorivas') || [];
+    const pendientesContado = facturas.filter(f => f.forma_pago === 'contado' && f.estadoPago === 'pendiente_cobro' && f.estado === 'emitida');
+    
+    if (pendientesContado.length === 0) {
+        cont.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No hay facturas pendientes de cobro</td></tr>`;
+        return;
+    }
+    
+    pendientesContado.forEach(f => {
+        const medios = f.medios_pago ? f.medios_pago.map(m => `${m.tipo}: ${formatearMoneda(m.monto)}`).join('<br>') : '-';
+        cont.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td>${f.cliente_nombre}</td>
+                <td class="fw-bold">${f.numero}</td>
+                <td class="fw-bold text-primary">${formatearMoneda(f.total)}</td>
+                <td style="font-size:0.85em;">${medios}</td>
+                <td>
+                    <button class="btn btn-sm btn-success fw-bold" onclick="cobrarFacturaContado(${f.id})"><i class="bi bi-cash me-1"></i>Cobrar Ahora</button>
+                </td>
+            </tr>
+        `);
+    });
+}
+
+async function cobrarFacturaContado(id) {
+    // Validación de caja
+    const cajas = obtenerDatos('cajas_tecnorivas') || [];
+    const cajaAbierta = cajas.find(c => c.estado === 'abierta');
+    if (!cajaAbierta) {
+        alertaError('Debe abrir la caja antes de registrar un cobro.');
+        return;
     }
 
-    if (tipo === 'egreso') {
-        const saldoActual = cajas[idx].montoInicial + cajas[idx].ingresos - cajas[idx].egresos;
-        if (saldoActual - monto < 0) {
-            alertaError('La caja no puede quedar con saldo negativo.'); return false;
+    const facturas = obtenerDatos('facturas_tecnorivas') || [];
+    const idx = facturas.findIndex(f => f.id === id);
+    if (idx === -1) return;
+    const f = facturas[idx];
+
+    if (!(await confirmarAccion(`¿Confirmar cobro de la factura ${f.numero} por ${formatearMoneda(f.total)}?`, 'Cobrar Factura'))) return;
+
+    // Registrar en Caja
+    const asientos = obtenerCaja();
+    
+    if (f.medios_pago && f.medios_pago.length > 0) {
+        f.medios_pago.forEach(m => {
+            asientos.push({
+                id: generarId(asientos) + Math.floor(Math.random() * 1000),
+                tipo: 'ingreso',
+                fecha: fechaHoraAhora(),
+                concepto: `Cobro Factura Contado - ${f.numero} (${f.cliente_nombre})`,
+                monto: m.monto,
+                caja: m.tipo, // Efectivo, Tarjeta, Transferencia
+                relacionadoCon: { tipo: 'factura', id: f.id, numero: f.numero },
+                usuario: obtenerSesion().username
+            });
+        });
+    } else {
+        // Fallback
+        asientos.push({
+            id: generarId(asientos),
+            tipo: 'ingreso',
+            fecha: fechaHoraAhora(),
+            concepto: `Cobro Factura Contado - ${f.numero}`,
+            monto: f.total,
+            caja: 'Efectivo',
+            relacionadoCon: { tipo: 'factura', id: f.id, numero: f.numero },
+            usuario: obtenerSesion().username
+        });
+    }
+    
+    guardarCaja(asientos);
+
+    // Actualizar Factura
+    facturas[idx].estadoPago = 'pagada';
+    facturas[idx].total_pagado = f.total;
+    guardarDatos('facturas_tecnorivas', facturas);
+
+    alertaExito('Cobro registrado y asientos generados.');
+    cargarCaja();
+}
+
+function registrarEgresoManual(e) {
+    e.preventDefault();
+    
+    const concepto = document.getElementById('egreso-concepto').value;
+    const monto = parseFloat(document.getElementById('egreso-monto').value);
+    const cajaOrigen = document.getElementById('egreso-caja').value;
+    
+    const asientos = obtenerCaja();
+    asientos.push({
+        id: generarId(asientos),
+        tipo: 'egreso',
+        fecha: fechaHoraAhora(),
+        concepto: `Egreso Manual: ${concepto}`,
+        monto: monto,
+        caja: cajaOrigen,
+        relacionadoCon: null,
+        usuario: obtenerSesion().username
+    });
+    
+    guardarCaja(asientos);
+    
+    bootstrap.Modal.getInstance(document.getElementById('modal-egreso-manual')).hide();
+    document.getElementById('form-egreso-manual').reset();
+    
+    alertaExito('Egreso registrado correctamente.');
+    cargarCaja();
+}
+
+// ----------------------------------------------------
+// MÓDULO CUOTAS EN CAJA
+// ----------------------------------------------------
+
+function renderCuotasPendientesCobro() {
+    const cont = document.getElementById('tabla-cuotas-pendientes-cobro');
+    if (!cont) return;
+    cont.innerHTML = '';
+    
+    const cuotas = obtenerDatos('cuotas_tecnorivas') || [];
+    const pendientes = cuotas.filter(c => c.estado === 'pendiente' || c.estado === 'vencida');
+    
+    if (pendientes.length === 0) {
+        cont.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay cuotas pendientes</td></tr>';
+        return;
+    }
+    
+    pendientes.sort((a, b) => new Date(a.fecha_vencimiento) - new Date(b.fecha_vencimiento)).forEach(c => {
+        
+        let resumenHtml = '';
+        for(let i=1; i<=c.total_cuotas; i++) {
+            if (i < c.numero_cuota) resumenHtml += '<div style="display:inline-block; width:10px; height:10px; background-color:#1e3a5f; margin-right:2px;"></div>';
+            else if (i === c.numero_cuota) resumenHtml += '<div style="display:inline-block; width:10px; height:10px; background-color:#6c757d; margin-right:2px;"></div>';
+            else resumenHtml += '<div style="display:inline-block; width:10px; height:10px; border:1px solid #dee2e6; margin-right:2px;"></div>';
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${c.cliente_nombre}</strong></td>
+            <td>${c.factura_numero}</td>
+            <td>
+                <div class="d-flex align-items-center gap-1">
+                    <div>${resumenHtml}</div>
+                    <span class="small text-muted">${c.numero_cuota}/${c.total_cuotas}</span>
+                </div>
+            </td>
+            <td class="${c.estado === 'vencida' ? 'text-danger fw-bold' : ''}">${formatearFecha(c.fecha_vencimiento)}</td>
+            <td class="fw-bold">${formatearMoneda(c.monto)}</td>
+            <td>
+                <button class="btn btn-sm btn-success" onclick="abrirModalPagarCuota(${c.id})"><i class="bi bi-cash"></i> Cobrar</button>
+            </td>
+        `;
+        cont.appendChild(tr);
+    });
+}
+
+function abrirModalPagarCuota(id, pagarTodoSeleccionado = false) {
+    const cuotas = obtenerDatos('cuotas_tecnorivas') || [];
+    const c = cuotas.find(x => x.id === id);
+    if (!c) return;
+
+    // Validación de caja
+    const cajas = obtenerDatos('cajas_tecnorivas') || [];
+    const cajaAbierta = cajas.find(caja => caja.estado === 'abierta');
+    if (!cajaAbierta) {
+        alertaError('Debe abrir la caja antes de registrar un pago.');
+        return;
+    }
+
+    // Validación correlativa
+    if (c.numero_cuota > 1) {
+        const cuotaAnterior = cuotas.find(x => x.factura_id === c.factura_id && x.numero_cuota === (c.numero_cuota - 1));
+        if (cuotaAnterior && cuotaAnterior.estado !== 'pagada') {
+            alertaError(`No puede pagar la cuota ${c.numero_cuota} porque la cuota ${cuotaAnterior.numero_cuota} aún está pendiente o vencida.`);
+            return;
         }
     }
 
-    const mov = {
-        hora: fechaHoraAhora(),
-        tipo: tipo,
-        concepto: concepto,
-        monto: monto
+    // Calcular monto total restante
+    const pendientesMismaFactura = cuotas.filter(x => x.factura_id === c.factura_id && (x.estado === 'pendiente' || x.estado === 'vencida'));
+    const montoTotalRestante = pendientesMismaFactura.reduce((sum, item) => sum + item.monto, 0);
+
+    document.getElementById('pago-cuota-id').value = c.id;
+    document.getElementById('pago-cuota-info').textContent = `Factura ${c.factura_numero} - Cliente: ${c.cliente_nombre} - Cuota ${c.numero_cuota}/${c.total_cuotas}`;
+    
+    // Configurar radios
+    const containerTodo = document.getElementById('container-pago-tipo-todo');
+    const radioActual = document.getElementById('pago-tipo-actual');
+    const radioTodo = document.getElementById('pago-tipo-todo');
+    const montoFinalHtml = document.getElementById('pago-cuota-monto');
+
+    if (pendientesMismaFactura.length > 1) {
+        containerTodo.classList.remove('d-none');
+        document.getElementById('pago-todo-monto').textContent = formatearMoneda(montoTotalRestante);
+    } else {
+        containerTodo.classList.add('d-none');
+    }
+
+    if (pagarTodoSeleccionado && pendientesMismaFactura.length > 1) {
+        radioTodo.checked = true;
+        montoFinalHtml.textContent = formatearMoneda(montoTotalRestante);
+        document.getElementById('pago-cuota-info').textContent = `Factura ${c.factura_numero} - Cliente: ${c.cliente_nombre} - ${pendientesMismaFactura.length} Cuotas restantes`;
+    } else {
+        radioActual.checked = true;
+        montoFinalHtml.textContent = formatearMoneda(c.monto);
+    }
+
+    // Eventos para cambiar el monto visualmente
+    radioActual.onchange = () => { 
+        montoFinalHtml.textContent = formatearMoneda(c.monto); 
+        document.getElementById('pago-cuota-info').textContent = `Factura ${c.factura_numero} - Cliente: ${c.cliente_nombre} - Cuota ${c.numero_cuota}/${c.total_cuotas}`;
+    };
+    radioTodo.onchange = () => { 
+        montoFinalHtml.textContent = formatearMoneda(montoTotalRestante); 
+        document.getElementById('pago-cuota-info').textContent = `Factura ${c.factura_numero} - Cliente: ${c.cliente_nombre} - ${pendientesMismaFactura.length} Cuotas restantes`;
     };
 
-    cajas[idx].movimientos.push(mov);
-    if (tipo === 'ingreso') cajas[idx].ingresos += monto;
-    else cajas[idx].egresos += monto;
-
-    guardarCajas(cajas);
-    actualizarVistaCaja();
-    return true;
-}
-
-window.cobrarPresupuestoEnCaja = function(numero, monto) {
-    return agregarMovimientoCaja('ingreso', `Cobro Presupuesto ${numero}`, monto);
-};
-
-function renderMovimientosActivos(movs) {
-    const tbody = document.getElementById('tabla-movimientos-actual');
-    if (!tbody) return;
-    
-    if (movs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Sin movimientos</td></tr>';
-        return;
+    if (c.estado === 'vencida') {
+        document.getElementById('alerta-vencimiento').classList.remove('d-none');
+    } else {
+        document.getElementById('alerta-vencimiento').classList.add('d-none');
     }
 
-    tbody.innerHTML = movs.map(m => `
-        <tr>
-            <td>${new Date(m.hora).toLocaleTimeString('es-DO')}</td>
-            <td><span class="badge ${m.tipo === 'ingreso' ? 'bg-success' : 'bg-danger'}">${m.tipo.toUpperCase()}</span></td>
-            <td>${m.concepto}</td>
-            <td class="${m.tipo === 'ingreso' ? 'text-success' : 'text-danger'} fw-bold">${m.tipo === 'ingreso' ? '+' : '-'}${formatearMoneda(m.monto)}</td>
-        </tr>
-    `).reverse().join('');
+    document.getElementById('pago-cuota-metodo').value = 'Efectivo';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-pagar-cuota')).show();
 }
 
-function renderHistorialCajas() {
-    const tbody = document.getElementById('tabla-historial-cajas');
-    if (!tbody) return;
-    const cajas = obtenerCajas().filter(c => c.estado === 'cerrada').reverse();
+function procesarPagoCuota(e) {
+    e.preventDefault();
+    const id = parseInt(document.getElementById('pago-cuota-id').value);
+    const metodo = document.getElementById('pago-cuota-metodo').value;
+    const tipoPago = document.querySelector('input[name="pago-tipo"]:checked').value;
 
-    if (cajas.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay historial de cajas</td></tr>';
-        document.getElementById('contador-historial').textContent = '0 sesiones';
-        return;
-    }
-
-    document.getElementById('contador-historial').textContent = `${cajas.length} sesiones`;
-    
-    tbody.innerHTML = cajas.map(c => `
-        <tr>
-            <td>${formatearFechaHora(c.fechaApertura)}</td>
-            <td>${c.cajero}</td>
-            <td>${formatearMoneda(c.montoInicial)}</td>
-            <td class="text-success">+${formatearMoneda(c.ingresos)}</td>
-            <td class="text-danger">-${formatearMoneda(c.egresos)}</td>
-            <td class="fw-bold text-primary">${formatearMoneda(c.montoInicial + c.ingresos - c.egresos)}</td>
-            <td><span class="badge bg-secondary">CERRADA</span></td>
-        </tr>
-    `).join('');
-}
-
-function formatearFechaHora(iso) {
-    if (!iso) return '-';
-    return new Date(iso).toLocaleString('es-DO', { 
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute:'2-digit'
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const sesion = protegerPagina();
-    if (!sesion) return;
-    configurarBotonesCaja();
-    actualizarVistaCaja();
-    
-    document.getElementById('form-movimiento')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const tipo = document.getElementById('mov-tipo').value;
-        const concepto = document.getElementById('mov-concepto').value.trim();
-        const monto = parseFloat(document.getElementById('mov-monto').value);
-        registrarMovimientoManual(tipo, concepto, monto);
-    });
-
-    document.getElementById('caja-presupuesto-condicion')?.addEventListener('change', (e) => {
-        const divCuotas = document.getElementById('div-caja-presupuesto-cuotas');
-        if (e.target.value === 'credito') {
-            divCuotas.classList.remove('d-none');
-            document.getElementById('caja-presupuesto-cuotas').required = true;
-        } else {
-            divCuotas.classList.add('d-none');
-            document.getElementById('caja-presupuesto-cuotas').required = false;
-        }
-    });
-
-    document.getElementById('form-cobrar-presupuesto-caja')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const idStr = document.getElementById('caja-presupuesto-id').value;
-        if (!idStr) { alertaError('Seleccione un presupuesto.'); return; }
-        const id = parseInt(idStr);
-        const condicion = document.getElementById('caja-presupuesto-condicion').value;
-        const metodo = document.getElementById('caja-presupuesto-metodo').value;
-        const cuotas = condicion === 'credito' ? parseInt(document.getElementById('caja-presupuesto-cuotas').value) : 1;
-
-        const presupuestos = obtenerDatos('presupuestos_tecnorivas');
-        const p = presupuestos.find(x => x.id === id);
-        if (!p) return;
-
-        if (!(await confirmarAccion(`¿Confirmar cobro por ${condicion}?`, `Presupuesto ${p.numero}`))) return;
-        
-        p.condicion = condicion;
-        p.metodoPago = metodo;
-        p.cantidadCuotas = cuotas;
-        p.planPagos = [];
-        
-        if (condicion === 'contado') {
-            p.estado = 'cobrado';
-            p.planPagos.push({
-                nroCuota: 1,
-                monto: p.total,
-                vencimiento: fechaHoraAhora().split('T')[0],
-                estado: 'pagado',
-                fechaPago: fechaHoraAhora()
-            });
-            agregarMovimientoCaja('ingreso', `Cobro Presupuesto ${p.numero} (${metodo})`, p.total);
-        } else {
-            p.estado = 'credito';
-            const montoCuota = Math.round(p.total / cuotas);
-            let fechaActual = new Date();
-            for (let i = 1; i <= cuotas; i++) {
-                fechaActual.setDate(fechaActual.getDate() + 30);
-                p.planPagos.push({
-                    nroCuota: i,
-                    monto: montoCuota,
-                    vencimiento: fechaActual.toISOString().split('T')[0],
-                    estado: 'pendiente',
-                    fechaPago: null
-                });
-            }
-        }
-        
-        // Modificar stock
-        const articulos = obtenerDatos('articulos_tecnorivas');
-        const movimientosInv = obtenerDatos('movimientos_inventario');
-        p.detalle.forEach(det => {
-            const artIdx = articulos.findIndex(a => a.id === det.itemId);
-            if (artIdx !== -1) {
-                const saldoA = articulos[artIdx].stock;
-                articulos[artIdx].stock -= det.cantidad;
-                const saldoB = articulos[artIdx].stock;
-                movimientosInv.push({
-                    fecha: fechaHoraAhora(),
-                    articuloId: det.itemId,
-                    tipo: 'salida',
-                    cantidad: det.cantidad,
-                    saldoA: saldoA,
-                    saldoB: saldoB,
-                    referencia: `Venta Presupuesto ${p.numero}`
-                });
-            }
-        });
-        guardarDatos('articulos_tecnorivas', articulos);
-        guardarDatos('movimientos_inventario', movimientosInv);
-        
-        guardarDatos('presupuestos_tecnorivas', presupuestos);
-        bootstrap.Modal.getInstance(document.getElementById('modal-cobrar-presupuesto-caja')).hide();
-        setTimeout(() => {
-            alertaExito(`Presupuesto cobrado a ${condicion}`);
-        }, 300);
-        
-        renderCuentasCobrar();
-        renderCuentasPagar();
-    });
-});
-
-// ==========================================
-// CUENTAS POR COBRAR (CLIENTES)
-// ==========================================
-
-function renderCuentasCobrar() {
-    const tbody = document.getElementById('tabla-cuentas-cobrar');
-    if (!tbody) return;
-    
-    const presupuestos = obtenerDatos('presupuestos_tecnorivas');
-    const clientes = obtenerDatos('clientes_tecnorivas');
-    let html = '';
-    
-    presupuestos.forEach(p => {
-        if (p.planPagos && p.planPagos.length > 0) {
-            const cliente = clientes.find(c => c.id === p.clienteId);
-            const nombreCliente = cliente ? cliente.nombre : 'Desconocido';
-            
-            p.planPagos.forEach(cuota => {
-                if (cuota.estado === 'pendiente') {
-                    html += `
-                        <tr>
-                            <td>${p.numero}</td>
-                            <td>${nombreCliente}</td>
-                            <td>${cuota.nroCuota} / ${p.cantidadCuotas}</td>
-                            <td>${cuota.vencimiento}</td>
-                            <td>${formatearMoneda(cuota.monto)}</td>
-                            <td><span class="badge bg-warning text-dark">Pendiente</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-success" onclick="cobrarCuota(${p.id}, ${cuota.nroCuota}, ${cuota.monto})" title="Cobrar Cuota">
-                                    <i class="bi bi-cash-coin"></i> Cobrar
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                }
-            });
-        }
-    });
-    
-    if (html === '') {
-        html = '<tr><td colspan="7" class="text-center text-muted py-4">No hay cuotas pendientes por cobrar</td></tr>';
-    }
-    tbody.innerHTML = html;
-}
-
-window.cobrarCuota = async function(idPresupuesto, nroCuota, monto) {
-    const cajaActiva = obtenerCajaActiva();
-    if (!cajaActiva) { alertaError('Abre la caja primero.'); return; }
-    
-    if (!(await confirmarAccion(`¿Registrar cobro de la Cuota ${nroCuota} por ${formatearMoneda(monto)}?`, 'Cobrar Cuota'))) return;
-    
-    const presupuestos = obtenerDatos('presupuestos_tecnorivas');
-    const idx = presupuestos.findIndex(p => p.id === idPresupuesto);
+    const cuotas = obtenerDatos('cuotas_tecnorivas') || [];
+    const idx = cuotas.findIndex(x => x.id === id);
     if (idx === -1) return;
+    const cuotaActual = cuotas[idx];
+
+    const cajaTecnorivas = obtenerDatos('caja_tecnorivas') || [];
+    const pendientesMismaFactura = cuotas.filter(x => x.factura_id === cuotaActual.factura_id && (x.estado === 'pendiente' || x.estado === 'vencida'));
     
-    const p = presupuestos[idx];
-    const cuota = p.planPagos.find(c => c.nroCuota === nroCuota);
-    if (cuota) {
-        cuota.estado = 'pagado';
-        cuota.fechaPago = fechaHoraAhora();
-        
-        // Verificar si se completaron todas las cuotas
-        if (p.planPagos.every(c => c.estado === 'pagado')) {
-            p.estado = 'cobrado';
-        }
+    let cuotasAPagar = [];
+    if (tipoPago === 'todo') {
+        cuotasAPagar = pendientesMismaFactura;
+    } else {
+        cuotasAPagar = [cuotaActual];
     }
-    guardarDatos('presupuestos_tecnorivas', presupuestos);
-    
-    agregarMovimientoCaja('ingreso', `Cobro Cuota ${nroCuota} - Pres. ${p.numero}`, monto);
-    renderCuentasCobrar();
-    alertaExito('Cuota cobrada correctamente.');
-};
 
-// ==========================================
-// CUENTAS POR PAGAR (PROVEEDORES)
-// ==========================================
-
-function renderCuentasPagar() {
-    const tbody = document.getElementById('tabla-cuentas-pagar');
-    if (!tbody) return;
+    const totalCobrado = cuotasAPagar.reduce((sum, item) => sum + item.monto, 0);
+    const descripcion = tipoPago === 'todo' ? `Cobro ${cuotasAPagar.length} Cuotas Restantes - Factura ${cuotaActual.factura_numero}` : `Cobro Cuota ${cuotaActual.numero_cuota}/${cuotaActual.total_cuotas} - Factura ${cuotaActual.factura_numero}`;
     
-    const compras = obtenerDatos('compras_tecnorivas');
-    const proveedores = obtenerDatos('proveedores_tecnorivas');
-    let html = '';
-    
-    compras.forEach(c => {
-        if (c.planPagos && c.planPagos.length > 0) {
-            const proveedor = proveedores.find(p => p.id === c.proveedorId);
-            const nombreProveedor = proveedor ? proveedor.nombre : 'Desconocido';
-            
-            c.planPagos.forEach(cuota => {
-                if (cuota.estado === 'pendiente') {
-                    html += `
-                        <tr>
-                            <td>${c.numero}</td>
-                            <td>${nombreProveedor}</td>
-                            <td>${cuota.nroCuota} / ${c.cantidadCuotas}</td>
-                            <td>${cuota.vencimiento}</td>
-                            <td>${formatearMoneda(cuota.monto)}</td>
-                            <td><span class="badge bg-warning text-dark">Pendiente</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-danger" onclick="pagarCuota(${c.id}, ${cuota.nroCuota}, ${cuota.monto})" title="Pagar Cuota">
-                                    <i class="bi bi-wallet2"></i> Pagar
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                }
-            });
-        }
+    // Ingresar a Caja
+    cajaTecnorivas.push({
+        id: generarId(cajaTecnorivas),
+        tipo: 'ingreso',
+        fecha: fechaHoraAhora(),
+        concepto: descripcion,
+        monto: totalCobrado,
+        caja: metodo === 'Efectivo' ? 'Caja General' : (metodo === 'Tarjeta' ? 'Tarjetas por Acreditar' : 'Banco'),
+        relacionadoCon: { tipo: 'cuota', id: cuotaActual.id, numero: cuotaActual.factura_numero },
+        usuario: obtenerSesion().nombre
     });
-    
-    if (html === '') {
-        html = '<tr><td colspan="7" class="text-center text-muted py-4">No hay cuotas pendientes por pagar</td></tr>';
+    guardarDatos('caja_tecnorivas', cajaTecnorivas);
+
+    // Actualizar Cuotas
+    cuotasAPagar.forEach(c => {
+        const i = cuotas.findIndex(x => x.id === c.id);
+        cuotas[i].estado = 'pagada';
+        cuotas[i].fecha_pago = fechaHoraAhora();
+        cuotas[i].metodo_pago = metodo;
+    });
+    guardarDatos('cuotas_tecnorivas', cuotas);
+
+    // Actualizar Factura
+    const todasPagadas = cuotas.filter(x => x.factura_id === cuotaActual.factura_id).every(x => x.estado === 'pagada');
+    if (todasPagadas) {
+        const facturas = obtenerDatos('facturas_tecnorivas') || [];
+        const fIdx = facturas.findIndex(f => f.id === cuotaActual.factura_id);
+        if (fIdx !== -1) {
+            facturas[fIdx].estadoPago = 'pagada';
+            guardarDatos('facturas_tecnorivas', facturas);
+        }
     }
-    tbody.innerHTML = html;
+
+    bootstrap.Modal.getInstance(document.getElementById('modal-pagar-cuota')).hide();
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Pago Registrado',
+        text: 'El cobro fue ingresado a la caja correctamente.',
+        confirmButtonText: 'Aceptar'
+    }).then(() => {
+        cargarCaja();
+    });
 }
-
-window.pagarCuota = async function(idCompra, nroCuota, monto) {
-    const cajaActiva = obtenerCajaActiva();
-    if (!cajaActiva) { alertaError('Abre la caja primero.'); return; }
-    
-    if (!(await confirmarAccion(`¿Registrar pago de la Cuota ${nroCuota} por ${formatearMoneda(monto)}?`, 'Pagar Cuota'))) return;
-    
-    const compras = obtenerDatos('compras_tecnorivas');
-    const idx = compras.findIndex(c => c.id === idCompra);
-    if (idx === -1) return;
-    
-    const c = compras[idx];
-    const cuota = c.planPagos.find(ct => ct.nroCuota === nroCuota);
-    if (!cuota) return;
-
-    if (!agregarMovimientoCaja('egreso', `Pago Cuota ${nroCuota} - Compra ${c.numero}`, monto)) {
-        return;
-    }
-
-    cuota.estado = 'pagado';
-    cuota.fechaPago = fechaHoraAhora();
-    
-    // Verificar si se completaron todas
-    if (c.planPagos.every(ct => ct.estado === 'pagado')) {
-        c.estado = 'pagado';
-    }
-    
-    guardarDatos('compras_tecnorivas', compras);
-    renderCuentasPagar();
-    alertaExito('Cuota pagada correctamente.');
-};
