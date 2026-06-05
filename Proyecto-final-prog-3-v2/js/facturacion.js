@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let nuevaFacturaDetalles = [];
 let nuevaFacturaTotal = 0;
+let mediosPagoContado = [];
 
 function obtenerFacturas() {
     return obtenerDatos(CLAVE_FACTURAS);
@@ -934,10 +935,6 @@ function agregarAlDetalleFactura(tipoItem, itemId, descripcion, cant, precio, iv
     // Auto-fill Efectivo with new total if condition is contado
     const condicion = document.getElementById('nueva-fac-condicion').value;
     if (condicion === 'contado') {
-        const inputEfectivo = document.querySelector('.input-medio-pago[data-tipo="Efectivo"]');
-        if (inputEfectivo) {
-            inputEfectivo.value = nuevaFacturaTotal;
-        }
         recalcularTotalMediosPago();
     }
 }
@@ -1020,6 +1017,34 @@ function configurarNuevaFacturaSPA() {
     if (btnGuardarBorrador) {
         btnGuardarBorrador.addEventListener('click', guardarBorrador);
     }
+
+    // Botón Agregar Medio de Pago
+    const btnAddMedio = document.getElementById('btn-add-metodo-pago');
+    if (btnAddMedio) {
+        btnAddMedio.addEventListener('click', () => {
+            const selectMedio = document.getElementById('fac-add-medio-pago');
+            const inputMonto = document.getElementById('fac-add-monto-pago');
+            const monto = parseFloat(inputMonto.value);
+            
+            if (isNaN(monto) || monto <= 0) {
+                alertaAdvertencia('Ingrese un monto válido.');
+                return;
+            }
+            
+            const totalAbonado = mediosPagoContado.reduce((sum, item) => sum + item.monto, 0);
+            if (totalAbonado + monto > nuevaFacturaTotal) {
+                alertaError('El monto ingresado supera el total faltante de la factura.');
+                return;
+            }
+            
+            mediosPagoContado.push({
+                tipo: selectMedio.value,
+                monto: monto
+            });
+            
+            recalcularTotalMediosPago();
+        });
+    }
 }
 
 async function guardarBorrador() {
@@ -1061,6 +1086,7 @@ window.continuarBorrador = function(id) {
     const b = facturas.find(x => x.id === id);
     if (!b) return;
 
+    mediosPagoContado = [];
     document.getElementById('nueva-fac-cliente').value = b.cliente_nombre;
     document.getElementById('nueva-fac-cliente-id').value = b.cliente_id;
     document.getElementById('nueva-fac-presupuesto').value = b.presupuesto_numero || '';
@@ -1079,11 +1105,56 @@ window.continuarBorrador = function(id) {
 };
 
 function actualizarMontoContado() {
-    const inputMonto = document.getElementById('nueva-fac-monto-abonar');
-    if(inputMonto) {
-        inputMonto.value = formatearMoneda(nuevaFacturaTotal);
+    const inputMonto = document.getElementById('fac-add-monto-pago');
+    if(inputMonto && mediosPagoContado.length === 0) {
+        inputMonto.value = nuevaFacturaTotal;
     }
+    recalcularTotalMediosPago();
 }
+
+function recalcularTotalMediosPago() {
+    const totalAbonado = mediosPagoContado.reduce((sum, item) => sum + item.monto, 0);
+    const faltante = nuevaFacturaTotal - totalAbonado;
+    
+    const elTotal = document.getElementById('total-abonado-contado');
+    const elFaltante = document.getElementById('faltante-abonado-contado');
+    const inputMonto = document.getElementById('fac-add-monto-pago');
+    
+    if (elTotal) elTotal.textContent = formatearMoneda(totalAbonado);
+    if (elFaltante) {
+        elFaltante.textContent = formatearMoneda(faltante > 0 ? faltante : 0);
+        elFaltante.className = faltante > 0 ? 'text-danger fw-bold' : 'text-success fw-bold';
+    }
+    
+    if (inputMonto) {
+        inputMonto.value = faltante > 0 ? faltante : 0;
+    }
+    
+    renderListaMediosPago();
+}
+
+function renderListaMediosPago() {
+    const tbody = document.getElementById('lista-metodos-pago');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    mediosPagoContado.forEach((item, index) => {
+        tbody.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td>${item.tipo}</td>
+                <td class="fw-bold">${formatearMoneda(item.monto)}</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarMedioPago(${index})" title="Eliminar"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>
+        `);
+    });
+}
+
+window.eliminarMedioPago = function(index) {
+    mediosPagoContado.splice(index, 1);
+    recalcularTotalMediosPago();
+};
 
 function verificarPresupuestoRedirigido() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -1102,6 +1173,7 @@ function preLlenarDesdePresupuesto(presId) {
     const pres = presupuestos.find(p => p.id === presId);
     if (!pres) return;
 
+    mediosPagoContado = [];
     document.getElementById('nueva-fac-cliente').value = pres.clienteNombre;
     document.getElementById('nueva-fac-cliente-id').value = pres.clienteId;
     document.getElementById('nueva-fac-presupuesto').value = pres.numero;
@@ -1156,9 +1228,9 @@ window.eliminarItemNuevaFactura = function(index) {
     // Si la condición es contado, recalcular medios de pago
     const condicion = document.getElementById('nueva-fac-condicion').value;
     if (condicion === 'contado') {
-        const inputEfectivo = document.querySelector('.input-medio-pago[data-tipo="Efectivo"]');
-        if (inputEfectivo) {
-            inputEfectivo.value = nuevaFacturaTotal;
+        const totalAbonado = mediosPagoContado.reduce((sum, item) => sum + item.monto, 0);
+        if (totalAbonado > nuevaFacturaTotal) {
+            mediosPagoContado = [];
         }
         recalcularTotalMediosPago();
     }
@@ -1177,9 +1249,20 @@ async function emitirNuevaFactura(e) {
     // Validar Medios de Pago si es Contado
     let mediosPagoArr = [];
     if (condicion === 'contado') {
-        const selectMedio = document.getElementById('nueva-fac-medio-pago');
-        const medioSeleccionado = selectMedio ? selectMedio.value : 'Efectivo (Gs.)';
-        mediosPagoArr.push({ tipo: medioSeleccionado, monto: nuevaFacturaTotal });
+        const totalAbonado = mediosPagoContado.reduce((sum, item) => sum + item.monto, 0);
+        if (totalAbonado !== nuevaFacturaTotal) {
+            alertaError('El total abonado debe ser exactamente igual al total de la factura.');
+            return;
+        }
+        mediosPagoArr = [...mediosPagoContado];
+        
+        // Validar caja abierta
+        const cajas = obtenerDatos('cajas_tecnorivas') || [];
+        const cajaAbierta = cajas.find(caja => caja.estado === 'abierta');
+        if (!cajaAbierta) {
+            alertaError('Debe abrir la caja antes de emitir una factura al contado.');
+            return;
+        }
     }
 
     if (!(await confirmarAccion(`¿Emitir factura oficial por ${formatearMoneda(nuevaFacturaTotal)}?`, 'Emitir Factura'))) return;
@@ -1198,11 +1281,11 @@ async function emitirNuevaFactura(e) {
         cliente_id: parseInt(document.getElementById('nueva-fac-cliente-id').value) || 0,
         cliente_nombre: document.getElementById('nueva-fac-cliente').value,
         fecha: document.getElementById('nueva-fac-fecha').value,
-        estado: 'emitida', // borrador, emitida, anulada
-        estadoPago: condicion === 'contado' ? 'pendiente_cobro' : 'pendiente', 
+        estado: condicion === 'contado' ? 'pagada' : 'emitida', // borrador, emitida, pagada, anulada
+        estadoPago: condicion === 'contado' ? 'pagada' : 'pendiente', 
         items: [...nuevaFacturaDetalles],
         total: nuevaFacturaTotal,
-        total_pagado: 0,
+        total_pagado: condicion === 'contado' ? nuevaFacturaTotal : 0,
         forma_pago: condicion,
         medios_pago: mediosPagoArr,
         observaciones: document.getElementById('nueva-fac-observaciones').value
@@ -1228,6 +1311,23 @@ async function emitirNuevaFactura(e) {
     });
     guardarDatos('articulos_tecnorivas', articulos);
     guardarDatos('movimientos_inventario', movsInv);
+
+    if (condicion === 'contado') {
+        const cajas = obtenerDatos('cajas_tecnorivas') || [];
+        const idxCaja = cajas.findIndex(caja => caja.estado === 'abierta');
+        if (idxCaja !== -1) {
+            mediosPagoArr.forEach(pago => {
+                cajas[idxCaja].movimientos.push({
+                    hora: fechaHoraAhora(),
+                    tipo: 'ingreso',
+                    concepto: `Venta Contado Factura ${numFac} (${pago.tipo})`,
+                    monto: pago.monto
+                });
+                cajas[idxCaja].ingresos += pago.monto;
+            });
+            guardarDatos('cajas_tecnorivas', cajas);
+        }
+    }
 
     // Si es crédito, generar cuotas
     if (condicion === 'credito') {

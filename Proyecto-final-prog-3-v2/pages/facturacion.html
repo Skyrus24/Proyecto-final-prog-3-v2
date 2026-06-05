@@ -354,12 +354,11 @@
 
                         <!-- Panel Contado -->
                         <div id="panel-condicion-contado" class="d-none bg-light p-3 rounded mb-4">
-                            <h6 class="fw-bold"><i class="bi bi-wallet2 me-2"></i>Detalles de Pago y Montos</h6>
-                            
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Medio de Pago (Seleccione) *</label>
-                                    <select class="form-select" id="nueva-fac-medio-pago">
+                            <h6 class="fw-bold"><i class="bi bi-wallet2 me-2"></i>Detalles de Pago (Multi-método)</h6>
+                            <div class="row g-2 align-items-end mb-3">
+                                <div class="col-md-5">
+                                    <label class="form-label text-xs">Medio de Pago</label>
+                                    <select class="form-select form-select-sm" id="fac-add-medio-pago">
                                         <option value="Efectivo (Gs.)" selected>Efectivo (Gs.)</option>
                                         <option value="Transferencia Bancaria (SIPAP / SPI)">Transferencia Bancaria (SIPAP / SPI)</option>
                                         <option value="Código QR (Bancard/Infonet)">Código QR (Bancard/Infonet)</option>
@@ -369,11 +368,38 @@
                                         <option value="Cheque">Cheque</option>
                                     </select>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Monto a Abonar</label>
-                                    <input type="text" class="form-control fw-bold text-primary" id="nueva-fac-monto-abonar" readonly value="0">
+                                <div class="col-md-5">
+                                    <label class="form-label text-xs">Monto a Abonar (Gs.)</label>
+                                    <input type="number" class="form-control form-control-sm" id="fac-add-monto-pago" min="1">
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary w-100" id="btn-add-metodo-pago"><i class="bi bi-plus-lg"></i> Agregar</button>
                                 </div>
                             </div>
+                            
+                            <table class="table table-sm table-bordered bg-white mb-2">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Método de Pago</th>
+                                        <th>Monto</th>
+                                        <th style="width: 50px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-metodos-pago">
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th class="text-end">Total Pagado:</th>
+                                        <th id="total-abonado-contado" class="text-success">₲ 0</th>
+                                        <th></th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-end">Faltante:</th>
+                                        <th id="faltante-abonado-contado" class="text-danger">₲ 0</th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
                           
                         <!-- Panel Crédito -->
