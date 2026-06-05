@@ -986,36 +986,28 @@ function configurarNuevaFacturaSPA() {
     if (selectCond) {
         selectCond.addEventListener('change', (e) => {
             const val = e.target.value;
-            const selectPlazo = document.getElementById('nueva-fac-plazo');
-            const selectFrecuencia = document.getElementById('nueva-fac-frecuencia');
             
             if (val === 'contado') {
                 panelContado.classList.remove('d-none');
                 panelCredito.classList.add('d-none');
-                document.querySelectorAll('.input-medio-pago').forEach(inp => inp.disabled = false);
+                const selectPlazo = document.getElementById('nueva-fac-plazo');
                 if(selectPlazo) selectPlazo.disabled = true;
-                if(selectFrecuencia) selectFrecuencia.disabled = true;
-                recalcularTotalMediosPago();
+                actualizarMontoContado();
             } else if (val === 'credito') {
                 panelContado.classList.add('d-none');
                 panelCredito.classList.remove('d-none');
-                document.querySelectorAll('.input-medio-pago').forEach(inp => inp.disabled = true);
+                const selectPlazo = document.getElementById('nueva-fac-plazo');
                 if(selectPlazo) selectPlazo.disabled = false;
-                if(selectFrecuencia) selectFrecuencia.disabled = false;
             } else {
                 panelContado.classList.add('d-none');
                 panelCredito.classList.add('d-none');
-                document.querySelectorAll('.input-medio-pago').forEach(inp => inp.disabled = true);
+                const selectPlazo = document.getElementById('nueva-fac-plazo');
                 if(selectPlazo) selectPlazo.disabled = true;
-                if(selectFrecuencia) selectFrecuencia.disabled = true;
             }
         });
     }
 
-    // Medios de pago (Contado)
-    document.querySelectorAll('.input-medio-pago').forEach(inp => {
-        inp.addEventListener('input', recalcularTotalMediosPago);
-    });
+    // Se eliminan los event listeners de input-medio-pago
 
     // Envío del Formulario
     const formNueva = document.getElementById('form-nueva-factura');
@@ -1086,19 +1078,10 @@ window.continuarBorrador = function(id) {
     mostrarPanelNuevaFactura();
 };
 
-function recalcularTotalMediosPago() {
-    let suma = 0;
-    document.querySelectorAll('.input-medio-pago').forEach(inp => {
-        suma += parseFloat(inp.value) || 0;
-    });
-    
-    document.getElementById('suma-medios-pago').textContent = formatearMoneda(suma);
-    
-    const errSpan = document.getElementById('error-medios-pago');
-    if (Math.abs(suma - nuevaFacturaTotal) > 0.1) {
-        errSpan.classList.remove('d-none');
-    } else {
-        errSpan.classList.add('d-none');
+function actualizarMontoContado() {
+    const inputMonto = document.getElementById('nueva-fac-monto-abonar');
+    if(inputMonto) {
+        inputMonto.value = formatearMoneda(nuevaFacturaTotal);
     }
 }
 
@@ -1131,9 +1114,8 @@ function preLlenarDesdePresupuesto(presId) {
 
     renderTablaItemsNuevaFactura();
     
-    // Auto-fill Efectivo with total
-    document.querySelector('.input-medio-pago[data-tipo="Efectivo"]').value = nuevaFacturaTotal;
-    recalcularTotalMediosPago();
+    // Auto-fill Monto a Abonar
+    actualizarMontoContado();
     
     // Reset item category selection to update options
     const selectCat = document.getElementById('fac-item-categoria');
@@ -1163,6 +1145,7 @@ function renderTablaItemsNuevaFactura() {
     });
     
     document.getElementById('nueva-fac-total').textContent = formatearMoneda(nuevaFacturaTotal);
+    actualizarMontoContado();
 }
 
 window.eliminarItemNuevaFactura = function(index) {
@@ -1194,19 +1177,9 @@ async function emitirNuevaFactura(e) {
     // Validar Medios de Pago si es Contado
     let mediosPagoArr = [];
     if (condicion === 'contado') {
-        let suma = 0;
-        document.querySelectorAll('.input-medio-pago').forEach(inp => {
-            const val = parseFloat(inp.value) || 0;
-            if (val > 0) {
-                mediosPagoArr.push({ tipo: inp.dataset.tipo, monto: val });
-                suma += val;
-            }
-        });
-        
-        if (Math.abs(suma - nuevaFacturaTotal) > 0.1) {
-            alertaError('La suma de los medios de pago no coincide con el total de la factura.');
-            return;
-        }
+        const selectMedio = document.getElementById('nueva-fac-medio-pago');
+        const medioSeleccionado = selectMedio ? selectMedio.value : 'Efectivo (Gs.)';
+        mediosPagoArr.push({ tipo: medioSeleccionado, monto: nuevaFacturaTotal });
     }
 
     if (!(await confirmarAccion(`¿Emitir factura oficial por ${formatearMoneda(nuevaFacturaTotal)}?`, 'Emitir Factura'))) return;
