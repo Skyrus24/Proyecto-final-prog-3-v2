@@ -710,10 +710,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let servsDB = obtenerDatos('servicios_tecnorivas');
     let dbModificada = false;
     servsDB.forEach(s => {
-        if (!s.categoriaId || !s.precio_base) {
+        // Re-sincronizar el nombre de la categoría basándose en el categoriaId (corrige bug de "Refrigeración" global)
+        if (s.categoriaId) {
+            const cat = categoriasDB.find(c => c.id === parseInt(s.categoriaId));
+            if (cat && s.categoria !== cat.nombre) {
+                s.categoria = cat.nombre;
+                dbModificada = true;
+            }
+        }
+
+        if (!s.categoriaId || typeof s.precio_base === 'undefined') {
             s.categoriaId = s.categoriaId || defaultCat.id;
             s.categoria = s.categoria || defaultCat.nombre;
-            s.precio_base = s.precio_base || 50000;
+            s.precio_base = typeof s.precio_base !== 'undefined' ? s.precio_base : (typeof s.precio !== 'undefined' ? s.precio : 50000);
             s.activo = typeof s.activo !== 'undefined' ? s.activo : true;
             dbModificada = true;
         }

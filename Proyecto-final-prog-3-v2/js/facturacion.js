@@ -1128,6 +1128,12 @@ function recalcularTotalMediosPago() {
     
     if (inputMonto) {
         inputMonto.value = faltante > 0 ? faltante : 0;
+        inputMonto.disabled = faltante <= 0;
+    }
+    
+    const btnAddMedio = document.getElementById('btn-add-metodo-pago');
+    if (btnAddMedio) {
+        btnAddMedio.disabled = faltante <= 0;
     }
     
     renderListaMediosPago();
@@ -1255,14 +1261,6 @@ async function emitirNuevaFactura(e) {
             return;
         }
         mediosPagoArr = [...mediosPagoContado];
-        
-        // Validar caja abierta
-        const cajas = obtenerDatos('cajas_tecnorivas') || [];
-        const cajaAbierta = cajas.find(caja => caja.estado === 'abierta');
-        if (!cajaAbierta) {
-            alertaError('Debe abrir la caja antes de emitir una factura al contado.');
-            return;
-        }
     }
 
     if (!(await confirmarAccion(`¿Emitir factura oficial por ${formatearMoneda(nuevaFacturaTotal)}?`, 'Emitir Factura'))) return;
@@ -1281,11 +1279,11 @@ async function emitirNuevaFactura(e) {
         cliente_id: parseInt(document.getElementById('nueva-fac-cliente-id').value) || 0,
         cliente_nombre: document.getElementById('nueva-fac-cliente').value,
         fecha: document.getElementById('nueva-fac-fecha').value,
-        estado: condicion === 'contado' ? 'pagada' : 'emitida', // borrador, emitida, pagada, anulada
-        estadoPago: condicion === 'contado' ? 'pagada' : 'pendiente', 
+        estado: 'emitida', // Siempre se crea como emitida, el pago se efectúa en Caja
+        estadoPago: condicion === 'contado' ? 'pendiente_cobro' : 'pendiente', 
         items: [...nuevaFacturaDetalles],
         total: nuevaFacturaTotal,
-        total_pagado: condicion === 'contado' ? nuevaFacturaTotal : 0,
+        total_pagado: 0,
         forma_pago: condicion,
         medios_pago: mediosPagoArr,
         observaciones: document.getElementById('nueva-fac-observaciones').value
@@ -1311,23 +1309,6 @@ async function emitirNuevaFactura(e) {
     });
     guardarDatos('articulos_tecnorivas', articulos);
     guardarDatos('movimientos_inventario', movsInv);
-
-    if (condicion === 'contado') {
-        const cajas = obtenerDatos('cajas_tecnorivas') || [];
-        const idxCaja = cajas.findIndex(caja => caja.estado === 'abierta');
-        if (idxCaja !== -1) {
-            mediosPagoArr.forEach(pago => {
-                cajas[idxCaja].movimientos.push({
-                    hora: fechaHoraAhora(),
-                    tipo: 'ingreso',
-                    concepto: `Venta Contado Factura ${numFac} (${pago.tipo})`,
-                    monto: pago.monto
-                });
-                cajas[idxCaja].ingresos += pago.monto;
-            });
-            guardarDatos('cajas_tecnorivas', cajas);
-        }
-    }
 
     // Si es crédito, generar cuotas
     if (condicion === 'credito') {

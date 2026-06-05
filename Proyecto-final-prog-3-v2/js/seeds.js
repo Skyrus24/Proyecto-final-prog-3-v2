@@ -40,16 +40,16 @@ function inicializarDatos() {
     // Servicios por defecto
     if (!localStorage.getItem('servicios_tecnorivas')) {
         const servicios = [
-            { id: 1, nombre: 'Mantenimiento de Aire Acondicionado', categoriaId: 1, precio: 150000, iva: 10 },
-            { id: 2, nombre: 'Instalación de Compresor', categoriaId: 1, precio: 250000, iva: 10 },
-            { id: 3, nombre: 'Instalación Eléctrica Básica', categoriaId: 2, precio: 300000, iva: 10 },
-            { id: 4, nombre: 'Cambio de Panel Eléctrico', categoriaId: 2, precio: 450000, iva: 10 },
-            { id: 5, nombre: 'Mano de Obra Construcción (Día)', categoriaId: 3, precio: 180000, iva: 10 },
-            { id: 6, nombre: 'Reparación de Fugas de Agua', categoriaId: 5, precio: 120000, iva: 10 },
-            { id: 7, nombre: 'Pintura de Interiores (m2)', categoriaId: 6, precio: 25000, iva: 10 },
-            { id: 8, nombre: 'Instalación de Lámparas', categoriaId: 7, precio: 80000, iva: 10 },
-            { id: 9, nombre: 'Instalación de Cámaras', categoriaId: 8, precio: 350000, iva: 10 },
-            { id: 10, nombre: 'Mantenimiento de Jardín', categoriaId: 9, precio: 90000, iva: 10 }
+            { id: 1, nombre: 'Mantenimiento de Aire Acondicionado', categoriaId: 1, categoria: 'Refrigeración', precio_base: 150000, iva: 10, activo: true },
+            { id: 2, nombre: 'Instalación de Compresor', categoriaId: 1, categoria: 'Refrigeración', precio_base: 250000, iva: 10, activo: true },
+            { id: 3, nombre: 'Instalación Eléctrica Básica', categoriaId: 2, categoria: 'Electricidad', precio_base: 300000, iva: 10, activo: true },
+            { id: 4, nombre: 'Cambio de Panel Eléctrico', categoriaId: 2, categoria: 'Electricidad', precio_base: 450000, iva: 10, activo: true },
+            { id: 5, nombre: 'Mano de Obra Construcción (Día)', categoriaId: 3, categoria: 'Construcción', precio_base: 180000, iva: 10, activo: true },
+            { id: 6, nombre: 'Reparación de Fugas de Agua', categoriaId: 5, categoria: 'Plomería', precio_base: 120000, iva: 10, activo: true },
+            { id: 7, nombre: 'Pintura de Interiores (m2)', categoriaId: 6, categoria: 'Pintura', precio_base: 25000, iva: 10, activo: true },
+            { id: 8, nombre: 'Instalación de Lámparas', categoriaId: 7, categoria: 'Iluminación', precio_base: 80000, iva: 10, activo: true },
+            { id: 9, nombre: 'Instalación de Cámaras', categoriaId: 8, categoria: 'Seguridad', precio_base: 350000, iva: 10, activo: true },
+            { id: 10, nombre: 'Mantenimiento de Jardín', categoriaId: 9, categoria: 'Jardinería', precio_base: 90000, iva: 10, activo: true }
         ];
         guardarDatos('servicios_tecnorivas', servicios);
     }
